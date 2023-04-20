@@ -2,7 +2,7 @@
 Ivan Pandev, March 2023
 
 This document defines the application of the Runge-Kutta 4th Order, 2nd derivative
-numerical iteration method to solve the DVA matrix over time.
+numerical iteration method to solve the x_dd matrix over time.
 '''
 
 import chassis_model as model
