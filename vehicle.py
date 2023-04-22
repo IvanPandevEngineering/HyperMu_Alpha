@@ -4,7 +4,7 @@ import formulas as f
 import condition_data as cd
 from virtual_params import virtual_params
 import chassis_model as model
-from RK4_iterator import RK4_iterator
+from RK4_iterator import RK4_iterator_1Dtest
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -223,7 +223,7 @@ class vehicle:
             
             #C_s = get_damper_rate()
 
-            a, a_d, b, b_d = RK4_iterator(
+            a, a_d, b, b_d = RK4_iterator_1Dtest(
                 self, dt,
                 a, a_d, b, b_d, c, c_d,
                 F_sm, F_usm, F_sm_half_next, F_usm_half_next, F_sm_next, F_usm_next
@@ -252,7 +252,7 @@ class vehicle:
             c = item
             c_d = item + c_array[i+1] / dt
 
-            a, a_d, b, b_d = RK4_iterator(
+            a, a_d, b, b_d = RK4_iterator_1Dtest(
                 self, dt,
                 a, a_d, b, b_d, c, c_d,
                 F_sm = 0, F_usm = 0, F_sm_half_next = 0, F_usm_half_next = 0, F_sm_next = 0, F_usm_next = 0
