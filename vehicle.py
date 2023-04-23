@@ -198,7 +198,7 @@ class vehicle:
         print(f'Cross-Wise Mass Distribution (FL/RR): {round(100*(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m, 3)} %')
         print('\n')
     
-    def G_replay(self, telemetry_path: str):
+    def G_replay_1Dtest(self, telemetry_path: str):
 
         force_function = cd.from_sensor_log_iOS_app(telemetry_path)
 
@@ -238,7 +238,7 @@ class vehicle:
 
         return force_function['loggingTime(txt)'][1:], tire_load, damper_vel, body_deflection
     
-    def Shaker(self):
+    def Shaker_1Dtest(self):
 
         time_array, c_array, dt = cd.get_bump_function()
 
