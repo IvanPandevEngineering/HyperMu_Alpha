@@ -122,24 +122,6 @@ def get_x_matrix(
         [0, 0, 0, 0, 0, 0, 0, (- usm_r)]  # Node b_rl
     ])
 
-    A_mat_old = np.array([
-        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), 0, 0, 0, 0],  # Node a_fr
-        [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), 0, 0, 0, 0],  # Node a_fl, compared to a_fr, (-) on roll terms and chassis flex terms, but not pitch terms
-        [( - I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( + I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), 0, 0, 0, 0],  # Node a_rr, compared to a_fr, (-) on pitch and chassis flex terms, but not roll terms
-        [( + I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), 0, 0, 0, 0],  # Node a_rl, compared to a_fr, (-) on pitch and roll terms, but not chassis flex termms 
-        [0, 0, 0, 0, (- usm_f), 0, 0, 0],  # Node b_fr
-        [0, 0, 0, 0, 0, (- usm_f), 0, 0],  # Node b_fl
-        [0, 0, 0, 0, 0, 0, (- usm_r), 0],  # Node b_rr
-        [0, 0, 0, 0, 0, 0, 0, (- usm_r)]  # Node b_rl
-    ])
-
-    A_ma_old2 = np.array([
-        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2))],  # Node a_fr
-        [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)), ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2))],  # Node a_fl, compared to a_fr, (-) on roll terms and chassis flex terms, but not pitch terms
-        [( - I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( + I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2))],  # Node a_rr, compared to a_fr, (-) on pitch and chassis flex terms, but not roll terms
-        [( + I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_roll_inst_r/(I_roll_arm_inst_r**2) + I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2)), ( - I_pitch_inst/(4*I_pitch_arm_inst_r**2))]  # Node a_rl, compared to a_fr, (-) on pitch and roll terms, but not chassis flex termms 
-    ])
-
     B_mat = np.array([
         [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ride_damper_F_fr],
         [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl + ride_damper_F_fl],
@@ -152,6 +134,7 @@ def get_x_matrix(
     ])
 
     #print(A_mat)
+    print(B_mat)
     a = np.linalg.inv(A_mat)
     #print(B_mat)
 

@@ -52,14 +52,14 @@ def RK4_iterator(
         K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_s_fr = C_s_fr, C_s_fl = C_s_fl, C_s_rr = C_s_rr, C_s_rl = C_s_rl, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
         G_lat = G_lat_half_next, G_long = G_long_half_next  # lateral and longitudinal acceleration in G
     )
-    x2_a_fr = dt * a_d_fr + v1_a_d_fr/2
-    x2_a_fl = dt * a_d_fl + v1_a_d_fl/2
-    x2_a_rr = dt * a_d_rr + v1_a_d_rr/2
-    x2_a_rl = dt * a_d_rl + v1_a_d_rl/2
-    x2_b_fr = dt * b_d_fr + v1_b_d_fr/2
-    x2_b_fl = dt * b_d_fl + v1_b_d_fl/2
-    x2_b_rr = dt * b_d_rr + v1_b_d_rr/2
-    x2_b_rl = dt * b_d_rl + v1_b_d_rl/2
+    x2_a_fr = dt * (a_d_fr + v1_a_d_fr/2)
+    x2_a_fl = dt * (a_d_fl + v1_a_d_fl/2)
+    x2_a_rr = dt * (a_d_rr + v1_a_d_rr/2)
+    x2_a_rl = dt * (a_d_rl + v1_a_d_rl/2)
+    x2_b_fr = dt * (b_d_fr + v1_b_d_fr/2)
+    x2_b_fl = dt * (b_d_fl + v1_b_d_fl/2)
+    x2_b_rr = dt * (b_d_rr + v1_b_d_rr/2)
+    x2_b_rl = dt * (b_d_rl + v1_b_d_rl/2)
     v2_a_d_fr = dt * F_mat_half_next_1[0][0]
     v2_a_d_fl = dt * F_mat_half_next_1[1][0]
     v2_a_d_rr = dt * F_mat_half_next_1[2][0]
@@ -78,14 +78,14 @@ def RK4_iterator(
         K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_s_fr = C_s_fr, C_s_fl = C_s_fl, C_s_rr = C_s_rr, C_s_rl = C_s_rl, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
         G_lat = G_lat_half_next, G_long = G_long_half_next  # lateral and longitudinal acceleration in G
     )
-    x3_a_fr = dt * a_d_fr + v2_a_d_fr/2
-    x3_a_fl = dt * a_d_fl + v2_a_d_fl/2
-    x3_a_rr = dt * a_d_rr + v2_a_d_rr/2
-    x3_a_rl = dt * a_d_rl + v2_a_d_rl/2
-    x3_b_fr = dt * b_d_fr + v2_b_d_fr/2
-    x3_b_fl = dt * b_d_fl + v2_b_d_fl/2
-    x3_b_rr = dt * b_d_rr + v2_b_d_rr/2
-    x3_b_rl = dt * b_d_rl + v2_b_d_rl/2
+    x3_a_fr = dt * (a_d_fr + v2_a_d_fr/2)
+    x3_a_fl = dt * (a_d_fl + v2_a_d_fl/2)
+    x3_a_rr = dt * (a_d_rr + v2_a_d_rr/2)
+    x3_a_rl = dt * (a_d_rl + v2_a_d_rl/2)
+    x3_b_fr = dt * (b_d_fr + v2_b_d_fr/2)
+    x3_b_fl = dt * (b_d_fl + v2_b_d_fl/2)
+    x3_b_rr = dt * (b_d_rr + v2_b_d_rr/2)
+    x3_b_rl = dt * (b_d_rl + v2_b_d_rl/2)
     v3_a_d_fr = dt * F_mat_half_next_2[0][0]
     v3_a_d_fl = dt * F_mat_half_next_2[1][0]
     v3_a_d_rr = dt * F_mat_half_next_2[2][0]
@@ -104,14 +104,14 @@ def RK4_iterator(
         K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_s_fr = C_s_fr, C_s_fl = C_s_fl, C_s_rr = C_s_rr, C_s_rl = C_s_rl, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
         G_lat = G_lat_next, G_long = G_long_next  # lateral and longitudinal acceleration in G
     )
-    x4_a_fr = dt * a_d_fr + v3_a_d_fr
-    x4_a_fl = dt * a_d_fl + v3_a_d_fl
-    x4_a_rr = dt * a_d_rr + v3_a_d_rr
-    x4_a_rl = dt * a_d_rl + v3_a_d_rl
-    x4_b_fr = dt * b_d_fr + v3_b_d_fr
-    x4_b_fl = dt * b_d_fl + v3_b_d_fl
-    x4_b_rr = dt * b_d_rr + v3_b_d_rr
-    x4_b_rl = dt * b_d_rl + v3_b_d_rl
+    x4_a_fr = dt * (a_d_fr + v3_a_d_fr)
+    x4_a_fl = dt * (a_d_fl + v3_a_d_fl)
+    x4_a_rr = dt * (a_d_rr + v3_a_d_rr)
+    x4_a_rl = dt * (a_d_rl + v3_a_d_rl)
+    x4_b_fr = dt * (b_d_fr + v3_b_d_fr)
+    x4_b_fl = dt * (b_d_fl + v3_b_d_fl)
+    x4_b_rr = dt * (b_d_rr + v3_b_d_rr)
+    x4_b_rl = dt * (b_d_rl + v3_b_d_rl)
     v4_a_d_fr = dt * F_mat_next[0][0]
     v4_a_d_fl = dt * F_mat_next[1][0]
     v4_a_d_rr = dt * F_mat_next[2][0]

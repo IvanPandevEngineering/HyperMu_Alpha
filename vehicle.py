@@ -236,11 +236,8 @@ class vehicle:
             I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll, a_d_rr, a_d_rl, self.tw_r)
             I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
-            print(i)
-
             a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
             b_fr, b_fl, b_rr, b_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
-            c_fr, c_fl, c_rr, c_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl, \
             = \
             RK4_iterator(
                 dt, 
@@ -252,11 +249,13 @@ class vehicle:
                 G_lat, G_long, G_lat_half_next, G_long_half_next, G_lat_next, G_long_next  # lateral and longitudinal acceleration in G
             )
 
+            print(dt, a_fr, a_fl, a_d_fr, a_d_fl)
+
             tire_load.append(b_fr * self.K_t_f + b_d_fr * self.C_t_f)
             damper_vel.append(a_d_fr)
             body_deflection.append(a_fr * 50000)
 
-            if i+2 == len(force_function):
+            if i+2090 == len(force_function):
                 break
 
         print('Solver complete.')
@@ -296,12 +295,12 @@ class vehicle:
 
             tire_load.append(b * self.K_t_f + b_d * self.C_t_f)
             damper_vel.append(a_d)
-            body_deflection.append(a * 50000)
+            body_deflection.append(a*10)
 
             if i+2 == len(force_function):
                 break
 
-        return force_function['loggingTime(txt)'][1:], tire_load, damper_vel, body_deflection
+        return force_function['loggingTime(txt)'][1:], force_function['accelerometerAccelerationX(G)'][1:], tire_load, damper_vel, body_deflection
     
     def Shaker_1Dtest(self):
 
