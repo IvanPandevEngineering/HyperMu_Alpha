@@ -108,7 +108,6 @@ def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, 
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
 
 '''
-End helper functions above.
 Begin vehicle properties definitions below.
 '''
 
@@ -258,3 +257,17 @@ def aero_platform_response(test_df_f, test_df_r, m_f, wheel_base, K_s_f_v, K_s_r
     stability_margin = wheel_base * (m_f - aero_cp_f)  # m, inches aero center of pressure is behind the center of mass
 
     return(pitch, dive, squat, stability_margin)  # In degrees dive, m, m, and m respectively
+
+'''
+Begin functions for supporting time-dependent solving below.
+#TODO:Dummy functions still to finalize.
+'''
+
+def get_inst_damper_rate(C):
+    return C
+
+def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
+    return I_roll, tw/2
+
+def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
+    return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
