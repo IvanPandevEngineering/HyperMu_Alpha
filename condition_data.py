@@ -4,7 +4,7 @@ import math
 def from_sensor_log_iOS_app(path: str):
 
     print('Converting file to dataframe...')
-    data = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)']]
+    data = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
 
     print('Parsing timesteps...')
     data['datetime'] = pd.to_datetime(data['loggingTime(txt)'])
@@ -13,7 +13,7 @@ def from_sensor_log_iOS_app(path: str):
     for i, timestep in enumerate(data['timestep']):
         data['timestep'][i] = int(str(data['timestep'][i])[-6:]) / 1000000  # us to s
 
-    return data
+    return data[3200:5400].reset_index()
 
 def get_bump_function(timespan: int = 9, magnitude: float = 0.020, frequency: float = 0.5):
 
