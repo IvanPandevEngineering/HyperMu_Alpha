@@ -236,8 +236,8 @@ class vehicle:
             I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll, a_d_rr, a_d_rl, self.tw_r)
             I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
-            a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
-            b_fr, b_fl, b_rr, b_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
+            a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
+            a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
             = \
             RK4_iterator(
                 dt, 
@@ -255,7 +255,7 @@ class vehicle:
             damper_vel.append(a_d_fr)
             body_deflection.append(a_fr * 50000)
 
-            if i+2090 == len(force_function):
+            if i+len(force_function)-1000 == len(force_function):
                 break
 
         print('Solver complete.')

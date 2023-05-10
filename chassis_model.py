@@ -36,12 +36,12 @@ def get_x_matrix(
     '''
 
     #  Load transfers from lat- and long- acceleration
-    lat_sm_elastic_LT_f = G_lat * f.LatLT_sm_elastic_1g_axle(sm_f, rc_height_f, cm_height, tw_f)
-    lat_sm_geo_LT_f = G_lat * f.LatLT_sm_geometric_1g_axle(sm_f, rc_height_f, tw_f)
+    lat_sm_elastic_LT_f = G_lat * f.LatLT_sm_elastic_1g_axle(sm_f*sm, rc_height_f, cm_height, tw_f) #TODO: please clean up this notation sm_f*sm
+    lat_sm_geo_LT_f = G_lat * f.LatLT_sm_geometric_1g_axle(sm_f*sm, rc_height_f, tw_f)
     lat_usm_geo_LT_f = G_lat * f.LatLT_usm_geometric_1g_axle(usm_f, tire_diam_f, tw_f)
 
-    lat_sm_elastic_LT_r = G_lat * f.LatLT_sm_elastic_1g_axle(sm_r, rc_height_r, cm_height, tw_r)
-    lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(sm_r, rc_height_r, tw_r)
+    lat_sm_elastic_LT_r = G_lat * f.LatLT_sm_elastic_1g_axle(sm_r*sm, rc_height_r, cm_height, tw_r)
+    lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(sm_r*sm, rc_height_r, tw_r)
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(usm_r, tire_diam_r, tw_r)
 
     long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(sm, pc_height, cm_height, wheel_base_f)
@@ -79,41 +79,34 @@ def get_x_matrix(
     tire_damper_F_rl = C_t_r * (b_d_rl - c_d_rl)
 
     '''
-    The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias, which are as follows:
-    
-    roll_inr_LT_f = I_roll_inst_f * (a_dd_fr - a_dd_fl) / I_roll_arm_inst_f**2
-    roll_inr_LT_r = I_roll_inst_r * (a_dd_rr - a_dd_rl) / I_roll_arm_inst_r**2
-    pitch_inr_LT_f = I_pitch_inst * ((a_dd_fr + a_dd_fl)/2 - (a_dd_rr + a_dd_rl)/2) / I_pitch_arm_inst_f**2
-    pitch_inr_LT_r = I_pitch_inst * ((a_dd_fr + a_dd_fl)/2 - (a_dd_rr + a_dd_rl)/2) / I_pitch_arm_inst_r**2
-    height_delta_LT_f = sm_f * (a_dd_fr + a_dd_fl) / 2
-    height_delta_LT_r = sm_r * (a_dd_rr + a_dd_rl) / 2
+    The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
     '''
 
     #TODO: Not complete, add r/l versions of roll arms and unique corner masses.
 
     A_mat = np.array([
-        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2),\
+        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f*sm/2),\
          ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          0, 0, 0, 0],  # Node a_dd_fr
 
         [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f/2),\
+         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f*sm/2),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          0, 0, 0, 0],  # Node a_dd_fl
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2),\
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r*sm/2),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          0, 0, 0, 0],  # Node a_dd_rr
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r/2),\
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - sm_r*sm/2),\
          0, 0, 0, 0],  # Node a_dd_rl
 
         [0, 0, 0, 0, (- usm_f), 0, 0, 0],  # Node b_fr
@@ -133,12 +126,10 @@ def get_x_matrix(
         [ - ride_spring_F_rl - ride_damper_F_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
     ])
 
-    #print(A_mat)
-    print(B_mat)
     a = np.linalg.inv(A_mat)
-    #print(B_mat)
+    x_mat = np.matmul(a, B_mat)
 
-    return np.matmul(a, B_mat)
+    return x_mat
 
 def get_x_matrix_1Dtest(
     m: float,
