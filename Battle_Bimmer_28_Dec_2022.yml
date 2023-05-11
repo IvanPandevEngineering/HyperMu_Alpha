@@ -90,6 +90,9 @@ parameters:
   wheel_base:
     - 107.3
     - 'in'
+  torsional_spring_rate:
+    - 12500
+    - 'Nm/deg'
   spring_rate_f:
     - 450
     - 'lbf/in'
