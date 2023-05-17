@@ -274,7 +274,11 @@ class vehicle:
         c_fr, c_fl, c_rr, c_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl, \
             = [0] * 24
         
-        tire_load, damper_vel, roll_angle_f, roll_angle_r = [],[],[],[]
+        roll_angle_f, roll_angle_r, pitch_angle, \
+        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+        lateral_load_dist_f, lateral_load_dist_r, \
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl = \
+        [],[],[],[],[],[],[],[],[],[],[],[],[]
 
         print('Starting RK4 solver for G-replay...')
 
@@ -285,9 +289,9 @@ class vehicle:
             G_lat = row['accelerometerAccelerationX(G)']
             G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1]
             G_lat_half_next = (G_lat + G_lat_next) /2
-            G_long = 0#row['accelerometerAccelerationY(G)']
-            G_long_next = 0#force_function['accelerometerAccelerationY(G)'][i+1]
-            G_long_half_next = 0#(G_long + G_long_next) /2
+            G_long = row['accelerometerAccelerationY(G)']
+            G_long_next = force_function['accelerometerAccelerationY(G)'][i+1]
+            G_long_half_next = (G_long + G_long_next) /2
 
             #TODO: shell functions for now, must add detail
             C_s_fr = f.get_inst_damper_rate(self.C_lsc_f)
@@ -295,9 +299,9 @@ class vehicle:
             C_s_rr = f.get_inst_damper_rate(self.C_lsc_r)
             C_s_rl = f.get_inst_damper_rate(self.C_lsc_r)
 
-            #TODO: shell functions for now, must add detail
-            I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll, a_d_fr, a_d_fl, self.tw_f)
-            I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll, a_d_rr, a_d_rl, self.tw_r)
+            #TODO: shell functions for now, must add detail including front-rear inertias split per weight distribution
+            I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
+            I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, a_d_rr, a_d_rl, self.tw_r)
             I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
             a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
@@ -313,17 +317,38 @@ class vehicle:
                 G_lat, G_long, G_lat_half_next, G_long_half_next, G_lat_next, G_long_next  # lateral and longitudinal acceleration in G
             )
 
-            tire_load.append(b_fr * self.K_t_f + b_d_fr * self.C_t_f)
-            damper_vel.append(a_d_fr)
+            tire_load_fr_val = b_fr * self.K_t_f + b_d_fr * self.C_t_f + (self.m * self.m_f) * 9.80655
+            tire_load_fl_val = b_fl * self.K_t_f + b_d_fl * self.C_t_f + (self.m * self.m_f) * 9.80655
+            tire_load_rr_val = b_rr * self.K_t_r + b_d_rr * self.C_t_r + (self.m * (1-self.m_f)) * 9.80655
+            tire_load_rl_val = b_rl * self.K_t_r + b_d_rl * self.C_t_r + (self.m * (1-self.m_f)) * 9.80655
+
+            tire_load_fr.append(tire_load_fr_val)
+            tire_load_fl.append(tire_load_fl_val)
+            tire_load_rr.append(tire_load_rr_val)
+            tire_load_rl.append(tire_load_rl_val)
+            #add motion ratios to damper vels
+            damper_vel_fr.append(a_d_fr)
+            damper_vel_fl.append(a_d_fl)
+            damper_vel_rr.append(a_d_rr)
+            damper_vel_rl.append(a_d_rl)
             roll_angle_f.append((a_fr - a_fl)*180/3.14)
             roll_angle_r.append((a_rr - a_rl)*180/3.14)
+            pitch_angle.append((a_fr+a_fl)-(a_rr+a_rl)*180/(2*3.14))
+            lateral_load_dist_f.append(tire_load_fr_val / (tire_load_fr_val + tire_load_fl_val))
+            lateral_load_dist_r.append(tire_load_rr_val / (tire_load_rr_val + tire_load_rl_val))
 
             if i == len(force_function)-2:
                 break
 
         print('Solver complete.')
 
-        return force_function['loggingTime(txt)'][1:], tire_load, damper_vel, roll_angle_f, roll_angle_r
+        return(
+            force_function[1:],
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            lateral_load_dist_f, lateral_load_dist_r,
+            roll_angle_f, roll_angle_r, pitch_angle
+        )
 
     def G_replay_1Dtest(self, telemetry_path: str):
 

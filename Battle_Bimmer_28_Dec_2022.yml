@@ -91,7 +91,7 @@ parameters:
     - 107.3
     - 'in'
   torsional_spring_rate:
-    - 12500
+    - 125000
     - 'Nm/deg'
   spring_rate_f:
     - 450

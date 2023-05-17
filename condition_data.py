@@ -15,16 +15,21 @@ def from_sensor_log_iOS_app(path: str):
 
     return data[3200:5400].reset_index()
 
-def get_G_function(timespan: int = 9, magnitude: float = 1.4, frequency: float = 0.5):
+def get_G_function(
+        timespan: int = 3,
+        lat_magnitude: float = 1.4, lat_frequency: float = 0.5,
+        long_magnitude: float = 0.3, long_frequency: float = 2
+    ):
 
     #  Default time resolution is set to 100hz
     time_res = 100  # hz
 
-    G_lat_array = [math.sin(2 * math.pi * frequency * x / time_res) * magnitude for x in range(time_res * timespan)]  # 100 steps is 1s
+    G_lat_array = [math.sin(2 * math.pi * lat_frequency * x / time_res) * lat_magnitude for x in range(time_res * timespan)]  # 100 steps is 1s
+    G_long_array = [math.sin(2 * math.pi * long_frequency * x / time_res) * long_magnitude for x in range(time_res * timespan)]  # 100 steps is 1s
     time_array = [x/time_res for x in range(len(G_lat_array))]
     dt_array = [1/time_res for all in range(len(G_lat_array))]
 
-    data = pd.DataFrame(list(zip(time_array, G_lat_array, dt_array)), columns=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'timestep'])
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, dt_array)), columns=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'timestep'])
 
     print(len(data))
 
