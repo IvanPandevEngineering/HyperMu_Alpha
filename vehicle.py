@@ -346,7 +346,7 @@ class vehicle:
             force_function[1:],
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-            lateral_load_dist_f, lateral_load_dist_r,
+            np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
             roll_angle_f, roll_angle_r, pitch_angle
         )
 

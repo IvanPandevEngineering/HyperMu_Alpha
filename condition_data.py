@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import numpy as np
 
 def from_sensor_log_iOS_app(path: str):
 
@@ -18,14 +19,16 @@ def from_sensor_log_iOS_app(path: str):
 def get_G_function(
         timespan: int = 3,
         lat_magnitude: float = 1.4, lat_frequency: float = 0.5,
-        long_magnitude: float = 0.3, long_frequency: float = 2
+        long_magnitude: float = -0.6, long_frequency: float = 1
     ):
 
     #  Default time resolution is set to 100hz
     time_res = 100  # hz
 
-    G_lat_array = [math.sin(2 * math.pi * lat_frequency * x / time_res) * lat_magnitude for x in range(time_res * timespan)]  # 100 steps is 1s
-    G_long_array = [math.sin(2 * math.pi * long_frequency * x / time_res) * long_magnitude for x in range(time_res * timespan)]  # 100 steps is 1s
+    G_lat_array = np.array([math.sin(2 * math.pi * lat_frequency * x / time_res) * lat_magnitude for x in range(time_res * timespan)]) # 100 steps is 1s
+    G_lat_array[200:] = 0
+    G_long_array = np.array([math.sin(2 * math.pi * long_frequency * x / time_res) * long_magnitude for x in range(time_res * timespan)])  # 100 steps is 1s
+    G_long_array[175:] = -long_magnitude
     time_array = [x/time_res for x in range(len(G_lat_array))]
     dt_array = [1/time_res for all in range(len(G_lat_array))]
 

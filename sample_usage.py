@@ -51,6 +51,10 @@ subplots[1,1].plot(force_function['loggingTime(txt)'], lateral_load_dist_r, labe
 subplots[1,1].legend()
 subplots[1,1].grid(True)
 
+subplots[1,2].plot(force_function['loggingTime(txt)'], lateral_load_dist_f/(lateral_load_dist_r+lateral_load_dist_f), label='lateral load dist ratio (%, f)')
+subplots[1,2].legend()
+subplots[1,2].grid(True)
+
 fig.tight_layout()
 plt.show()
 
