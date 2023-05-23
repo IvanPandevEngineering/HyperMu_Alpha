@@ -7,7 +7,7 @@ numerical iteration method to solve the x_dd matrix over time.
 
 import chassis_model as model
 
-def RK4_iterator(
+def RK4_step(
     dt, 
     self,  # Many static vehicle parameters passed in self
     a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs

@@ -4,7 +4,7 @@ import formulas as f
 import condition_data as cd
 from virtual_params import virtual_params
 import chassis_model as model
-from RK4_iterator import RK4_iterator, RK4_iterator_1Dtest
+from RK4_iterator import RK4_step, RK4_iterator_1Dtest
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -199,74 +199,14 @@ class vehicle:
         print(f'Cross-Wise Mass Distribution (FL/RR): {round(100*(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m, 3)} %')
         print('\n')
 
-    def G_replay(self, telemetry_path: str):
-
-        #  Create force function from chosen telemetry conversion function, selection of function TBD
-        force_function = cd.from_sensor_log_iOS_app(telemetry_path)
-        #TODO: try passing a sin wave through here and see if the shaky data is causing the instability
-
-        #  Initialize variables
-        a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
-        b_fr, b_fl, b_rr, b_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
-        c_fr, c_fl, c_rr, c_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl, \
-            = [0] * 24
-        
-        tire_load, damper_vel, body_deflection = [],[],[]
-
-        print('Starting RK4 solver for G-replay...')
-
-        for i, row in force_function.iterrows():
-
-            dt = force_function['timestep'][i+1]
-
-            G_lat = row['accelerometerAccelerationX(G)']
-            G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1]
-            G_lat_half_next = (G_lat + G_lat_next) /2
-            G_long = row['accelerometerAccelerationY(G)']
-            G_long_next = force_function['accelerometerAccelerationY(G)'][i+1]
-            G_long_half_next = (G_long + G_long_next) /2
-
-            #TODO: shell functions for now, must add detail
-            C_s_fr = f.get_inst_damper_rate(self.C_lsc_f)
-            C_s_fl = f.get_inst_damper_rate(self.C_lsc_f)
-            C_s_rr = f.get_inst_damper_rate(self.C_lsc_r)
-            C_s_rl = f.get_inst_damper_rate(self.C_lsc_r)
-
-            #TODO: shell functions for now, must add detail
-            I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll, a_d_fr, a_d_fl, self.tw_f)
-            I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll, a_d_rr, a_d_rl, self.tw_r)
-            I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
-
-            a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
-            a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
-            = \
-            RK4_iterator(
-                dt, 
-                self,  # Many static vehicle parameters passed in self
-                a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
-                a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
-                I_roll_inst_f, I_roll_inst_r, I_pitch_inst, I_roll_arm_inst_f, I_roll_arm_inst_r, I_pitch_arm_inst_f, I_pitch_arm_inst_r,  # Inertias, radii of rotation
-                C_s_fr, C_s_fl, C_s_rr, C_s_rl,  # Springs and Dampers
-                G_lat, G_long, G_lat_half_next, G_long_half_next, G_lat_next, G_long_next  # lateral and longitudinal acceleration in G
-            )
-
-            print(dt, a_fr, a_fl, a_d_fr, a_d_fl)
-
-            tire_load.append(b_fr * self.K_t_f + b_d_fr * self.C_t_f)
-            damper_vel.append(a_d_fr)
-            body_deflection.append(a_fr * 50000)
-
-            if i == 100:
-                break
-
-        print('Solver complete.')
-
-        return force_function['loggingTime(txt)'][1:], tire_load, damper_vel, body_deflection
-
     def Shaker(self):
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
-        force_function = cd.get_G_function()
+        #force_function = cd.from_sensor_log_iOS_app(
+        #    r'C:\\Users\\Ivan Pandev\Documents\\vsCodeTest\\sample_data\\12_March_2023\\SensorLogFiles_my_iOS_device_230314_07-21-07\\2023-03-12_14_34_29_my_iOS_device.csv'
+        #)
+        
+        force_function = cd.get_demo_G_function()
 
         #  Initialize variables
         a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
@@ -292,14 +232,17 @@ class vehicle:
             G_long = row['accelerometerAccelerationY(G)']
             G_long_next = force_function['accelerometerAccelerationY(G)'][i+1]
             G_long_half_next = (G_long + G_long_next) /2
+
             c_fr = row['c_fr']
             c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep']
+            c_rr = row['c_rr']
+            c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep']
 
-            #TODO: shell functions for now, must add detail
-            C_s_fr = f.get_inst_damper_rate(self.C_lsc_f)
-            C_s_fl = f.get_inst_damper_rate(self.C_lsc_f)
-            C_s_rr = f.get_inst_damper_rate(self.C_lsc_r)
-            C_s_rl = f.get_inst_damper_rate(self.C_lsc_r)
+            #TODO: must add motion ratios
+            C_s_fr = f.get_inst_damper_rate(C_lsc = self.C_lsc_f, C_lsr = self.C_lsr_f, a_d = a_d_fr, b_d = b_d_fr)
+            C_s_fl = f.get_inst_damper_rate(C_lsc = self.C_lsc_f, C_lsr = self.C_lsr_f, a_d = a_d_fl, b_d = b_d_fl)
+            C_s_rr = f.get_inst_damper_rate(C_lsc = self.C_lsc_r, C_lsr = self.C_lsr_r, a_d = a_d_rr, b_d = b_d_rr)
+            C_s_rl = f.get_inst_damper_rate(C_lsc = self.C_lsc_r, C_lsr = self.C_lsr_r, a_d = a_d_rl, b_d = b_d_rl)
 
             #TODO: shell functions for now, must add detail including front-rear inertias split per weight distribution
             I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
@@ -309,7 +252,7 @@ class vehicle:
             a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
             a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
             = \
-            RK4_iterator(
+            RK4_step(
                 dt, 
                 self,  # Many static vehicle parameters passed in self
                 a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
@@ -351,6 +294,8 @@ class vehicle:
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
             roll_angle_f, roll_angle_r, pitch_angle
         )
+
+# Depricated functions for development and debugging only.
 
     def G_replay_1Dtest(self, telemetry_path: str):
 
