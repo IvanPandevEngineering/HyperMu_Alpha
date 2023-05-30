@@ -202,11 +202,11 @@ class vehicle:
     def Shaker(self):
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
-        #force_function = cd.from_sensor_log_iOS_app(
-        #    r'C:\\Users\\Ivan Pandev\Documents\\vsCodeTest\\sample_data\\12_March_2023\\SensorLogFiles_my_iOS_device_230314_07-21-07\\2023-03-12_14_34_29_my_iOS_device.csv'
-        #)
+        force_function = cd.from_sensor_log_iOS_app(
+            r'C:\\Users\\Ivan Pandev\Documents\\vsCodeTest\\sample_data\\12_March_2023\\SensorLogFiles_my_iOS_device_230314_07-21-07\\2023-03-12_14_34_29_my_iOS_device.csv'
+        )
         
-        force_function = cd.get_demo_G_function()
+        #force_function = cd.get_demo_G_function()
 
         #  Initialize variables
         a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
@@ -224,7 +224,7 @@ class vehicle:
 
         for i, row in force_function.iterrows():
 
-            dt = force_function['timestep'][i+1]
+            dt = 0.010#force_function['timestep'][i+1]
 
             G_lat = row['accelerometerAccelerationX(G)']
             G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1]
@@ -282,7 +282,7 @@ class vehicle:
             lateral_load_dist_f.append(tire_load_fr_val / (tire_load_fr_val + tire_load_fl_val))
             lateral_load_dist_r.append(tire_load_rr_val / (tire_load_rr_val + tire_load_rl_val))
 
-            if i == len(force_function)-2:
+            if i == len(force_function)-1:
                 break
 
         print('Solver complete.')

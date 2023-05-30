@@ -21,7 +21,7 @@ print('Graphing...')
 
 plt.style.use('seaborn-v0_8')
 fig, subplots = plt.subplots(2, 3, figsize=(14, 8))
-fig.suptitle('Demo Force and Surface Functions on Battle_Bimmer_28_Dec_2022, 0-3s', fontsize=14)
+fig.suptitle('Race Telemetry on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
 subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
 subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')

@@ -18,25 +18,35 @@ def from_sensor_log_iOS_app(path: str):
     data = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
 
     print('Parsing timesteps...')
+    #Create datetime column to be interpolated
     data['datetime'] = pd.to_datetime(data['loggingTime(txt)'])
-    data['timestep'] = data['datetime'].diff()
-    data['timestep'][0] = data['timestep'][1]
-    for i, timestep in enumerate(data['timestep']):
-        data['timestep'][i] = int(str(data['timestep'][i])[-6:]) / 1000000  # us to s
-    data = data[3200:5400].reset_index()
-
-    data['accelerometerAccelerationX(G)'] = custom_smooth(np.array(data['accelerometerAccelerationX(G)']), 500)
-    data['accelerometerAccelerationY(G)'] = custom_smooth(np.array(data['accelerometerAccelerationY(G)']), 500)
+    data['datetime'] = pd.DatetimeIndex(data['datetime'])
+    #drop redundant column
+    data = data.drop(columns='loggingTime(txt)')
+    #select interesting time range
+    data = data[3100:5500]
+    #set index to be picked up by interpolation function
+    data = data.set_index('datetime')
 
     data['c_fr_array'] = 0
     data['c_rr_array'] = 0
 
-    data = data.round({'accelerometerAccelerationX(G)': 3, 'accelerometerAccelerationY(G)': 3})
+    #perform resampling to 10ms, then drop all nans
+    data = data.resample('10ms')
+    data = data.interpolate(method='linear')
+    data = data.dropna(how='any')
 
-    data = pd.DataFrame(list(zip(data['loggingTime(txt)'], data['accelerometerAccelerationX(G)'], data['accelerometerAccelerationY(G)'], data['c_fr_array'], data['c_rr_array'], data['timestep'], data['motionRoll(rad)'], data['motionPitch(rad)'])), \
+    #create new time and timestep columns
+    data['time'] = data.index
+    data['timestep'] = data['time'].diff().dt.total_seconds()*1000
+
+    #drop old index
+    data = data.reset_index(drop=True)
+
+    #create dataframe and drop nans one more time
+    data = pd.DataFrame(list(zip(data['time'], data['accelerometerAccelerationX(G)'], data['accelerometerAccelerationY(G)'], data['c_fr_array'], data['c_rr_array'], data['timestep'], data['motionRoll(rad)'], data['motionPitch(rad)'])), \
         columns=columns_global)
-
-    print(data)
+    data = data.dropna(how='any')
 
     return data
 
