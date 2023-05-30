@@ -5,4 +5,6 @@ ChassisDyne is a chassis response calculator solving for tire load, lateral load
 
 ![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/demo1.png)
 
-The above screenshot represents a race car model, `Battle_Bimmer_28_Dec_2022`, responding to synthetic lateral and longitudinal inputs, with a bump affecting the inside tires on the right-handed turn. Demonstrated in the data is torsional chassis flex, suspension and tire harmonics, and much more.
+The above screenshot represents a race car model, `Battle_Bimmer_28_Dec_2022`, responding to synthetic lateral and longitudinal inputs, with a bump affecting the inside tires on the right-handed turn. Demonstrated in the data is torsional chassis flex, suspension and tire harmonics, and much more. The screenshot below represents the same model responding to a replay of telemetry gathered during a real-world autocross race run, where chassis acceleration is known precisely, but surface conditions are assumed smooth.
+
+![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/demo2.png)
