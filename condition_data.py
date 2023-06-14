@@ -15,38 +15,36 @@ def custom_smooth(array, rounds):
 def from_sensor_log_iOS_app(path: str):
 
     print('Converting file to dataframe...')
-    data = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
 
     print('Parsing timesteps...')
     #Create datetime column to be interpolated
-    data['datetime'] = pd.to_datetime(data['loggingTime(txt)'])
-    data['datetime'] = pd.DatetimeIndex(data['datetime'])
+    data_in['datetime'] = pd.to_datetime(data_in['loggingTime(txt)'])
+    data_in['datetime'] = pd.DatetimeIndex(data_in['datetime'])
     #drop redundant column
-    data = data.drop(columns='loggingTime(txt)')
+    data_in = data_in.drop(columns='loggingTime(txt)')
     #select interesting time range
-    data = data[3100:5500]
+    data_in = data_in[3100:5500]
     #set index to be picked up by interpolation function
-    data = data.set_index('datetime')
+    data_in = data_in.set_index('datetime')
 
-    data['c_fr_array'] = 0
-    data['c_rr_array'] = 0
+    data_in['c_fr_array'] = 0
+    data_in['c_rr_array'] = 0
 
     #perform resampling to 10ms, then drop all nans
-    data = data.resample('10ms')
-    data = data.interpolate(method='linear')
-    data = data.dropna(how='any')
+    data_in = data_in.resample('10ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
 
     #create new time and timestep columns
-    data['time'] = data.index
-    data['timestep'] = data['time'].diff().dt.total_seconds()*1000
-
-    #drop old index
-    data = data.reset_index(drop=True)
+    data_in['time'] = data_in.index
+    data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data['time'], data['accelerometerAccelerationX(G)'], data['accelerometerAccelerationY(G)'], data['c_fr_array'], data['c_rr_array'], data['timestep'], data['motionRoll(rad)'], data['motionPitch(rad)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRoll(rad)'], data_in['motionPitch(rad)'])), \
         columns=columns_global)
     data = data.dropna(how='any')
+    data = data.reset_index(drop=True)
 
     return data
 
@@ -81,8 +79,6 @@ def get_demo_G_function(
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch)), \
         columns=columns_global)
-
-    print(len(data))
 
     return data
 

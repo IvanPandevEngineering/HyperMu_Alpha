@@ -5,6 +5,7 @@ import condition_data as cd
 from virtual_params import virtual_params
 import chassis_model as model
 from RK4_iterator import RK4_step, RK4_iterator_1Dtest
+import visualizer as vis
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -31,8 +32,6 @@ def unpack_yml(path: str):
     return(dict)
 
 class vehicle:
-
-    #  Section 1. Vehicle definition and variable unpacking
 
     def __init__(self, vehicle_yml_path: str):
 
@@ -125,8 +124,6 @@ class vehicle:
         self.pitch_damping_slow = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v)
         self.pitch_damping_fast = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v)
 
-    #  Section 2. Analysis and plotting functions
-
     def summary(self):
         print('\n')
         print('_______ ROLL RESPONSE _______')
@@ -199,14 +196,15 @@ class vehicle:
         print(f'Cross-Wise Mass Distribution (FL/RR): {round(100*(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m, 3)} %')
         print('\n')
 
-    def Shaker(self):
+    def Shaker(self, **kwargs):
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
-        force_function = cd.from_sensor_log_iOS_app(
-            r'C:\\Users\\Ivan Pandev\Documents\\vsCodeTest\\sample_data\\12_March_2023\\SensorLogFiles_my_iOS_device_230314_07-21-07\\2023-03-12_14_34_29_my_iOS_device.csv'
-        )
-        
-        #force_function = cd.get_demo_G_function()
+        if kwargs:
+            force_function = cd.from_sensor_log_iOS_app(
+                kwargs['replay_src']
+            )
+        else:
+            force_function = cd.get_demo_G_function()
 
         #  Initialize variables
         a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
@@ -224,7 +222,7 @@ class vehicle:
 
         for i, row in force_function.iterrows():
 
-            dt = 0.010#force_function['timestep'][i+1]
+            dt = force_function['timestep'][i+1]
 
             G_lat = row['accelerometerAccelerationX(G)']
             G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1]
@@ -278,11 +276,11 @@ class vehicle:
             damper_vel_rl.append(a_d_rl - b_d_rl)
             roll_angle_f.append((a_fr - a_fl)*180/3.14)
             roll_angle_r.append((a_rr - a_rl)*180/3.14)
-            pitch_angle.append((a_fr+a_fl)-(a_rr+a_rl)*180/(2*3.14))
+            pitch_angle.append((a_fr+a_fl)*180/(2*3.14) - (a_rr+a_rl)*180/(2*3.14))
             lateral_load_dist_f.append(tire_load_fr_val / (tire_load_fr_val + tire_load_fl_val))
             lateral_load_dist_r.append(tire_load_rr_val / (tire_load_rr_val + tire_load_rl_val))
 
-            if i == len(force_function)-1:
+            if i == len(force_function)-2:
                 break
 
         print('Solver complete.')
@@ -292,6 +290,38 @@ class vehicle:
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
+            roll_angle_f, roll_angle_r, pitch_angle
+        )
+
+    def plot_shaker(self, **kwargs):
+
+        force_function, \
+        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        lateral_load_dist_f, lateral_load_dist_r, \
+        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+
+        vis.plot_response(
+            force_function,
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            lateral_load_dist_f, lateral_load_dist_r,
+            roll_angle_f, roll_angle_r, pitch_angle
+        )
+    
+    def correlation_check(self, **kwargs):
+        
+        force_function, \
+        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        lateral_load_dist_f, lateral_load_dist_r, \
+        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+
+        vis.check_correlation(
+            force_function,
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            lateral_load_dist_f, lateral_load_dist_r,
             roll_angle_f, roll_angle_r, pitch_angle
         )
 
