@@ -95,13 +95,13 @@ def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to ou
 
 #TODO: Finalize and draw out the below equations. Not done yet.
 #TODO: Geo arms are approximation, spend time thinking through physics
-def LongLT_sm_elastic_1g_end(sm, pc_height, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
+def LongLT_sm_elastic_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
     
-    return 9.80665 * sm * (cm_height - pc_height) / (wb_end * 2)
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / wb_end
 
-def LongLT_sm_geometric_1g_end(sm, pc_height, wb_end):  # N, transferred to outside OR lifted from One end tire
+def LongLT_sm_geometric_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
     
-    return 9.80665 * sm * pc_height / (wb_end * 2)
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * anti_geo) / wb_end
 
 def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
     

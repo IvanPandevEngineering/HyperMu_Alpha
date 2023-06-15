@@ -15,7 +15,7 @@ def get_x_matrix(
     a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
     sm, sm_f, sm_r, usm_f, usm_r,  # Masses
     I_roll_inst_f, I_roll_inst_r, I_pitch_inst, I_roll_arm_inst_f, I_roll_arm_inst_r, I_pitch_arm_inst_f, I_pitch_arm_inst_r,  # Inertias, radii of rotation
-    tw_f, tw_r, wheel_base_f, wheel_base_r, rc_height_f, rc_height_r, pc_height, cm_height, tire_diam_f, tire_diam_r,  # Vehicle geometries
+    tw_f, tw_r, wheel_base_f, wheel_base_r, rc_height_f, rc_height_r, anti_dive, anti_squat, cm_height, tire_diam_f, tire_diam_r,  # Vehicle geometries
     K_ch, K_s_f, K_s_r, K_t_f, K_t_r, C_s_fr, C_s_fl, C_s_rr, C_s_rl, C_t_f, C_t_r,  # Springs and Dampers
     G_lat, G_long  # lateral and longitudinal acceleration in G
 ) -> np.array:
@@ -44,12 +44,12 @@ def get_x_matrix(
     lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(sm_r*sm, rc_height_r, tw_r)
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(usm_r, tire_diam_r, tw_r)
 
-    long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(sm, pc_height, cm_height, wheel_base_f)
-    long_sm_geo_LT_f = G_long * f.LongLT_sm_geometric_1g_end(sm, pc_height, wheel_base_f) 
+    long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(sm, sm_r, anti_dive, cm_height, wheel_base_f)
+    long_sm_geo_LT_f = G_long * f.LongLT_sm_geometric_1g_end(sm, sm_r, anti_dive, cm_height, wheel_base_f)
     long_usm_geo_LT_f = G_long * f.LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diam_f, tire_diam_r, wheel_base_f)
 
-    long_sm_elastic_LT_r = G_long * f.LongLT_sm_elastic_1g_end(sm, pc_height, cm_height, wheel_base_r)
-    long_sm_geo_LT_r = G_long * f.LongLT_sm_geometric_1g_end(sm, pc_height, wheel_base_r)
+    long_sm_elastic_LT_r = G_long * f.LongLT_sm_elastic_1g_end(sm, sm_f, anti_squat, cm_height, wheel_base_r)
+    long_sm_geo_LT_r = G_long * f.LongLT_sm_geometric_1g_end(sm, sm_f, anti_squat, cm_height, wheel_base_r)
     long_usm_geo_LT_r = G_long * f.LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diam_f, tire_diam_r, wheel_base_r)
 
     #  Load transfers from springs and dampers

@@ -75,6 +75,12 @@ parameters:
   pitch_center_height_ic2cp:
     - 9
     - 'in'
+  anti-dive:
+    - 0.20
+    - '-/-'
+  anti-squat:
+    - 0.80
+    - '-/-'
   tire_diameter_front:
     - 25.3
     - 'in'

@@ -93,6 +93,8 @@ class vehicle:
         self.pc_height_accel = vpd['pitch_center_height_accel']
         self.pc_height_decel = vpd['pitch_center_height_decel']
         self.pc_height_ic2cp = vpd['pitch_center_height_ic2cp']
+        self.anti_dive = vpd['anti-dive']
+        self.anti_squat = vpd['anti-squat']
 
         self.usm_fr = vpd['corner_unsprung_mass_fr']
         self.usm_fl = vpd['corner_unsprung_mass_fl']
