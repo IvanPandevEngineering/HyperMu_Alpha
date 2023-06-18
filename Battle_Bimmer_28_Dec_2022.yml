@@ -129,8 +129,18 @@ parameters:
   slow_rebound_damper_rate_r:
     - 4615 #600N @ 0.13m/s
     - 'N(m/s)'
-  # knee_force_compression:
-  # knee_force_rebound:
+  knee_speed_compression_f:
+    - 0.130
+    - 'm/s'
+  knee_speed_rebound_f:
+    - 0.130
+    - 'm/s'
+  knee_speed_compression_r:
+    - 0.130
+    - 'm/s'
+  knee_speed_rebound_r:
+    - 0.115
+    - 'm/s'
   fast_compression_damper_rate_f:
     - 2121 #700N @ 0.33m/s
     - 'N/(m/s)'

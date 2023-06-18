@@ -63,8 +63,8 @@ roll_angle_f, roll_angle_r, pitch_angle):
     fig, subplots = plt.subplots(2, 1, figsize=(14, 8))
     fig.suptitle('Race Telemetry on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
-    subplots[0].plot(force_function['loggingTime(txt)'], 180*force_function['motionRoll(rad)']/3.14+0.6, label='Control from Sensor Data (deg)')
-    subplots[0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
+    subplots[0].plot(force_function['loggingTime(txt)'], (180*force_function['motionRoll(rad)']/3.14)+.6, label='Control from Sensor Data (deg)')
+    #subplots[0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_f, label='roll angle (deg, f)')
     subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_r, label='roll angle (deg, r)')
     subplots[0].legend()

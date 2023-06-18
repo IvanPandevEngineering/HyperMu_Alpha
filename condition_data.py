@@ -92,3 +92,14 @@ def get_bump_function(timespan: int = 9, magnitude: float = 0.020, frequency: fl
     time_array = [x/time_res for x in range(len(c_array))]
 
     return time_array, c_array, dt
+
+'''
+Begin functions for dev purposes, exploring telemetry data.
+'''
+
+def from_sensor_log_iOS_app_dev(path: str):
+
+    print('Converting file to dataframe...')
+    data_in = pd.read_csv(path)
+
+    return data_in

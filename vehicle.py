@@ -56,15 +56,16 @@ class vehicle:
 
         self.C_lsc_f = vpd['slow_compression_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_lsc_r = vpd['slow_compression_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
-
         self.C_lsr_f = vpd['slow_rebound_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_lsr_r = vpd['slow_rebound_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
-
         self.C_hsc_f = vpd['fast_compression_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_hsc_r = vpd['fast_compression_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
-
         self.C_hsr_f = vpd['fast_rebound_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_hsr_r = vpd['fast_rebound_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
+        self.knee_c_f = vpd['knee_speed_compression_f'] / (vpd['WD_motion_ratio_f']**2)
+        self.knee_c_r = vpd['knee_speed_compression_r'] / (vpd['WD_motion_ratio_r']**2)
+        self.knee_r_f = vpd['knee_speed_rebound_f'] / (vpd['WD_motion_ratio_f']**2)
+        self.knee_r_r = vpd['knee_speed_rebound_r'] / (vpd['WD_motion_ratio_r']**2)
 
         self.tw_v, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v,\
         self.C_lsc_f_v, self.C_lsc_r_v,\
@@ -239,10 +240,19 @@ class vehicle:
             c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep']
 
             #TODO: must add motion ratios
-            C_s_fr = f.get_inst_damper_rate(C_lsc = self.C_lsc_f, C_lsr = self.C_lsr_f, a_d = a_d_fr, b_d = b_d_fr)
-            C_s_fl = f.get_inst_damper_rate(C_lsc = self.C_lsc_f, C_lsr = self.C_lsr_f, a_d = a_d_fl, b_d = b_d_fl)
-            C_s_rr = f.get_inst_damper_rate(C_lsc = self.C_lsc_r, C_lsr = self.C_lsr_r, a_d = a_d_rr, b_d = b_d_rr)
-            C_s_rl = f.get_inst_damper_rate(C_lsc = self.C_lsc_r, C_lsr = self.C_lsr_r, a_d = a_d_rl, b_d = b_d_rl)
+            #TODO: hsc = lsc*kneespeed + hsc, pass this forward to solver
+            C_s_fr = f.get_inst_damper_rate(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            )
+            C_s_fl = f.get_inst_damper_rate(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            )
+            C_s_rr = f.get_inst_damper_rate(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            )
+            C_s_rl = f.get_inst_damper_rate(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            )
 
             #TODO: shell functions for now, must add detail including front-rear inertias split per weight distribution
             I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
