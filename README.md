@@ -1,7 +1,8 @@
 # ChassisDyne
-## Multibody, time-dependent vehicle simulations by Ivan Pandev
+This repository is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. All rights reserved.
 
-ChassisDyne is a chassis response calculator solving for tire load, lateral load distribution, damper force, and many other variables over time, using either real-world acceleration telemetry, or synthetic acceleration and road surface data as inputs. The vehicle model consists of 6 solid bodies: Front chassis and rear chassis (connected by a torsion spring), and 4 unsprung masses connected to the chassis by variations of springs, roll bars, dampers, etc. The full definition is found in `chassis_model.py.`
+## Multibody, time-dependent vehicle simulations by Ivan Pandev
+ChassisDyne is a chassis response calculator solving for tire load, lateral load distribution, and other variables not directly measurable over time, using either real-world acceleration telemetry, or synthetic acceleration and road surface data as inputs. Intuitively speaking, ChassisDyne is a virtual 7-post shaker rig with significantly increased functionality, e.g. replaying chassis acceleration inputs as well as road surface inputs. The vehicle model consists of 6 solid bodies: Front chassis and rear chassis (connected by a torsion spring), and 4 unsprung suspension masses connected to the chassis by variations of springs, roll bars, dampers, etc. The full definition is found in `chassis_model.py.`
 
 ![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/demo1.png)
 
