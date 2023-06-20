@@ -2,7 +2,7 @@
 Ivan Pandev, March 2023
 
 This document defines the chassis model used in ChassisDyne, as a system of equations
-relating the wheel and tire displacements over time to chassis parameters such as
+relating the wheel and body displacements over time to chassis parameters such as
 springs, dampers, geometry, mass and inertia, etc.
 
 '''
@@ -65,9 +65,9 @@ def get_x_matrix(
     ride_damper_F_rr = C_s_rr * (a_d_rr - b_d_rr)
     ride_damper_F_rl = C_s_rl * (a_d_rl - b_d_rl)
 
-    #ARB
-    #Heave spring
-    #Heave damper
+    #  ARB
+    #  Heave spring
+    #  Heave damper
 
     tire_spring_F_fr = K_t_f * (b_fr - c_fr)
     tire_spring_F_fl = K_t_f * (b_fl - c_fl)
@@ -80,9 +80,10 @@ def get_x_matrix(
 
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
+    The last 4 rows are unsprung body inertias.
     '''
 
-    #TODO: Not complete, add r/l versions of roll arms and unique corner masses.
+    #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
 
     A_mat = np.array([
         [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - sm_f*sm/2),\
@@ -126,10 +127,7 @@ def get_x_matrix(
         [ - ride_spring_F_rl - ride_damper_F_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
     ])
 
-    a = np.linalg.inv(A_mat)
-    x_mat = np.matmul(a, B_mat)
-
-    return x_mat
+    return np.matmul(np.linalg.inv(A_mat), B_mat)
 
 def get_x_matrix_1Dtest(
     m: float,

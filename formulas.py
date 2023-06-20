@@ -266,13 +266,11 @@ Begin functions for supporting time-dependent solving below.
 def get_inst_damper_rate(C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r):
     if (a_d-b_d) > 0:
         if (a_d-b_d) > knee_c:
-            print('hsc entered')
             return C_hsc
         else:
             return C_lsc
     else:
         if (a_d-b_d) < -knee_r:
-            print('hsr entered')
             return C_hsr
         else:
             return C_lsr
