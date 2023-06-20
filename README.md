@@ -2,7 +2,9 @@
 This repository is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. All rights reserved.
 
 ## Multibody, time-dependent vehicle simulations by Ivan Pandev
-ChassisDyne is a chassis response calculator solving for tire load, lateral load distribution, and other variables not directly measurable over time, using either real-world acceleration telemetry, or synthetic acceleration and road surface data as inputs. Intuitively speaking, ChassisDyne is a virtual 7-post shaker rig with significantly increased functionality, e.g. replaying chassis acceleration inputs as well as road surface inputs. The vehicle model consists of 6 solid bodies: Front chassis and rear chassis (connected by a torsion spring), and 4 unsprung suspension masses connected to the chassis by variations of springs, roll bars, dampers, etc. The full definition is found in `chassis_model.py.`
+ChassisDyne is a chassis response calculator solving for tire load, lateral load distribution, and other variables not directly measurable over time, using either real-world acceleration telemetry, or synthetic acceleration and road surface data as inputs. Intuitively speaking, ChassisDyne is a virtual 7-post shaker rig with significantly increased functionality, e.g. replaying chassis acceleration inputs as well as road surface inputs.
+
+The vehicle model consists of 6 solid bodies: Front chassis and rear chassis (connected by a torsion spring), and 4 unsprung suspension masses connected to the chassis by variations of springs, roll bars, dampers, etc. The system of differential equations describing the model's response is found in `chassis_model.py.` The transient response of this model is then solved using Runge-Kutta methods in `RK4_iterator.py,` and variables of interest are collected.
 
 ![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/images/demo1.png)
 
@@ -81,3 +83,14 @@ Front Axle Mass Distribution: 52.973 %
 Left Mass Distribution: 51.549 %
 Cross-Wise Mass Distribution (FL/RR): 48.911 %
 ```
+
+## Real-World Correlation
+ChassisDyne can accept lateral and longitudinal g-force from telemetry as inputs. While some ChassisDyne outputs like instantaneous tire load are extremely difficult to measure directly and capture in telemetry, ChassisDyne also predicts measurable responses to g-force, such as roll and pitch angle. As a cursory validation of ChassisDyne outputs' correlation to real-world vehicle's behavior, its simulated roll and pitch angle outputs will be compared to the corresponding data from telemetry. This task is currently blocked since the last batch of race telemetry (see 'sample_telemetry/') shows evidence of the sensors shifting in attitude by as much as 0.7deg throughout the race course; a significant precision problem when maximum vehicle response is only 2-3deg. New sensor mounting and data collection is targeted by a racing event July 23rd, and correlation studies can resume after.
+
+## Ongoing development
+ChassisDyne's core functionality is practically complete, but much work remains on capturing increasingly-granular details of vehicle response. This includes but is not limited to:
+- High- and low- speed domain transitions of digressive dampers
+- Heave springs and dampers
+- Roll angle effects from engine torque
+
+Looking far ahead, ChassisDyne can also benefit from quality-of-life/ productization improvements such as a primitive GUI, synthetic input generator, and more generalized telemetry ingestion and reformatting.
