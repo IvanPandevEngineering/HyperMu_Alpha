@@ -87,7 +87,7 @@ Cross-Wise Mass Distribution (FL/RR): 48.911 %
 ## Real-World Correlation
 ChassisDyne can accept lateral and longitudinal g-force from telemetry as inputs. While some ChassisDyne outputs like instantaneous tire load are extremely difficult to measure directly and capture in telemetry, ChassisDyne also predicts measurable responses to g-force, such as roll and pitch angle. As a cursory validation of ChassisDyne outputs' correlation to real-world vehicle's behavior, its simulated roll and pitch angle outputs will be compared to the corresponding data from telemetry. This task is currently blocked since the last batch of race telemetry (see 'sample_telemetry/') shows evidence of the sensors shifting in attitude by as much as 0.7deg throughout the race course; a significant precision problem when maximum vehicle response is only 2-3deg. New sensor mounting and data collection is targeted by a racing event July 23rd, and correlation studies can resume after.
 
-## Ongoing development
+## Ongoing Development
 ChassisDyne's core functionality is practically complete, but much work remains on capturing increasingly-granular details of vehicle response. This includes but is not limited to:
 - High- and low- speed domain transitions of digressive dampers
 - Heave springs and dampers
