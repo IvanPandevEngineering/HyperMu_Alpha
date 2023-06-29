@@ -218,8 +218,9 @@ class vehicle:
         roll_angle_f, roll_angle_r, pitch_angle, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
-        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl = \
-        [],[],[],[],[],[],[],[],[],[],[],[],[]
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
+        [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
 
         print('Starting RK4 solver for G-replay...')
 
@@ -239,26 +240,6 @@ class vehicle:
             c_rr = row['c_rr']
             c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep']
 
-            #TODO: must add motion ratios
-            #TODO: hsc = lsc*kneespeed + hsc, pass this forward to solver
-            C_s_fr = f.get_inst_damper_rate(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-            )
-            C_s_fl = f.get_inst_damper_rate(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-            )
-            C_s_rr = f.get_inst_damper_rate(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-            )
-            C_s_rl = f.get_inst_damper_rate(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-            )
-
-            #TODO: shell functions for now, must add detail including front-rear inertias split per weight distribution
-            I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
-            I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, a_d_rr, a_d_rl, self.tw_r)
-            I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
-
             a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
             a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
             = \
@@ -267,8 +248,6 @@ class vehicle:
                 self,  # Many static vehicle parameters passed in self
                 a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
                 a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
-                I_roll_inst_f, I_roll_inst_r, I_pitch_inst, I_roll_arm_inst_f, I_roll_arm_inst_r, I_pitch_arm_inst_f, I_pitch_arm_inst_r,  # Inertias, radii of rotation
-                C_s_fr, C_s_fl, C_s_rr, C_s_rl,  # Springs and Dampers
                 G_lat, G_long, G_lat_half_next, G_long_half_next, G_lat_next, G_long_next  # lateral and longitudinal acceleration in G
             )
 
@@ -281,11 +260,26 @@ class vehicle:
             tire_load_fl.append(tire_load_fl_val)
             tire_load_rr.append(tire_load_rr_val)
             tire_load_rl.append(tire_load_rl_val)
-            #add motion ratios to damper vels
+
+            #damper vel is actually wheel vel, for now.
             damper_vel_fr.append(a_d_fr - b_d_fr)
             damper_vel_fl.append(a_d_fl - b_d_fl)
             damper_vel_rr.append(a_d_rr - b_d_rr)
             damper_vel_rl.append(a_d_rl - b_d_rl)
+
+            damper_force_fr.append(f.get_inst_damper_force(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            ))
+            damper_force_fl.append(f.get_inst_damper_force(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            ))
+            damper_force_rr.append(f.get_inst_damper_force(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            ))
+            damper_force_rl.append(f.get_inst_damper_force(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            ))
+
             roll_angle_f.append((a_fr - a_fl)*180/3.14)
             roll_angle_r.append((a_rr - a_rl)*180/3.14)
             pitch_angle.append((a_fr+a_fl)*180/(2*3.14) - (a_rr+a_rl)*180/(2*3.14))
@@ -301,6 +295,7 @@ class vehicle:
             force_function[1:],
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
             roll_angle_f, roll_angle_r, pitch_angle
         )
@@ -310,6 +305,7 @@ class vehicle:
         force_function, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
         roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
 
@@ -317,6 +313,7 @@ class vehicle:
             force_function,
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             lateral_load_dist_f, lateral_load_dist_r,
             roll_angle_f, roll_angle_r, pitch_angle
         )
@@ -326,6 +323,7 @@ class vehicle:
         force_function, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
         roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
 
@@ -333,6 +331,25 @@ class vehicle:
             force_function,
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
+            lateral_load_dist_f, lateral_load_dist_r,
+            roll_angle_f, roll_angle_r, pitch_angle
+        )
+
+    def damper_response(self, **kwargs):
+
+        force_function, \
+        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
+        lateral_load_dist_f, lateral_load_dist_r, \
+        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+
+        vis.damper_response(
+            force_function,
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             lateral_load_dist_f, lateral_load_dist_r,
             roll_angle_f, roll_angle_r, pitch_angle
         )

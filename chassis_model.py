@@ -11,12 +11,12 @@ import numpy as np
 import formulas as f
 
 def get_x_matrix(
+    self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
     a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
     sm, sm_f, sm_r, usm_f, usm_r,  # Masses
-    I_roll_inst_f, I_roll_inst_r, I_pitch_inst, I_roll_arm_inst_f, I_roll_arm_inst_r, I_pitch_arm_inst_f, I_pitch_arm_inst_r,  # Inertias, radii of rotation
     tw_f, tw_r, wheel_base_f, wheel_base_r, rc_height_f, rc_height_r, anti_dive, anti_squat, cm_height, tire_diam_f, tire_diam_r,  # Vehicle geometries
-    K_ch, K_s_f, K_s_r, K_t_f, K_t_r, C_s_fr, C_s_fl, C_s_rr, C_s_rl, C_t_f, C_t_r,  # Springs and Dampers
+    K_ch, K_s_f, K_s_r, K_t_f, K_t_r, C_t_f, C_t_r,  # Springs and Dampers
     G_lat, G_long  # lateral and longitudinal acceleration in G
 ) -> np.array:
     
@@ -34,6 +34,11 @@ def get_x_matrix(
     [b_rl_dd]
     ]
     '''
+
+    #  Get instantaneous body inertias
+    I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
+    I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, a_d_rr, a_d_rl, self.tw_r)
+    I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
     #  Load transfers from lat- and long- acceleration
     lat_sm_elastic_LT_f = G_lat * f.LatLT_sm_elastic_1g_axle(sm_f*sm, rc_height_f, cm_height, tw_f) #TODO: please clean up this notation sm_f*sm
@@ -60,10 +65,19 @@ def get_x_matrix(
     ride_spring_F_fl = K_s_f * (a_fl - b_fl)
     ride_spring_F_rr = K_s_r * (a_rr - b_rr)
     ride_spring_F_rl = K_s_r * (a_rl - b_rl)
-    ride_damper_F_fr = C_s_fr * (a_d_fr - b_d_fr)
-    ride_damper_F_fl = C_s_fl * (a_d_fl - b_d_fl)
-    ride_damper_F_rr = C_s_rr * (a_d_rr - b_d_rr)
-    ride_damper_F_rl = C_s_rl * (a_d_rl - b_d_rl)
+    
+    ride_damper_F_inst_fr = f.get_inst_damper_force(
+        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+    )
+    ride_damper_F_inst_fl = f.get_inst_damper_force(
+        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+    )
+    ride_damper_F_inst_rr = f.get_inst_damper_force(
+        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+    )
+    ride_damper_F_inst_rl = f.get_inst_damper_force(
+        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+    )
 
     #  ARB
     #  Heave spring
@@ -117,14 +131,14 @@ def get_x_matrix(
     ])
 
     B_mat = np.array([
-        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ride_damper_F_fr],
-        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl + ride_damper_F_fl],
-        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ride_damper_F_rr],
-        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl + ride_damper_F_rl],
-        [ - ride_spring_F_fr - ride_damper_F_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr],
-        [ - ride_spring_F_fl - ride_damper_F_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl],
-        [ - ride_spring_F_rr - ride_damper_F_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr],
-        [ - ride_spring_F_rl - ride_damper_F_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
+        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ride_damper_F_inst_fr],
+        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl + ride_damper_F_inst_fl],
+        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ride_damper_F_inst_rr],
+        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl + ride_damper_F_inst_rl],
+        [ - ride_spring_F_fr - ride_damper_F_inst_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr],
+        [ - ride_spring_F_fl - ride_damper_F_inst_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl],
+        [ - ride_spring_F_rr - ride_damper_F_inst_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr],
+        [ - ride_spring_F_rl - ride_damper_F_inst_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
     ])
 
     return np.matmul(np.linalg.inv(A_mat), B_mat)

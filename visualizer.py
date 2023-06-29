@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 def plot_response(force_function,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
 lateral_load_dist_f, lateral_load_dist_r,
 roll_angle_f, roll_angle_r, pitch_angle):
 
@@ -54,6 +55,7 @@ roll_angle_f, roll_angle_r, pitch_angle):
 def check_correlation(force_function,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
 lateral_load_dist_f, lateral_load_dist_r,
 roll_angle_f, roll_angle_r, pitch_angle):
 
@@ -75,6 +77,29 @@ roll_angle_f, roll_angle_r, pitch_angle):
     subplots[1].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
     subplots[1].legend()
     subplots[1].grid(True)
+
+    fig.tight_layout()
+    plt.show()
+
+def damper_response(force_function,
+tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
+lateral_load_dist_f, lateral_load_dist_r,
+roll_angle_f, roll_angle_r, pitch_angle):
+
+    print('Graphing...')
+
+    plt.style.use('seaborn-v0_8')
+    fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
+    fig.suptitle('Damper Response on Battle_Bimmer_28_Dec_2022', fontsize=14)
+
+    subplots.plot(damper_vel_fr, damper_force_fr, label='fr')
+    subplots.plot(damper_vel_fl, damper_force_fl, label='fl')
+    subplots.plot(damper_vel_rr, damper_force_rr, label='rr')
+    subplots.plot(damper_vel_rl, damper_force_rl, label='rl')
+    subplots.legend()
+    subplots.grid(True)
 
     fig.tight_layout()
     plt.show()

@@ -263,17 +263,19 @@ Begin functions for supporting time-dependent solving below.
 #TODO:Dummy functions still to finalize.
 '''
 
-def get_inst_damper_rate(C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r):
+def get_inst_damper_force(
+        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r,
+    ):
     if (a_d-b_d) > 0:
         if (a_d-b_d) > knee_c:
-            return C_hsc
+            return C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c
         else:
-            return C_lsc
+            return C_lsc * (a_d - b_d)
     else:
         if (a_d-b_d) < -knee_r:
-            return C_hsr
+            return C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r
         else:
-            return C_lsr
+            return C_lsr * (a_d - b_d)
 
 def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
     return I_roll, tw/2
