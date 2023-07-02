@@ -100,8 +100,10 @@ class vehicle:
 
         self.usm_fr = vpd['corner_unsprung_mass_fr']
         self.usm_fl = vpd['corner_unsprung_mass_fl']
+        self.usm_f = (self.usm_fl + self.usm_fr)/2
         self.usm_rr = vpd['corner_unsprung_mass_rr']
         self.usm_rl = vpd['corner_unsprung_mass_rl']
+        self.usm_r = (self.usm_rl + self.usm_rr)/2
 
         self.sm_fr = vpd['corner_mass_fr'] - vpd['corner_unsprung_mass_fr']
         self.sm_fl = vpd['corner_mass_fl'] - vpd['corner_unsprung_mass_fl']
@@ -112,6 +114,10 @@ class vehicle:
         self.m_f = (vpd['corner_mass_fr'] + vpd['corner_mass_fl']) / self.m
         self.sm = self.sm_fr + self.sm_fl + self.sm_rr + self.sm_rl
         self.sm_f = (self.sm_fr + self.sm_fl) / self.sm
+        self.sm_r = (self.sm_rr + self.sm_rl) / self.sm
+
+        self.wheel_base_f = self.wheel_base * (1 - self.m_f)
+        self.wheel_base_r = self.wheel_base * (self.m_f)
 
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
