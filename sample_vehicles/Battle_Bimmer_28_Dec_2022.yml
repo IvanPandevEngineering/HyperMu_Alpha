@@ -122,13 +122,13 @@ parameters:
     - 'N/(m/s)'
   slow_compression_damper_rate_r:
     - 2384 #310N @ 0.13m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
   slow_rebound_damper_rate_f:
     - 6153 #800N @ 0.13m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
   slow_rebound_damper_rate_r:
     - 4615 #600N @ 0.13m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
   knee_speed_compression_f:
     - 0.130
     - 'm/s'
@@ -142,15 +142,18 @@ parameters:
     - 0.115
     - 'm/s'
   fast_compression_damper_rate_f:
-    - 2121 #700N @ 0.33m/s
+    - 2121 #700N @ 0.33m/s 
     - 'N/(m/s)'
   fast_compression_damper_rate_r:
     - 1364 #450N @ 0.33m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
   fast_rebound_damper_rate_f:
     - 3939 #1300N @ 0.33m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
   fast_rebound_damper_rate_r:
     - 3485 #1150N @ 0.33m/s
-    - 'N(m/s)'
+    - 'N/(m/s)'
+  hysteresis_factor:
+    - 10
+    - 'N/(m/(s**2))'
 ...
