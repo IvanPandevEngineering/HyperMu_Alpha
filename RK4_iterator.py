@@ -21,7 +21,7 @@ def RK4_step(
         a_d_fr = a_d_fr, a_d_fl = a_d_fl, a_d_rr = a_d_rr, a_d_rl = a_d_rl, b_d_fr = b_d_fr, b_d_fl = b_d_fl, b_d_rr = b_d_rr, b_d_rl = b_d_rl, c_d_fr = c_d_fr, c_d_fl = c_d_fl, c_d_rr = c_d_rr, c_d_rl = c_d_rl,  # Node velocity inputs
         sm = self.sm, sm_f = self.sm_f, sm_r = (1 - self.sm_f), usm_f = (self.usm_fr + self.usm_fl)/2, usm_r = (self.usm_rr + self.usm_rl)/2,  # Masses
         tw_f = self.tw_f, tw_r = self.tw_r, wheel_base_f = self.wheel_base * (1 - self.m_f), wheel_base_r = self.wheel_base * self.m_f, rc_height_f = self.rc_height_f, rc_height_r = self.rc_height_r, anti_dive = self.anti_dive, anti_squat = self.anti_squat, cm_height = self.cm_height, tire_diam_f = self.tire_diam_f, tire_diam_r = self.tire_diam_r,  # Vehicle geometries
-        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
+        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r, H_C_s = self.H_C_s,  # Springs and Dampers
         G_lat = G_lat, G_long = G_long  # lateral and longitudinal acceleration in G
     )
     x1_a_fr = dt * a_d_fr
@@ -32,7 +32,7 @@ def RK4_step(
     x1_b_fl = dt * b_d_fl
     x1_b_rr = dt * b_d_rr
     x1_b_rl = dt * b_d_rl
-    v1_a_d_fr = dt * F_mat[0][0]
+    v1_a_d_fr = dt * F_mat[0][0] 
     v1_a_d_fl = dt * F_mat[1][0]
     v1_a_d_rr = dt * F_mat[2][0]
     v1_a_d_rl = dt * F_mat[3][0]
@@ -47,7 +47,7 @@ def RK4_step(
         a_d_fr = a_d_fr + v1_a_d_fr/2, a_d_fl = a_d_fl + v1_a_d_fl/2, a_d_rr = a_d_rr + v1_a_d_rr/2, a_d_rl = a_d_rl + v1_a_d_rl/2, b_d_fr = b_d_fr + v1_b_d_fr/2, b_d_fl = b_d_fl + v1_b_d_fl/2, b_d_rr = b_d_rr + v1_b_d_rr/2, b_d_rl = b_d_rl + v1_b_d_rl/2, c_d_fr = c_d_fr, c_d_fl = c_d_fl, c_d_rr = c_d_rr, c_d_rl = c_d_rl,  # Node velocity inputs
         sm = self.sm, sm_f = self.sm_f, sm_r = (1 - self.sm_f), usm_f = (self.usm_fr + self.usm_fl)/2, usm_r = (self.usm_rr + self.usm_rl)/2,  # Masses
         tw_f = self.tw_f, tw_r = self.tw_r, wheel_base_f = self.wheel_base * (1 - self.m_f), wheel_base_r = self.wheel_base * self.m_f, rc_height_f = self.rc_height_f, rc_height_r = self.rc_height_r, anti_dive = self.anti_dive, anti_squat = self.anti_squat, cm_height = self.cm_height, tire_diam_f = self.tire_diam_f, tire_diam_r = self.tire_diam_r,  # Vehicle geometries
-        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
+        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r, H_C_s = self.H_C_s,  # Springs and Dampers
         G_lat = G_lat_half_next, G_long = G_long_half_next  # lateral and longitudinal acceleration in G
     )
     x2_a_fr = dt * (a_d_fr + v1_a_d_fr/2)
@@ -73,7 +73,7 @@ def RK4_step(
         a_d_fr = a_d_fr + v2_a_d_fr/2, a_d_fl = a_d_fl + v2_a_d_fl/2, a_d_rr = a_d_rr + v2_a_d_rr/2, a_d_rl = a_d_rl + v2_a_d_rl/2, b_d_fr = b_d_fr + v2_b_d_fr/2, b_d_fl = b_d_fl + v2_b_d_fl/2, b_d_rr = b_d_rr + v2_b_d_rr/2, b_d_rl = b_d_rl + v2_b_d_rl/2, c_d_fr = c_d_fr, c_d_fl = c_d_fl, c_d_rr = c_d_rr, c_d_rl = c_d_rl,  # Node velocity inputs
         sm = self.sm, sm_f = self.sm_f, sm_r = (1 - self.sm_f), usm_f = (self.usm_fr + self.usm_fl)/2, usm_r = (self.usm_rr + self.usm_rl)/2,  # Masses
         tw_f = self.tw_f, tw_r = self.tw_r, wheel_base_f = self.wheel_base * (1 - self.m_f), wheel_base_r = self.wheel_base * self.m_f, rc_height_f = self.rc_height_f, rc_height_r = self.rc_height_r, anti_dive = self.anti_dive, anti_squat = self.anti_squat, cm_height = self.cm_height, tire_diam_f = self.tire_diam_f, tire_diam_r = self.tire_diam_r,  # Vehicle geometries
-        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
+        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r, H_C_s = self.H_C_s,  # Springs and Dampers
         G_lat = G_lat_half_next, G_long = G_long_half_next  # lateral and longitudinal acceleration in G
     )
     x3_a_fr = dt * (a_d_fr + v2_a_d_fr/2)
@@ -99,7 +99,7 @@ def RK4_step(
         a_d_fr = a_d_fr + v3_a_d_fr, a_d_fl = a_d_fl + v3_a_d_fl, a_d_rr = a_d_rr + v3_a_d_rr, a_d_rl = a_d_rl + v3_a_d_rl, b_d_fr = b_d_fr + v3_b_d_fr, b_d_fl = b_d_fl + v3_b_d_fl, b_d_rr = b_d_rr + v3_b_d_rr, b_d_rl = b_d_rl + v3_b_d_rl, c_d_fr = c_d_fr, c_d_fl = c_d_fl, c_d_rr = c_d_rr, c_d_rl = c_d_rl,  # Node velocity inputs
         sm = self.sm, sm_f = self.sm_f, sm_r = (1 - self.sm_f), usm_f = (self.usm_fr + self.usm_fl)/2, usm_r = (self.usm_rr + self.usm_rl)/2,  # Masses
         tw_f = self.tw_f, tw_r = self.tw_r, wheel_base_f = self.wheel_base * (1 - self.m_f), wheel_base_r = self.wheel_base * self.m_f, rc_height_f = self.rc_height_f, rc_height_r = self.rc_height_r, anti_dive = self.anti_dive, anti_squat = self.anti_squat, cm_height = self.cm_height, tire_diam_f = self.tire_diam_f, tire_diam_r = self.tire_diam_r,  # Vehicle geometries
-        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r,  # Springs and Dampers
+        K_ch = self.K_ch, K_s_f = self.K_s_f, K_s_r = self.K_s_r, K_t_f = self.K_t_f, K_t_r = self.K_t_r, C_t_f = self.C_t_f, C_t_r = self.C_t_r, H_C_s = self.H_C_s,  # Springs and Dampers
         G_lat = G_lat_next, G_long = G_long_next  # lateral and longitudinal acceleration in G
     )
     x4_a_fr = dt * (a_d_fr + v3_a_d_fr)
@@ -142,6 +142,8 @@ def RK4_step(
         b_fr_next, b_fl_next, b_rr_next, b_rl_next,
         a_d_fr_next, a_d_fl_next, a_d_rr_next, a_d_rl_next,
         b_d_fr_next, b_d_fl_next, b_d_rr_next, b_d_rl_next, 
+        F_mat_next[0], F_mat_next[1], F_mat_next[2], F_mat_next[3],  #a_dd_next
+        F_mat_next[4], F_mat_next[5], F_mat_next[6], F_mat_next[7]  #b_dd_next
     )
 
 def RK4_iterator_1Dtest(

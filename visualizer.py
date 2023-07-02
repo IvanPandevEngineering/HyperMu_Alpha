@@ -94,10 +94,10 @@ roll_angle_f, roll_angle_r, pitch_angle):
     fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
     fig.suptitle('Damper Response on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
-    subplots.plot(damper_vel_fr, damper_force_fr, label='fr')
-    subplots.plot(damper_vel_fl, damper_force_fl, label='fl')
-    subplots.plot(damper_vel_rr, damper_force_rr, label='rr')
-    subplots.plot(damper_vel_rl, damper_force_rl, label='rl')
+    subplots.scatter(damper_vel_fr, damper_force_fr, label='fr')
+    subplots.scatter(damper_vel_fl, damper_force_fl, label='fl')
+    subplots.scatter(damper_vel_rr, damper_force_rr, label='rr')
+    subplots.scatter(damper_vel_rl, damper_force_rl, label='rl')
     subplots.legend()
     subplots.grid(True)
 

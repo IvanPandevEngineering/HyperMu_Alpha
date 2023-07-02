@@ -66,6 +66,7 @@ class vehicle:
         self.knee_c_r = vpd['knee_speed_compression_r'] / (vpd['WD_motion_ratio_r']**2)
         self.knee_r_f = vpd['knee_speed_rebound_f'] / (vpd['WD_motion_ratio_f']**2)
         self.knee_r_r = vpd['knee_speed_rebound_r'] / (vpd['WD_motion_ratio_r']**2)
+        self.H_C_s = vpd['hysteresis_factor']
 
         self.tw_v, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v,\
         self.C_lsc_f_v, self.C_lsc_r_v,\
@@ -242,6 +243,7 @@ class vehicle:
 
             a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
             a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
+            a_dd_fr, a_dd_fl, a_dd_rr, a_dd_rl, b_dd_fr, b_dd_fl, b_dd_rr, b_dd_rl, \
             = \
             RK4_step(
                 dt, 
@@ -267,17 +269,17 @@ class vehicle:
             damper_vel_rr.append(a_d_rr - b_d_rr)
             damper_vel_rl.append(a_d_rl - b_d_rl)
 
-            damper_force_fr.append(f.get_inst_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            damper_force_fr.append(f.get_damper_force(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, a_dd = a_dd_fr, b_d = b_d_fr, b_dd = b_dd_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f, H_C_s = self.H_C_s
             ))
-            damper_force_fl.append(f.get_inst_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+            damper_force_fl.append(f.get_damper_force(
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, a_dd = a_dd_fl, b_d = b_d_fl, b_dd = b_dd_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f, H_C_s = self.H_C_s
             ))
-            damper_force_rr.append(f.get_inst_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            damper_force_rr.append(f.get_damper_force(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, a_dd = a_dd_rr, b_d = b_d_rr, b_dd = b_dd_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r, H_C_s = self.H_C_s
             ))
-            damper_force_rl.append(f.get_inst_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+            damper_force_rl.append(f.get_damper_force(
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, a_dd = a_dd_rl, b_d = b_d_rl, b_dd = b_dd_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r, H_C_s = self.H_C_s
             ))
 
             roll_angle_f.append((a_fr - a_fl)*180/3.14)

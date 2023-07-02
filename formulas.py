@@ -263,19 +263,33 @@ Begin functions for supporting time-dependent solving below.
 #TODO:Dummy functions still to finalize.
 '''
 
-def get_inst_damper_force(
-        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r,
+def get_ideal_damper_force(
+        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
     ):
-    if (a_d-b_d) > 0:
-        if (a_d-b_d) > knee_c:
-            return C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c
-        else:
-            return C_lsc * (a_d - b_d)
-    else:
-        if (a_d-b_d) < -knee_r:
-            return C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r
-        else:
-            return C_lsr * (a_d - b_d)
+    if (a_d-b_d) > 0:  # Compression domain
+        if (a_d-b_d) > knee_c:  # High-speed compression domain
+            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c)
+        else:  # Low-speed compression domain
+            return (C_lsc * (a_d - b_d))
+    else:  # Rebound domain
+        if (a_d-b_d) < -knee_r:  # High-speed rebound domain
+            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r)
+        else:  # Low-speed rebound domain
+            return (C_lsr * (a_d - b_d))
+
+def get_damper_force(
+        C_lsc, C_hsc, C_lsr, C_hsr, a_d, a_dd, b_d, b_dd, knee_c, knee_r, H_C_s
+    ):
+    if (a_d-b_d) > 0:  # Compression domain
+        if (a_d-b_d) > knee_c:  # High-speed compression domain
+            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c) + H_C_s*(a_dd - b_dd)
+        else:  # Low-speed compression domain
+            return (C_lsc * (a_d - b_d)) + H_C_s*(a_dd - b_dd)
+    else:  # Rebound domain
+        if (a_d-b_d) < -knee_r:  # High-speed rebound domain
+            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r) - H_C_s*(a_dd - b_dd)
+        else:  # Low-speed rebound domain
+            return (C_lsr * (a_d - b_d)) - H_C_s*(a_dd - b_dd)
 
 def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
     return I_roll, tw/2
