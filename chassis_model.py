@@ -9,11 +9,17 @@ springs, dampers, geometry, mass and inertia, etc.
 
 import numpy as np
 import formulas as f
+from collections import namedtuple
+
+chassis_state = namedtuple('chassis_state',
+    ['a_fr', 'a_fl', 'a_rr', 'a_rl', 'b_fr', 'b_fl', 'b_rr', 'b_rl', 'c_fr', 'c_fl', 'c_rr', 'c_rl',\
+    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl',\
+    'a_dd_fr', 'a_dd_fl', 'a_dd_rr', 'a_dd_rl', 'b_dd_fr', 'b_dd_fl', 'b_dd_rr', 'b_dd_rl', 'c_dd_fr', 'c_dd_fl', 'c_dd_rr', 'c_dd_rl']
+)
 
 def get_x_matrix(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
-    a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
-    a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
+    state,
     G_lat, G_long  # lateral and longitudinal acceleration in G
 ) -> np.array:
     
@@ -33,8 +39,8 @@ def get_x_matrix(
     '''
 
     #  Get instantaneous body inertias
-    I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, a_d_fr, a_d_fl, self.tw_f)
-    I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, a_d_rr, a_d_rl, self.tw_r)
+    I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, state.a_d_fr, state.a_d_fl, self.tw_f)
+    I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, state.a_d_rr, state.a_d_rl, self.tw_r)
     I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
     #  Load transfers from lat- and long- acceleration
@@ -56,38 +62,38 @@ def get_x_matrix(
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
-    chassis_flex_LT_f = self.K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (self.tw_f / 2)
-    chassis_flex_LT_r = self.K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (self.tw_r / 2)
-    ride_spring_F_fr = self.K_s_f * (a_fr - b_fr)
-    ride_spring_F_fl = self.K_s_f * (a_fl - b_fl)
-    ride_spring_F_rr = self.K_s_r * (a_rr - b_rr)
-    ride_spring_F_rl = self.K_s_r * (a_rl - b_rl)
+    chassis_flex_LT_f = self.K_ch * ((state.a_fr - state.a_fl) - (state.a_rr - state.a_rl)) / (self.tw_f / 2)
+    chassis_flex_LT_r = self.K_ch * ((state.a_fr - state.a_fl) - (state.a_rr - state.a_rl)) / (self.tw_r / 2)
+    ride_spring_F_fr = self.K_s_f * (state.a_fr - state.b_fr)
+    ride_spring_F_fl = self.K_s_f * (state.a_fl - state.b_fl)
+    ride_spring_F_rr = self.K_s_r * (state.a_rr - state.b_rr)
+    ride_spring_F_rl = self.K_s_r * (state.a_rl - state.b_rl)
     
     ride_damper_F_ideal_fr = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, b_d = b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
     )
     ride_damper_F_ideal_fl = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, b_d = b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
+        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
     )
     ride_damper_F_ideal_rr = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, b_d = b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
     )
     ride_damper_F_ideal_rl = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, b_d = b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
+        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
     )
 
     #  ARB
     #  Heave spring
     #  Heave damper
 
-    tire_spring_F_fr = self.K_t_f * (b_fr - c_fr)
-    tire_spring_F_fl = self.K_t_f * (b_fl - c_fl)
-    tire_spring_F_rr = self.K_t_r * (b_rr - c_rr)
-    tire_spring_F_rl = self.K_t_r * (b_rl - c_rl)
-    tire_damper_F_fr = self.C_t_f * (b_d_fr - c_d_fr)
-    tire_damper_F_fl = self.C_t_f * (b_d_fl - c_d_fl)
-    tire_damper_F_rr = self.C_t_r * (b_d_rr - c_d_rr)
-    tire_damper_F_rl = self.C_t_r * (b_d_rl - c_d_rl)
+    tire_spring_F_fr = self.K_t_f * (state.b_fr - state.c_fr)
+    tire_spring_F_fl = self.K_t_f * (state.b_fl - state.c_fl)
+    tire_spring_F_rr = self.K_t_r * (state.b_rr - state.c_rr)
+    tire_spring_F_rl = self.K_t_r * (state.b_rl - state.c_rl)
+    tire_damper_F_fr = self.C_t_f * (state.b_d_fr - state.c_d_fr)
+    tire_damper_F_fl = self.C_t_f * (state.b_d_fl - state.c_d_fl)
+    tire_damper_F_rr = self.C_t_r * (state.b_d_rr - state.c_d_rr)
+    tire_damper_F_rl = self.C_t_r * (state.b_d_rl - state.c_d_rl)
 
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
