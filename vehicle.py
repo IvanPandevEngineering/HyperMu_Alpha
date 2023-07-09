@@ -3,7 +3,7 @@ import numpy as np
 import formulas as f
 import condition_data as cd
 from virtual_params import virtual_params
-from RK4_iterator import RK4_step, RK4_iterator_1Dtest
+from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 from chassis_model import chassis_state
 
@@ -232,18 +232,34 @@ class vehicle:
         for i, row in force_function.iterrows():
 
             dt = force_function['timestep'][i+1]
-            inputs_dt = {}
 
-            inputs_dt['G_lat'] = row['accelerometerAccelerationX(G)']
-            inputs_dt['G_lat_next'] = force_function['accelerometerAccelerationX(G)'][i+1]
-            inputs_dt['G_lat_half_next'] = (inputs_dt['G_lat'] + inputs_dt['G_lat_next']) /2
-            inputs_dt['G_long'] = row['accelerometerAccelerationY(G)']
-            inputs_dt['G_long_next'] = force_function['accelerometerAccelerationY(G)'][i+1]
-            inputs_dt['G_long_half_next'] = (inputs_dt['G_long'] + inputs_dt['G_long_next']) /2
+            inputs_dt = time_dependent_inputs(
+                G_lat = row['accelerometerAccelerationX(G)'],
+                G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
+                G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
+                G_long = row['accelerometerAccelerationY(G)'],
+                G_long_next = force_function['accelerometerAccelerationY(G)'][i+1],
+                G_long_half_next = (row['accelerometerAccelerationY(G)'] + force_function['accelerometerAccelerationY(G)'][i+1])/2,
+                c_fr = row['c_fr'],
+                c_fl = 0,
+                c_rr = row['c_rr'],
+                c_rl = 0,
+                c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
+                c_d_fl = 0,
+                c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
+                c_d_rl = 0,
+                c_fr_next = force_function['c_fr'][i+1],
+                c_fl_next = 0,
+                c_rr_next = force_function['c_rr'][i+1],
+                c_rl_next = 0,
+                c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
+                c_d_fl_next = 0,
+                c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
+                c_d_rl_next = 0,
+            )
 
             state = RK4_step(
-                dt, self, state,
-                inputs_dt
+                dt = dt, self = self, state = state, inputs_dt = inputs_dt
             )
 
             tire_load_fr.append(f.get_tire_load(self, b = state.b_fr, b_d = state.b_d_fr, c = state.c_fr, c_d = state.c_d_fr, m_dist = self.m_f)) 
@@ -276,13 +292,13 @@ class vehicle:
             lateral_load_dist_f.append(tire_load_fr[i] / (tire_load_fr[i] + tire_load_fl[i]))
             lateral_load_dist_r.append(tire_load_rr[i] / (tire_load_rr[i] + tire_load_rl[i]))
 
-            if i == len(force_function)-2:
+            if i == len(force_function)-3:
                 break
 
         print('Solver complete.')
 
         return(
-            force_function[1:],
+            force_function[2:],
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,

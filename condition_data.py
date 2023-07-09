@@ -64,11 +64,11 @@ def get_demo_G_function(
     G_long_array[175:] = -long_magnitude
 
     c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
-    c_fr_array[130:160] = -0.018  # m
+    c_fr_array[130:160] = -0.008  # m
     c_fr_array = custom_smooth(c_fr_array, 3)
 
     c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
-    c_rr_array[150:180] = -0.020  # m
+    c_rr_array[150:180] = -0.010  # m
     c_rr_array = custom_smooth(c_rr_array, 3)
 
     time_array = [x/time_res for x in range(len(G_lat_array))]

@@ -6,6 +6,13 @@ numerical iteration method to solve the x_dd matrix over time.
 '''
 
 import chassis_model as model
+from collections import namedtuple
+
+time_dependent_inputs = namedtuple('time_dependent_inputs',
+    ['G_lat', 'G_lat_half_next', 'G_lat_next', 'G_long', 'G_long_half_next', 'G_long_next',
+     'c_fr', 'c_fl', 'c_rr', 'c_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl',
+     'c_fr_next', 'c_fl_next', 'c_rr_next', 'c_rl_next', 'c_d_fr_next', 'c_d_fl_next', 'c_d_rr_next', 'c_d_rl_next']
+)
 
 def RK4_step(
     dt, self, state, inputs_dt
@@ -13,7 +20,7 @@ def RK4_step(
 
     F_mat = model.get_dd_matrix(
         self = self, state = state,
-        G_lat = inputs_dt['G_lat'], G_long = inputs_dt['G_long']  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat, G_long = inputs_dt.G_long  # lateral and longitudinal acceleration in G
     )
 
     x1_a_fr = dt * state.a_d_fr
@@ -40,14 +47,14 @@ def RK4_step(
         a_d_fr = state.a_d_fr + v1_a_d_fr/2, a_d_fl = state.a_d_fl + v1_a_d_fl/2, a_d_rr = state.a_d_rr + v1_a_d_rr/2, a_d_rl = state.a_d_rl + v1_a_d_rl/2,
         b_d_fr = state.b_d_fr + v1_b_d_fr/2, b_d_fl = state.b_d_fl + v1_b_d_fl/2, b_d_rr = state.b_d_rr + v1_b_d_rr/2, b_d_rl = state.b_d_rl + v1_b_d_rl/2,
 
-        c_fr = state.c_fr, c_fl = state.c_fl, c_rr = state.c_rr, c_rl = state.c_rl,
-        c_d_fr = state.c_d_fr, c_d_fl = state.c_d_fl, c_d_rr = state.c_d_rr, c_d_rl = state.c_d_rl
+        c_fr = (inputs_dt.c_fr+inputs_dt.c_fr_next)/2, c_fl = (inputs_dt.c_fl+inputs_dt.c_fl_next)/2, c_rr = (inputs_dt.c_rr+inputs_dt.c_rr_next)/2, c_rl = (inputs_dt.c_rl+inputs_dt.c_rl_next)/2,
+        c_d_fr = (inputs_dt.c_d_fr+inputs_dt.c_d_fr_next)/2, c_d_fl = (inputs_dt.c_d_fl+inputs_dt.c_d_fl_next)/2, c_d_rr = (inputs_dt.c_d_rr+inputs_dt.c_d_rr_next)/2, c_d_rl = (inputs_dt.c_d_rl+inputs_dt.c_d_rl_next)/2
     )
 
     F_mat_half_next_1 = model.get_dd_matrix(
         self = self,
         state = RK_state_1,
-        G_lat = inputs_dt['G_lat_half_next'], G_long = inputs_dt['G_long_half_next']  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next  # lateral and longitudinal acceleration in G
     )
 
     x2_a_fr = dt * (state.a_d_fr + v1_a_d_fr/2)
@@ -74,14 +81,14 @@ def RK4_step(
         a_d_fr = state.a_d_fr + v2_a_d_fr/2, a_d_fl = state.a_d_fl + v2_a_d_fl/2, a_d_rr = state.a_d_rr + v2_a_d_rr/2, a_d_rl = state.a_d_rl + v2_a_d_rl/2,
         b_d_fr = state.b_d_fr + v2_b_d_fr/2, b_d_fl = state.b_d_fl + v2_b_d_fl/2, b_d_rr = state.b_d_rr + v2_b_d_rr/2, b_d_rl = state.b_d_rl + v2_b_d_rl/2,
 
-        c_fr = state.c_fr, c_fl = state.c_fl, c_rr = state.c_rr, c_rl = state.c_rl,
-        c_d_fr = state.c_d_fr, c_d_fl = state.c_d_fl, c_d_rr = state.c_d_rr, c_d_rl = state.c_d_rl
+        c_fr = (inputs_dt.c_fr+inputs_dt.c_fr_next)/2, c_fl = (inputs_dt.c_fl+inputs_dt.c_fl_next)/2, c_rr = (inputs_dt.c_rr+inputs_dt.c_rr_next)/2, c_rl = (inputs_dt.c_rl+inputs_dt.c_rl_next)/2,
+        c_d_fr = (inputs_dt.c_d_fr+inputs_dt.c_d_fr_next)/2, c_d_fl = (inputs_dt.c_d_fl+inputs_dt.c_d_fl_next)/2, c_d_rr = (inputs_dt.c_d_rr+inputs_dt.c_d_rr_next)/2, c_d_rl = (inputs_dt.c_d_rl+inputs_dt.c_d_rl_next)/2
     )
     
     F_mat_half_next_2 = model.get_dd_matrix(
         self = self,
         state = RK_state_2,
-        G_lat = inputs_dt['G_lat_half_next'], G_long = inputs_dt['G_long_half_next']  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next  # lateral and longitudinal acceleration in G
     )
 
     x3_a_fr = dt * (state.a_d_fr + v2_a_d_fr/2)
@@ -107,16 +114,16 @@ def RK4_step(
         a_d_fr = state.a_d_fr + v3_a_d_fr, a_d_fl = state.a_d_fl + v3_a_d_fl, a_d_rr = state.a_d_rr + v3_a_d_rr, a_d_rl = state.a_d_rl + v3_a_d_rl,
         b_d_fr = state.b_d_fr + v3_b_d_fr, b_d_fl = state.b_d_fl + v3_b_d_fl, b_d_rr = state.b_d_rr + v3_b_d_rr, b_d_rl = state.b_d_rl + v3_b_d_rl,
 
-        c_fr = state.c_fr, c_fl = state.c_fl, c_rr = state.c_rr, c_rl = state.c_rl,
-        c_d_fr = state.c_d_fr, c_d_fl = state.c_d_fl, c_d_rr = state.c_d_rr, c_d_rl = state.c_d_rl
+        c_fr = inputs_dt.c_fr_next, c_fl = inputs_dt.c_fl_next, c_rr = inputs_dt.c_rr_next, c_rl = inputs_dt.c_rl_next,
+        c_d_fr = inputs_dt.c_d_fr_next, c_d_fl = inputs_dt.c_d_fl_next, c_d_rr = inputs_dt.c_d_rr_next, c_d_rl = inputs_dt.c_d_rl_next
     )
 
     F_mat_next = model.get_dd_matrix(
         self = self,
         state = RK_state_3,
-        G_lat = inputs_dt['G_lat_next'], G_long = inputs_dt['G_long_next']  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_next, G_long = inputs_dt.G_long_next  # lateral and longitudinal acceleration in G
     )
-    
+
     x4_a_fr = dt * (state.a_d_fr + v3_a_d_fr)
     x4_a_fl = dt * (state.a_d_fl + v3_a_d_fl)
     x4_a_rr = dt * (state.a_d_rr + v3_a_d_rr)
