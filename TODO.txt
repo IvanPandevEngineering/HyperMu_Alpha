@@ -1,0 +1,15 @@
+HIGH PRIORITY
+- add road surface functionality back in
+    - should inputs_dt be a dict or named tuple?
+X remove hysteresis as defined currently
+- refactor where all params of interest are calculated
+
+LOW PRIORITY
+- labeled axes on printouts
+- multiple plotting functions for either G-replay or Shaker Rig
+- separate plotting file
+- create one G = 9.80655 global variable in functions.py and otherwise
+
+POTENTIAL TASKS
+- command line actions
+- simple GUI

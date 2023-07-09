@@ -13,11 +13,10 @@ from collections import namedtuple
 
 chassis_state = namedtuple('chassis_state',
     ['a_fr', 'a_fl', 'a_rr', 'a_rl', 'b_fr', 'b_fl', 'b_rr', 'b_rl', 'c_fr', 'c_fl', 'c_rr', 'c_rl',\
-    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl',\
-    'a_dd_fr', 'a_dd_fl', 'a_dd_rr', 'a_dd_rl', 'b_dd_fr', 'b_dd_fl', 'b_dd_rr', 'b_dd_rl', 'c_dd_fr', 'c_dd_fl', 'c_dd_rr', 'c_dd_rl']
+    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
 )
 
-def get_x_matrix(
+def get_dd_matrix(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     state,
     G_lat, G_long  # lateral and longitudinal acceleration in G
@@ -103,34 +102,34 @@ def get_x_matrix(
     #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
 
     A_mat = np.array([
-        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - self.H_C_s,\
+        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2),\
          ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         self.H_C_s, 0, 0, 0],  # Node a_dd_fr
+         0, 0, 0, 0],  # Node a_dd_fr
 
         [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - self.H_C_s,\
+         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         0, self.H_C_s, 0, 0],  # Node a_dd_fl
+         0, 0, 0, 0],  # Node a_dd_fl
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2) - self.H_C_s,\
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         0, 0, self.H_C_s, 0],  # Node a_dd_rr
+         0, 0, 0, 0],  # Node a_dd_rr
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2) - self.H_C_s,\
-         0, 0, 0, self.H_C_s],  # Node a_dd_rl
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
+         0, 0, 0, 0],  # Node a_dd_rl
 
-        [- self.H_C_s, 0, 0, 0, (- self.usm_f + self.H_C_s), 0, 0, 0],  # Node b_fr
-        [0, - self.H_C_s, 0, 0, 0, (- self.usm_f + self.H_C_s), 0, 0],  # Node b_fl
-        [0, 0, - self.H_C_s, 0, 0, 0, (- self.usm_r + self.H_C_s), 0],  # Node b_rr
-        [0, 0, 0, - self.H_C_s, 0, 0, 0, (- self.usm_r + self.H_C_s)]  # Node b_rl
+        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # Node b_fr
+        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # Node b_fl
+        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # Node b_rr
+        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_rl
     ])
 
     B_mat = np.array([
