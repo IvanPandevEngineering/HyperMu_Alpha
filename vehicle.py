@@ -3,9 +3,10 @@ import numpy as np
 import formulas as f
 import condition_data as cd
 from virtual_params import virtual_params
-import chassis_model as model
-from RK4_iterator import RK4_step, RK4_iterator_1Dtest
+from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
+from chassis_model import chassis_state
+import csv
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -66,7 +67,6 @@ class vehicle:
         self.knee_c_r = vpd['knee_speed_compression_r'] / (vpd['WD_motion_ratio_r']**2)
         self.knee_r_f = vpd['knee_speed_rebound_f'] / (vpd['WD_motion_ratio_f']**2)
         self.knee_r_r = vpd['knee_speed_rebound_r'] / (vpd['WD_motion_ratio_r']**2)
-        self.H_C_s = vpd['hysteresis_factor']
 
         self.tw_v, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v,\
         self.C_lsc_f_v, self.C_lsc_r_v,\
@@ -112,6 +112,7 @@ class vehicle:
 
         self.m = vpd['corner_mass_fr'] + vpd['corner_mass_fl'] + vpd['corner_mass_rr'] + vpd['corner_mass_rl']
         self.m_f = (vpd['corner_mass_fr'] + vpd['corner_mass_fl']) / self.m
+        self.m_r = (vpd['corner_mass_rr'] + vpd['corner_mass_rl']) / self.m
         self.sm = self.sm_fr + self.sm_fl + self.sm_rr + self.sm_rl
         self.sm_f = (self.sm_fr + self.sm_fl) / self.sm
         self.sm_r = (self.sm_rr + self.sm_rl) / self.sm
@@ -216,11 +217,10 @@ class vehicle:
         else:
             force_function = cd.get_demo_G_function()
 
-        #  Initialize variables
-        a_fr, a_fl, a_rr, a_rl, a_d_fr, a_d_fl, a_d_rr, a_d_rl, \
-        b_fr, b_fl, b_rr, b_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
-        c_fr, c_fl, c_rr, c_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl, \
-            = [0] * 24
+        state = chassis_state(
+            0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0
+        )
         
         roll_angle_f, roll_angle_r, pitch_angle, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
@@ -230,82 +230,81 @@ class vehicle:
         [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
 
         print('Starting RK4 solver for G-replay...')
-
         for i, row in force_function.iterrows():
 
             dt = force_function['timestep'][i+1]
 
-            G_lat = row['accelerometerAccelerationX(G)']
-            G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1]
-            G_lat_half_next = (G_lat + G_lat_next) /2
-            G_long = row['accelerometerAccelerationY(G)']
-            G_long_next = force_function['accelerometerAccelerationY(G)'][i+1]
-            G_long_half_next = (G_long + G_long_next) /2
-
-            c_fr = row['c_fr']
-            c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep']
-            c_rr = row['c_rr']
-            c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep']
-
-            a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, \
-            a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, \
-            a_dd_fr, a_dd_fl, a_dd_rr, a_dd_rl, b_dd_fr, b_dd_fl, b_dd_rr, b_dd_rl, \
-            = \
-            RK4_step(
-                dt, 
-                self,  # Many static vehicle parameters passed in self
-                a_fr, a_fl, a_rr, a_rl, b_fr, b_fl, b_rr, b_rl, c_fr, c_fl, c_rr, c_rl,  # Node position inputs
-                a_d_fr, a_d_fl, a_d_rr, a_d_rl, b_d_fr, b_d_fl, b_d_rr, b_d_rl, c_d_fr, c_d_fl, c_d_rr, c_d_rl,  # Node velocity inputs
-                G_lat, G_long, G_lat_half_next, G_long_half_next, G_lat_next, G_long_next  # lateral and longitudinal acceleration in G
+            inputs_dt = time_dependent_inputs(
+                G_lat = row['accelerometerAccelerationX(G)'],
+                G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
+                G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
+                G_long = row['accelerometerAccelerationY(G)'],
+                G_long_next = force_function['accelerometerAccelerationY(G)'][i+1],
+                G_long_half_next = (row['accelerometerAccelerationY(G)'] + force_function['accelerometerAccelerationY(G)'][i+1])/2,
+                c_fr = row['c_fr'],
+                c_fl = 0,
+                c_rr = row['c_rr'],
+                c_rl = 0,
+                c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
+                c_d_fl = 0,
+                c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
+                c_d_rl = 0,
+                c_fr_next = force_function['c_fr'][i+1],
+                c_fl_next = 0,
+                c_rr_next = force_function['c_rr'][i+1],
+                c_rl_next = 0,
+                c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
+                c_d_fl_next = 0,
+                c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
+                c_d_rl_next = 0,
             )
 
-            tire_load_fr_val = (b_fr - c_fr) * self.K_t_f + (b_d_fr - c_d_fr) * self.C_t_f + (self.m * self.m_f) * 9.80655
-            tire_load_fl_val = (b_fl - c_fl) * self.K_t_f + (b_d_fl - c_d_fl) * self.C_t_f + (self.m * self.m_f) * 9.80655
-            tire_load_rr_val = (b_rr - c_rr) * self.K_t_r + (b_d_rr - c_d_rr) * self.C_t_r + (self.m * (1-self.m_f)) * 9.80655
-            tire_load_rl_val = (b_rl - c_rl) * self.K_t_r + (b_d_rl - c_d_rl) * self.C_t_r + (self.m * (1-self.m_f)) * 9.80655
+            state = RK4_step(
+                dt = dt, self = self, state = state, inputs_dt = inputs_dt
+            )
 
-            tire_load_fr.append(tire_load_fr_val)
-            tire_load_fl.append(tire_load_fl_val)
-            tire_load_rr.append(tire_load_rr_val)
-            tire_load_rl.append(tire_load_rl_val)
+            tire_load_fr.append(f.get_tire_load(self, b = state.b_fr, b_d = state.b_d_fr, c = state.c_fr, c_d = state.c_d_fr, m_dist = self.m_f)) 
+            tire_load_fl.append(f.get_tire_load(self, b = state.b_fl, b_d = state.b_d_fl, c = state.c_fl, c_d = state.c_d_fl, m_dist = self.m_f))
+            tire_load_rr.append(f.get_tire_load(self, b = state.b_rr, b_d = state.b_d_rr, c = state.c_rr, c_d = state.c_d_rr, m_dist = self.m_r))
+            tire_load_rl.append(f.get_tire_load(self, b = state.b_rl, b_d = state.b_d_rl, c = state.c_rl, c_d = state.c_d_rl, m_dist = self.m_r))
 
             #damper vel is actually wheel vel, for now.
-            damper_vel_fr.append(a_d_fr - b_d_fr)
-            damper_vel_fl.append(a_d_fl - b_d_fl)
-            damper_vel_rr.append(a_d_rr - b_d_rr)
-            damper_vel_rl.append(a_d_rl - b_d_rl)
+            damper_vel_fr.append(state.a_d_fr - state.b_d_fr)
+            damper_vel_fl.append(state.a_d_fl - state.b_d_fl)
+            damper_vel_rr.append(state.a_d_rr - state.b_d_rr)
+            damper_vel_rl.append(state.a_d_rl - state.b_d_rl)
 
             damper_force_fr.append(f.get_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fr, a_dd = a_dd_fr, b_d = b_d_fr, b_dd = b_dd_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f, H_C_s = self.H_C_s
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
             ))
             damper_force_fl.append(f.get_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = a_d_fl, a_dd = a_dd_fl, b_d = b_d_fl, b_dd = b_dd_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f, H_C_s = self.H_C_s
+                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
             ))
             damper_force_rr.append(f.get_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rr, a_dd = a_dd_rr, b_d = b_d_rr, b_dd = b_dd_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r, H_C_s = self.H_C_s
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
             ))
             damper_force_rl.append(f.get_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = a_d_rl, a_dd = a_dd_rl, b_d = b_d_rl, b_dd = b_dd_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r, H_C_s = self.H_C_s
+                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
             ))
 
-            roll_angle_f.append((a_fr - a_fl)*180/3.14)
-            roll_angle_r.append((a_rr - a_rl)*180/3.14)
-            pitch_angle.append((a_fr+a_fl)*180/(2*3.14) - (a_rr+a_rl)*180/(2*3.14))
-            lateral_load_dist_f.append(tire_load_fr_val / (tire_load_fr_val + tire_load_fl_val))
-            lateral_load_dist_r.append(tire_load_rr_val / (tire_load_rr_val + tire_load_rl_val))
+            roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14)
+            roll_angle_r.append((state.a_rr - state.a_rl)*180/3.14)
+            pitch_angle.append((state.a_fr+state.a_fl)*180/(2*3.14) - (state.a_rr+state.a_rl)*180/(2*3.14))
+            lateral_load_dist_f.append(tire_load_fr[i] / (tire_load_fr[i] + tire_load_fl[i]))
+            lateral_load_dist_r.append(tire_load_rr[i] / (tire_load_rr[i] + tire_load_rl[i]))
 
-            if i == len(force_function)-2:
+            if i == len(force_function)-3:
                 break
 
         print('Solver complete.')
 
         return(
-            force_function[1:],
+            force_function[2:],
             tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
-            roll_angle_f, roll_angle_r, pitch_angle
+            np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle)
         )
 
     def plot_shaker(self, **kwargs):
@@ -361,6 +360,37 @@ class vehicle:
             lateral_load_dist_f, lateral_load_dist_r,
             roll_angle_f, roll_angle_r, pitch_angle
         )
+
+    def synth_data_for_ML(self, **kwargs):
+
+        synth_data = []
+
+        for height in np.linspace(15, 22, 30):
+            self.cm_height = height
+            print(f'Now solving with new parameter: {self.cm_height} cm_height')
+
+            force_function, \
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
+            lateral_load_dist_f, lateral_load_dist_r, \
+            roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+
+            synth_data.append((
+                [np.array(force_function['accelerometerAccelerationX(G)']),
+                np.array(force_function['accelerometerAccelerationY(G)']),
+                (roll_angle_f+roll_angle_r)/2,
+                pitch_angle],
+                [self.cm_height]
+            ))
+
+        print(synth_data)
+
+        with open('synthetic_ML_data', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(synth_data)
+
+        return synth_data
 
 # Depricated functions for development and debugging only.
 
