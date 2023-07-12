@@ -6,6 +6,7 @@ from virtual_params import virtual_params
 from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 from chassis_model import chassis_state
+import csv
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -303,7 +304,7 @@ class vehicle:
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
-            roll_angle_f, roll_angle_r, pitch_angle
+            np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle)
         )
 
     def plot_shaker(self, **kwargs):
@@ -359,6 +360,37 @@ class vehicle:
             lateral_load_dist_f, lateral_load_dist_r,
             roll_angle_f, roll_angle_r, pitch_angle
         )
+
+    def synth_data_for_ML(self, **kwargs):
+
+        synth_data = []
+
+        for height in np.linspace(15, 22, 30):
+            self.cm_height = height
+            print(f'Now solving with new parameter: {self.cm_height} cm_height')
+
+            force_function, \
+            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
+            lateral_load_dist_f, lateral_load_dist_r, \
+            roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+
+            synth_data.append((
+                [np.array(force_function['accelerometerAccelerationX(G)']),
+                np.array(force_function['accelerometerAccelerationY(G)']),
+                (roll_angle_f+roll_angle_r)/2,
+                pitch_angle],
+                [self.cm_height]
+            ))
+
+        print(synth_data)
+
+        with open('synthetic_ML_data', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(synth_data)
+
+        return synth_data
 
 # Depricated functions for development and debugging only.
 
