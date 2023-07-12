@@ -362,8 +362,14 @@ class vehicle:
         )
 
     def synth_data_for_ML(self, **kwargs):
+        
+        '''
+        Designed for a ML project which seeks to estimate CM height based on lat/long acceleration and roll/pitch angles.
+        Input dims are [[300x1], [300x1], [300x1], [300x1]], representing 3 seconds of 4 driving parameters, sampled at 100hz
+        Output dims are [1], representing CM height
+        '''
 
-        synth_data = []
+        synth_data = [['Inputs'],['Outputs']]
 
         for height in np.linspace(15, 22, 30):
             self.cm_height = height
@@ -386,7 +392,7 @@ class vehicle:
 
         print(synth_data)
 
-        with open('synthetic_ML_data', 'w', newline='') as file:
+        with open('synthetic_ML_data.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerows(synth_data)
 
