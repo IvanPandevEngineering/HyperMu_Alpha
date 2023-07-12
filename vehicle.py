@@ -6,7 +6,7 @@ from virtual_params import virtual_params
 from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 from chassis_model import chassis_state
-import csv
+import pickle
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -366,7 +366,9 @@ class vehicle:
         '''
         Designed for a ML project which seeks to estimate CM height based on lat/long acceleration and roll/pitch angles.
         Input dims are [[300x1], [300x1], [300x1], [300x1]], representing 3 seconds of 4 driving parameters, sampled at 100hz
+        Input format is List[np.array[floats], np.array[floats], np.array[floats], np.array[floats]]
         Output dims are [1], representing CM height
+        Output format is List[float]
         '''
 
         synth_data = [('Inputs','Outputs')]
@@ -382,8 +384,8 @@ class vehicle:
             lateral_load_dist_f, lateral_load_dist_r, \
             roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
 
-            synth_data.append((
-                [np.array(force_function['accelerometerAccelerationX(G)']),
+            synth_data.append(([
+                np.array(force_function['accelerometerAccelerationX(G)']),
                 np.array(force_function['accelerometerAccelerationY(G)']),
                 (roll_angle_f+roll_angle_r)/2,
                 pitch_angle],
@@ -392,9 +394,8 @@ class vehicle:
 
         print(synth_data)
 
-        with open('synthetic_ML_data.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(synth_data)
+        with open('synthetic_ML_data.pkl', 'wb') as file:
+            pickle.dump(synth_data, file)
 
         return synth_data
 
