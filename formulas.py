@@ -278,21 +278,24 @@ def get_ideal_damper_force(
             return (C_lsr * (a_d - b_d))
 
 def get_damper_force(
-        C_lsc, C_hsc, C_lsr, C_hsr, a_d, a_dd, b_d, b_dd, knee_c, knee_r, H_C_s
+        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
     ):
     if (a_d-b_d) > 0:  # Compression domain
         if (a_d-b_d) > knee_c:  # High-speed compression domain
-            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c) + H_C_s*(a_dd - b_dd)
+            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c)
         else:  # Low-speed compression domain
-            return (C_lsc * (a_d - b_d)) + H_C_s*(a_dd - b_dd)
+            return (C_lsc * (a_d - b_d))
     else:  # Rebound domain
         if (a_d-b_d) < -knee_r:  # High-speed rebound domain
-            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r) - H_C_s*(a_dd - b_dd)
+            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r)
         else:  # Low-speed rebound domain
-            return (C_lsr * (a_d - b_d)) - H_C_s*(a_dd - b_dd)
+            return (C_lsr * (a_d - b_d))
 
 def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
     return I_roll, tw/2
 
 def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
+
+def get_tire_load(self, b, b_d, c, c_d, m_dist):
+    return (b - c) * self.K_t_f + (b_d - c_d) * self.C_t_f + (self.m * m_dist) * 9.80655
