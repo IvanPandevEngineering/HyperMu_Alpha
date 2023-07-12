@@ -369,7 +369,7 @@ class vehicle:
         Output dims are [1], representing CM height
         '''
 
-        synth_data = [['Inputs'],['Outputs']]
+        synth_data = [('Inputs','Outputs')]
 
         for height in np.linspace(15, 22, 30):
             self.cm_height = height
