@@ -7,6 +7,7 @@ from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 from chassis_model import chassis_state
 import pickle
+import matplotlib.pyplot as plt
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -373,7 +374,7 @@ class vehicle:
 
         synth_data = [('Inputs','Outputs')]
 
-        for height in np.linspace(15, 22, 30):
+        for height in np.linspace(0.38, 0.57, 30):
             self.cm_height = height
             print(f'Now solving with new parameter: {self.cm_height} cm_height')
 
@@ -392,7 +393,7 @@ class vehicle:
                 [self.cm_height]
             ))
 
-        print(synth_data)
+        vis.ML_set(synth_data)
 
         with open('synthetic_ML_data.pkl', 'wb') as file:
             pickle.dump(synth_data, file)

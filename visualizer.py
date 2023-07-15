@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_response(force_function,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
@@ -100,6 +101,32 @@ roll_angle_f, roll_angle_r, pitch_angle):
     subplots.scatter(damper_vel_rl, damper_force_rl, label='rl')
     subplots.legend()
     subplots.grid(True)
+
+    fig.tight_layout()
+    plt.show()
+
+def ML_set(synth_data):
+
+    print('Graphing...')
+
+    plt.style.use('seaborn-v0_8')
+    fig, subplots = plt.subplots(1, 2, figsize=(14, 8))
+    fig.suptitle('Synthesized ML Training Set', fontsize=14)
+
+    for sample in synth_data[1:]:
+        subplots[1].plot(sample[0][2], label=f'CM Height: {sample[1][0]:.3f} m')
+        subplots[1].plot(sample[0][3])
+        subplots[1].legend(fontsize = '8', loc = 'upper right')
+        subplots[1].set_xlabel('Time (1/100s)')
+        subplots[1].set_ylabel('Simulated Roll Angle, Degrees')
+        subplots[1].set_title('Simulated Response to Inputs at Various CM Height Values')
+
+    subplots[0].plot(sample[0][0], label=f'Lateral Input')
+    subplots[0].plot(sample[0][1], label=f'Longitudinal Input')
+    subplots[0].legend(fontsize = '8')
+    subplots[0].set_xlabel('Time (1/100s)')
+    subplots[0].set_ylabel('Synthetic Acceleration Inputs, G')
+    subplots[0].set_title('Synthetic Acceleration Inputs, G')
 
     fig.tight_layout()
     plt.show()
