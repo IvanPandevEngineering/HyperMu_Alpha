@@ -58,7 +58,8 @@ tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
 lateral_load_dist_f, lateral_load_dist_r,
-roll_angle_f, roll_angle_r, pitch_angle):
+roll_angle_f, roll_angle_r, pitch_angle,
+roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     print('Graphing...')
 
@@ -66,16 +67,16 @@ roll_angle_f, roll_angle_r, pitch_angle):
     fig, subplots = plt.subplots(2, 1, figsize=(14, 8))
     fig.suptitle('Race Telemetry on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
-    subplots[0].plot(force_function['loggingTime(txt)'], (180*force_function['motionRoll(rad)']/3.14)+.6, label='Control from Sensor Data (deg)')
+    subplots[0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.5, label='Control from Sensor Data (deg)')
     #subplots[0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
-    subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_f, label='roll angle (deg, f)')
-    subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_r, label='roll angle (deg, r)')
+    subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='roll angle (deg, f)')
+    subplots[0].plot(force_function['loggingTime(txt)'], roll_angle_rate_r, label='roll angle (deg, r)')
     subplots[0].legend()
     subplots[0].grid(True)
 
-    subplots[1].plot(force_function['loggingTime(txt)'], 180*force_function['motionPitch(rad)']/3.14, label='Control from Sensor Data (deg)')
-    subplots[1].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationY(G)'], label='long accel (G)')
-    subplots[1].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
+    subplots[1].plot(force_function['loggingTime(txt)'], 180*force_function['gyroRotationY(rad/s)']/3.14, label='Control from Sensor Data (deg)')
+    #subplots[1].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationY(G)'], label='long accel (G)')
+    subplots[1].plot(force_function['loggingTime(txt)'], pitch_angle_rate, label='pitch angle (deg)')
     subplots[1].legend()
     subplots[1].grid(True)
 

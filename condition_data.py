@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 # define standard dataframe format for multiple data generation functions
-columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'motionRoll(rad)', 'motionPitch(rad)']
+columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'gyroRotationY(rad/s)', 'motionPitch(rad)']
 
 def custom_smooth(array, rounds):
     
@@ -15,7 +15,7 @@ def custom_smooth(array, rounds):
 def from_sensor_log_iOS_app(path: str):
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'motionPitch(rad)']]
 
     print('Parsing timesteps...')
     #Create datetime column to be interpolated
@@ -41,7 +41,7 @@ def from_sensor_log_iOS_app(path: str):
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRoll(rad)'], data_in['motionPitch(rad)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['motionPitch(rad)'])), \
         columns=columns_global)
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
