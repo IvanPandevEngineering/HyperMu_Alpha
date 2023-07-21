@@ -77,10 +77,14 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][1].legend()
     subplots[0][1].grid(True)
 
-    subplots[1][0].plot(force_function['loggingTime(txt)'], 180*force_function['motionPitch(rad)']/3.14, label='Control from Sensor Data (deg)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], -180*force_function['gyroRotationX(rad/s)']/3.14, label='Control from Sensor Data (deg)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle_rate, label='pitch angle (deg)')
     subplots[1][0].legend()
     subplots[1][0].grid(True)
+
+    subplots[1][1].scatter(pitch_angle_rate, (-180*force_function['gyroRotationX(rad/s)']/3.14)-.5, label='Control from Sensor Data (deg)')
+    subplots[1][1].legend()
+    subplots[1][1].grid(True)
 
     fig.tight_layout()
     plt.show()
