@@ -1,9 +1,10 @@
 import pandas as pd
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
 # define standard dataframe format for multiple data generation functions
-columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'motionRoll(rad)', 'motionPitch(rad)']
+columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']
 
 def custom_smooth(array, rounds):
     
@@ -15,7 +16,7 @@ def custom_smooth(array, rounds):
 def from_sensor_log_iOS_app(path: str):
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'motionRoll(rad)', 'motionPitch(rad)']]
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']]
 
     print('Parsing timesteps...')
     #Create datetime column to be interpolated
@@ -31,9 +32,20 @@ def from_sensor_log_iOS_app(path: str):
     data_in['c_fr_array'] = 0
     data_in['c_rr_array'] = 0
 
-    #perform resampling to 10ms, then drop all nans
+    #resampling to time resolution, interpolate linearly then drop all nans
+    data_in = data_in.resample('1ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    #resampling to 10ms, interpolate linearly then drop all nans
     data_in = data_in.resample('10ms')
     data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = 20).mean()
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = 20).mean()
+    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = 20).mean()
+    data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = 20).mean()
     data_in = data_in.dropna(how='any')
 
     #create new time and timestep columns
@@ -41,7 +53,7 @@ def from_sensor_log_iOS_app(path: str):
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRoll(rad)'], data_in['motionPitch(rad)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['gyroRotationX(rad/s)'])), \
         columns=columns_global)
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
@@ -100,6 +112,45 @@ Begin functions for dev purposes, exploring telemetry data.
 def from_sensor_log_iOS_app_dev(path: str):
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'motionPitch(rad)']]
 
-    return data_in
+    print('Parsing timesteps...')
+    #Create datetime column to be interpolated
+    data_in['datetime'] = pd.to_datetime(data_in['loggingTime(txt)'])
+    data_in['datetime'] = pd.DatetimeIndex(data_in['datetime'])
+    #drop redundant column
+    data_in = data_in.drop(columns='loggingTime(txt)')
+    #select interesting time range
+    data_in = data_in[3100:5500]
+    #set index to be picked up by interpolation function
+    data_in = data_in.set_index('datetime')
+
+    data_in['c_fr_array'] = 0
+    data_in['c_rr_array'] = 0
+
+    #resampling to time resolution, interpolate linearly then drop all nans
+    data_in = data_in.resample('1ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    #resampling to 10ms, interpolate linearly then drop all nans
+    data_in = data_in.resample('10ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = 10).mean()
+    data_in = data_in.dropna(how='any')
+
+    #create new time and timestep columns
+    data_in['time'] = data_in.index
+    data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
+
+    #create dataframe and drop nans one more time
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['motionPitch(rad)'])), \
+        columns=columns_global)
+    data = data.dropna(how='any')
+    data = data.reset_index(drop=True)
+
+    print(data_in['gyroRotationY(rad/s)'])
+
+    return data

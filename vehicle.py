@@ -223,12 +223,12 @@ class vehicle:
             0,0,0,0,0,0,0,0,0,0,0,0
         )
         
-        roll_angle_f, roll_angle_r, pitch_angle, \
+        roll_angle_f, roll_angle_r, pitch_angle, roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
-        [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
+        [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
 
         print('Starting RK4 solver for G-replay...')
         for i, row in force_function.iterrows():
@@ -291,6 +291,9 @@ class vehicle:
             roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14)
             roll_angle_r.append((state.a_rr - state.a_rl)*180/3.14)
             pitch_angle.append((state.a_fr+state.a_fl)*180/(2*3.14) - (state.a_rr+state.a_rl)*180/(2*3.14))
+            roll_angle_rate_f.append((state.a_d_fr - state.a_d_fl)*180/3.14)
+            roll_angle_rate_r.append((state.a_d_rr - state.a_d_rl)*180/3.14)
+            pitch_angle_rate.append((state.a_d_fr+state.a_d_fl)*180/(2*3.14) - (state.a_d_rr+state.a_d_rl)*180/(2*3.14))
             lateral_load_dist_f.append(tire_load_fr[i] / (tire_load_fr[i] + tire_load_fl[i]))
             lateral_load_dist_r.append(tire_load_rr[i] / (tire_load_rr[i] + tire_load_rl[i]))
 
@@ -305,7 +308,8 @@ class vehicle:
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
-            np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle)
+            np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle),
+            roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate
         )
 
     def plot_shaker(self, **kwargs):
@@ -333,7 +337,8 @@ class vehicle:
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+        roll_angle_f, roll_angle_r, pitch_angle, \
+        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
         vis.check_correlation(
             force_function,
@@ -341,7 +346,8 @@ class vehicle:
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             lateral_load_dist_f, lateral_load_dist_r,
-            roll_angle_f, roll_angle_r, pitch_angle
+            roll_angle_f, roll_angle_r, pitch_angle,
+            roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate
         )
 
     def damper_response(self, **kwargs):
