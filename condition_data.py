@@ -42,10 +42,10 @@ def from_sensor_log_iOS_app(path: str):
     data_in = data_in.interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
-    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = 20).mean()
-    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = 20).mean()
-    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = 20).mean()
-    data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = 20).mean()
+    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = 50, center = False).mean()
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = 50, center = False).mean()
+    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = 50, center = False).mean()
+    data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = 50, center = False).mean()
     data_in = data_in.dropna(how='any')
 
     #create new time and timestep columns

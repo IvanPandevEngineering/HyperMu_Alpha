@@ -87,8 +87,8 @@ class vehicle:
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
-        self.C_t_f = vpd['tire_rate_f'] / 1000
-        self.C_t_r = vpd['tire_rate_r'] / 1000
+        self.C_t_f = vpd['tire_rate_f'] / 10000
+        self.C_t_r = vpd['tire_rate_r'] / 10000
 
         self.cm_height = vpd['center_of_mass_height']
         self.rc_height_f = vpd['roll_center_height_front']
@@ -319,7 +319,8 @@ class vehicle:
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+        roll_angle_f, roll_angle_r, pitch_angle, \
+        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
         vis.plot_response(
             force_function,
@@ -357,7 +358,8 @@ class vehicle:
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+        roll_angle_f, roll_angle_r, pitch_angle, \
+        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
         vis.damper_response(
             force_function,

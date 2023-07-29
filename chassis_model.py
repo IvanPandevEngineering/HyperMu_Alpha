@@ -67,6 +67,8 @@ def get_dd_matrix(
     ride_spring_F_fl = self.K_s_f * (state.a_fl - state.b_fl)
     ride_spring_F_rr = self.K_s_r * (state.a_rr - state.b_rr)
     ride_spring_F_rl = self.K_s_r * (state.a_rl - state.b_rl)
+    ARB_F_f = self.K_arb_f * ((state.a_fr - state.b_fr) - (state.a_fl - state.b_fl))
+    ARB_F_r = self.K_arb_r * ((state.a_rr - state.b_rr) - (state.a_rl - state.b_rl))
     
     ride_damper_F_ideal_fr = f.get_ideal_damper_force(
         C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
@@ -81,7 +83,6 @@ def get_dd_matrix(
         C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
     )
 
-    #  ARB
     #  Heave spring
     #  Heave damper
 
@@ -129,18 +130,18 @@ def get_dd_matrix(
         [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # Node b_fr
         [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # Node b_fl
         [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # Node b_rr
-        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_rl
+        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_rl 
     ])
 
     B_mat = np.array([
-        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ride_damper_F_ideal_fr],
-        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl + ride_damper_F_ideal_fl],
-        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ride_damper_F_ideal_rr],
-        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl + ride_damper_F_ideal_rl],
-        [ - ride_spring_F_fr - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr],
-        [ - ride_spring_F_fl - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl],
-        [ - ride_spring_F_rr - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr],
-        [ - ride_spring_F_rl - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
+        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr],
+        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl],
+        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr],
+        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl],
+        [ - ride_spring_F_fr - ARB_F_f - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr],
+        [ - ride_spring_F_fl + ARB_F_f - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl],
+        [ - ride_spring_F_rr - ARB_F_r - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr],
+        [ - ride_spring_F_rl + ARB_F_r - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
     ])
 
     return np.matmul(np.linalg.inv(A_mat), B_mat)
