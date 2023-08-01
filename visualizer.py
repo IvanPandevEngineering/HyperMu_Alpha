@@ -7,7 +7,8 @@ tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
 lateral_load_dist_f, lateral_load_dist_r,
-roll_angle_f, roll_angle_r, pitch_angle):
+roll_angle_f, roll_angle_r, pitch_angle,
+roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     print('Graphing...')
 
@@ -98,7 +99,8 @@ tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
 lateral_load_dist_f, lateral_load_dist_r,
-roll_angle_f, roll_angle_r, pitch_angle):
+roll_angle_f, roll_angle_r, pitch_angle,
+roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     print('Graphing...')
 

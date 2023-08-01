@@ -7,7 +7,6 @@ from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 from chassis_model import chassis_state
 import pickle
-import matplotlib.pyplot as plt
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -139,73 +138,73 @@ class vehicle:
     def summary(self):
         print('\n')
         print('_______ ROLL RESPONSE _______')
-        print(f'Roll Gradient: {round(f.roll_gradient(self.tw_v, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r), 3)} deg/G')
-        print(f'Roll Frequency: {round(f.roll_frequency(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll), 3)} hz')
-        print(f'Roll Damping Ratio (Slow): {round(f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v), 3)}')
-        print(f'Roll Damping Ratio (Fast): {round(f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v), 3)}')
-        print(f'Lateral Load Distribution Front: +{round(100 * self.LatLT_properties[0], 3)} % Outside/G')
-        print(f'Lateral Load Distribution Rear: +{round(100 * self.LatLT_properties[1], 3)} % Outside/G')
-        print(f'Lateral Load Distribution Ratio: +{round(self.LatLT_properties[2], 3)} % Front/G')
-        print(f'Tip-Over G: {round(self.roll_tip_G, 3)} G')
+        print(f'Roll Gradient: {f.roll_gradient(self.tw_v, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r):.3f} deg/G')
+        print(f'Roll Frequency: {f.roll_frequency(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll):.3f} hz')
+        print(f'Roll Damping Ratio (Slow): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v):.3f}')
+        print(f'Roll Damping Ratio (Fast): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v):.3f}')
+        print(f'Lateral Load Distribution Front: +{self.LatLT_properties[0]:.3%} % Outside/G')
+        print(f'Lateral Load Distribution Rear: +{self.LatLT_properties[1]:.3%} % Outside/G')
+        print(f'Lateral Load Distribution Ratio: +{self.LatLT_properties[2]:.3f} % Front/G')
+        print(f'Tip-Over G: {self.roll_tip_G:.3f} G')
         print('\n')
 
         print('_______ PITCH RESPONSE _______')
-        print(f'Pitch Gradient, Accel: {round(self.pitch_gradient_accel, 3)} deg/G')
-        print(f'Pitch Gradient, Decel: {round(self.pitch_gradient_decel, 3)} deg/G')
-        print(f'Pitch Frequency*: {round(self.pitch_frequency, 3)} hz')
-        print(f'Pitch Damping Ratio* (Slow): {round(self.pitch_damping_slow, 3)}')
-        print(f'Pitch Damping Ratio* (Fast): {round(self.pitch_damping_fast, 3)}')
-        print(f'Longitudinal Load Distribution: +/-{round(100*self.LongLD_per_g, 3)} % Front/G')
+        print(f'Pitch Gradient, Accel: {self.pitch_gradient_accel:.3f} deg/G')
+        print(f'Pitch Gradient, Decel: {self.pitch_gradient_decel:.3f} deg/G')
+        print(f'Pitch Frequency*: {self.pitch_frequency:.3f} hz')
+        print(f'Pitch Damping Ratio* (Slow): {self.pitch_damping_slow:.3f}')
+        print(f'Pitch Damping Ratio* (Fast): {self.pitch_damping_fast:.3f}')
+        print(f'Longitudinal Load Distribution: +/-{self.LongLD_per_g:.3%} % Front/G')
         print('* - taken from contact-patch-to-IC line, see documenation.')
         print('\n')
 
         print('_______ AERO PLATFORM RESPONSE _______')
-        print(f'Pitch Angle Change: {round(self.aero_response[0], 3)} degrees, dive')
-        print(f'Front Ride Height Change: {round(self.aero_response[1]*1000, 3)} mm')
-        print(f'Rear Ride Height Change: {round(self.aero_response[2]*1000, 3)} mm')
-        print(f'Stability Margin: {round(self.aero_response[3]*1000, 3)} mm, stability')
+        print(f'Pitch Angle Change: {self.aero_response[0]:.3f} degrees, dive')
+        print(f'Front Ride Height Change: {self.aero_response[1]*1000:.3f} mm')
+        print(f'Rear Ride Height Change: {self.aero_response[2]*1000:.3f} mm')
+        print(f'Stability Margin: {self.aero_response[3]*1000:.3f} mm, stability')
         print('\n')
 
         print('_______ FRONT RIGHT CORNER _______')
-        print(f'Wheel Rate: {round(self.K_s_f/1000, 3)} N/mm')
-        print(f'Natural Frequency: {round(np.sqrt(self.K_s_f/self.sm_fr)/(2*np.pi), 3)} hz')
-        print(f'Damping Ratio, Slow Compression: {round(f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fr), 3)} -/-')
-        print(f'Damping Ratio, Slow Rebound: {round(f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fr), 3)} -/-')
-        print(f'Damping Ratio, Fast Compression: {round(f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fr), 3)} -/-')
-        print(f'Damping Ratio, Fast Rebound: {round(f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fr), 3)} -/-')
+        print(f'Wheel Rate: {self.K_s_f/1000:.3f} N/mm')
+        print(f'Natural Frequency: {np.sqrt(self.K_s_f/self.sm_fr)/(2*np.pi):.3f} hz')
+        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fr):.3f} -/-')
+        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fr):.3f} -/-')
+        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fr):.3f} -/-')
+        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fr):.3f} -/-')
         print('\n')
 
         print('_______ FRONT LEFT CORNER _______')
-        print(f'Wheel Rate: {round(self.K_s_f/1000, 3)} N/mm')
-        print(f'Natural Frequency: {round(np.sqrt(self.K_s_f/self.sm_fl)/(2*np.pi), 3)} hz')
-        print(f'Damping Ratio, Slow Compression: {round(f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fl), 3)} -/-')
-        print(f'Damping Ratio, Slow Rebound: {round(f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fl), 3)} -/-')
-        print(f'Damping Ratio, Fast Compression: {round(f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fl), 3)} -/-')
-        print(f'Damping Ratio, Fast Rebound: {round(f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fl), 3)} -/-')
+        print(f'Wheel Rate: {self.K_s_f/1000:.3f} N/mm')
+        print(f'Natural Frequency: {np.sqrt(self.K_s_f/self.sm_fl)/(2*np.pi):.3f} hz')
+        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fl):.3f} -/-')
+        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fl):.3f} -/-')
+        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fl):.3f} -/-')
+        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fl):.3f} -/-')
         print('\n')
 
         print('_______ REAR RIGHT CORNER _______')
-        print(f'Wheel Rate: {round(self.K_s_r/1000, 3)} N/mm')
-        print(f'Natural Frequency: {round(np.sqrt(self.K_s_r/self.sm_rr)/(2*np.pi), 3)} hz')
-        print(f'Damping Ratio, Slow Compression: {round(f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rr), 3)} -/-')
-        print(f'Damping Ratio, Slow Rebound: {round(f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rr), 3)} -/-')
-        print(f'Damping Ratio, Fast Compression: {round(f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rr), 3)} -/-')
-        print(f'Damping Ratio, Fast Rebound: {round(f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rr), 3)} -/-')
+        print(f'Wheel Rate: {self.K_s_r/1000:.3f} N/mm')
+        print(f'Natural Frequency: {np.sqrt(self.K_s_r/self.sm_rr)/(2*np.pi):.3f} hz')
+        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rr):.3f} -/-')
+        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rr):.3f} -/-')
+        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rr):.3f} -/-')
+        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rr):.3f} -/-')
         print('\n')
 
         print('_______ REAR LEFT CORNER _______')
-        print(f'Wheel Rate: {round(self.K_s_r/1000, 3)} N/mm')
-        print(f'Natural Frequency: {round(np.sqrt(self.K_s_r/self.sm_rl)/(2*np.pi), 3)} hz')
-        print(f'Damping Ratio, Slow Compression: {round(f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rl), 3)} -/-')
-        print(f'Damping Ratio, Slow Rebound: {round(f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rl), 3)} -/-')
-        print(f'Damping Ratio, Fast Compression: {round(f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rl), 3)} -/-')
-        print(f'Damping Ratio, Fast Rebound: {round(f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rl), 3)} -/-')
+        print(f'Wheel Rate: {self.K_s_r/1000:.3f} N/mm')
+        print(f'Natural Frequency: {np.sqrt(self.K_s_r/self.sm_rl)/(2*np.pi):.3f} hz')
+        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rl):.3f} -/-')
+        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rl):.3f} -/-')
+        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rl):.3f} -/-')
+        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rl):.3f} -/-')
         print('\n')
 
         print('_______ MASS DISTRIBUTION _______')
-        print(f'Front Axle Mass Distribution: {round(100*self.m_f, 3)} %')
-        print(f'Left Mass Distribution: {round(100*(self.sm_fl+self.usm_fl+self.sm_rl+self.usm_rl)/self.m, 3)} %')
-        print(f'Cross-Wise Mass Distribution (FL/RR): {round(100*(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m, 3)} %')
+        print(f'Front Axle Mass Distribution: {self.m_f:.3%}')
+        print(f'Left Mass Distribution: {(self.sm_fl+self.usm_fl+self.sm_rl+self.usm_rl)/self.m:.3%}')
+        print(f'Cross-Wise Mass Distribution (FL/RR): {(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m:.3%}')
         print('\n')
 
     def Shaker(self, **kwargs):
@@ -228,7 +227,7 @@ class vehicle:
         lateral_load_dist_f, lateral_load_dist_r, \
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
-        [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
+        [[] for _ in range(20)]
 
         print('Starting RK4 solver for G-replay...')
         for i, row in force_function.iterrows():
@@ -314,61 +313,21 @@ class vehicle:
 
     def plot_shaker(self, **kwargs):
 
-        force_function, \
-        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
-        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
-        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
-        lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle, \
-        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
+        shaker_results = self.Shaker(**kwargs)
 
-        vis.plot_response(
-            force_function,
-            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
-            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
-            lateral_load_dist_f, lateral_load_dist_r,
-            roll_angle_f, roll_angle_r, pitch_angle
-        )
+        vis.plot_response(*shaker_results)
     
     def correlation_check(self, **kwargs):
         
-        force_function, \
-        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
-        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
-        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
-        lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle, \
-        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
+        shaker_results = self.Shaker(**kwargs)
 
-        vis.check_correlation(
-            force_function,
-            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
-            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
-            lateral_load_dist_f, lateral_load_dist_r,
-            roll_angle_f, roll_angle_r, pitch_angle,
-            roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate
-        )
+        vis.check_correlation(*shaker_results)
 
     def damper_response(self, **kwargs):
 
-        force_function, \
-        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
-        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
-        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
-        lateral_load_dist_f, lateral_load_dist_r, \
-        roll_angle_f, roll_angle_r, pitch_angle, \
-        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
+        shaker_results = self.Shaker(**kwargs)
 
-        vis.damper_response(
-            force_function,
-            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
-            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
-            lateral_load_dist_f, lateral_load_dist_r,
-            roll_angle_f, roll_angle_r, pitch_angle
-        )
+        vis.damper_response(*shaker_results)
 
     def synth_data_for_ML(self, **kwargs):
         
