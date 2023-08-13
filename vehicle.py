@@ -1,3 +1,7 @@
+'''
+Copyright 2023 Ivan Pandev
+'''
+
 import yaml
 import numpy as np
 import formulas as f
@@ -308,7 +312,7 @@ class vehicle:
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
             np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle),
-            roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate
+            np.array(roll_angle_rate_f), np.array(roll_angle_rate_r), np.array(pitch_angle_rate)
         )
 
     def plot_shaker(self, **kwargs):
@@ -339,9 +343,28 @@ class vehicle:
         Output format is List[float]
         '''
 
+        # Create return array
         synth_data = [('Inputs','Outputs')]
 
-        for height in np.linspace(0.38, 0.57, 30):
+        # Create initial entry into return array, only telemetry data, no simulated data
+        force_function, \
+        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
+        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
+        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
+        lateral_load_dist_f, lateral_load_dist_r, \
+        roll_angle_f, roll_angle_r, pitch_angle,\
+        roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
+
+        synth_data.append(([
+                np.array(force_function['accelerometerAccelerationX(G)']),
+                np.array(force_function['accelerometerAccelerationY(G)']),
+                np.array(force_function['gyroRotationY(rad/s)']*180/np.pi),
+                np.array(force_function['gyroRotationX(rad/s)']*180/np.pi)],
+                [self.cm_height]
+            ))
+
+        # Now vary vehicle property, add simulated response to training set
+        for height in np.linspace(0.38, 0.57, 5):
             self.cm_height = height
             print(f'Now solving with new parameter: {self.cm_height} cm_height')
 
@@ -350,19 +373,20 @@ class vehicle:
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl, \
             lateral_load_dist_f, lateral_load_dist_r, \
-            roll_angle_f, roll_angle_r, pitch_angle = self.Shaker(**kwargs)
+            roll_angle_f, roll_angle_r, pitch_angle,\
+            roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
             synth_data.append(([
                 np.array(force_function['accelerometerAccelerationX(G)']),
                 np.array(force_function['accelerometerAccelerationY(G)']),
-                (roll_angle_f+roll_angle_r)/2,
-                pitch_angle],
+                (roll_angle_rate_f+roll_angle_rate_r)/2, 
+                pitch_angle_rate],
                 [self.cm_height]
             ))
 
         vis.ML_set(synth_data)
 
-        with open('synthetic_ML_data.pkl', 'wb') as file:
+        with open('ML_training_data_CM.pkl', 'wb') as file:
             pickle.dump(synth_data, file)
 
         return synth_data
