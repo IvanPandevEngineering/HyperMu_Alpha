@@ -155,18 +155,21 @@ def ML_set(synth_data):
     fig, subplots = plt.subplots(1, 2, figsize=(12, 6))
     fig.suptitle('Mixed Real, Synthetic ML Training Set', fontsize=14)
 
-    for sample in synth_data[1:]:
-        subplots[1].plot(sample[0][2], label=f'CM Height: {sample[1][0]:.3f} m')
+    for i, sample in enumerate(synth_data[1:]):
+        if i == 0:
+            subplots[1].plot(sample[0][2], label=f'Telemetry Response, CM Height: {sample[1][0]:.3f} m')
+        else:
+            subplots[1].plot(sample[0][2], label=f'Simulated Response, CM Height: {sample[1][0]:.3f} m')
         #subplots[1].plot(sample[0][3])
-        subplots[1].legend(fontsize = '8', loc = 'upper right')
-        subplots[1].set_xlabel('Time (1/100s)')
-        subplots[1].set_ylabel('Roll Angle, Degrees')
-        subplots[1].set_title('Response to Inputs at Various CM Height Values')
+        subplots[1].legend(fontsize = '9', loc = 'upper right')
+        subplots[1].set_xlabel('Time (s/100)')
+        subplots[1].set_ylabel('Roll Angle Rate, (deg/s)')
+        subplots[1].set_title('Response at Various CM Height Values')
 
     subplots[0].plot(sample[0][0], label=f'Lateral Input')
     #subplots[0].plot(sample[0][1], label=f'Longitudinal Input')
-    subplots[0].legend(fontsize = '8')
-    subplots[0].set_xlabel('Time (1/100s)')
+    subplots[0].legend(fontsize = '9')
+    subplots[0].set_xlabel('Time (s/100)')
     subplots[0].set_ylabel('Acceleration Inputs, G')
     subplots[0].set_title('Acceleration Inputs, G')
 
