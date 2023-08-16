@@ -91,6 +91,11 @@ Maximizing correlation against real-world telemetry will drive and validate Chas
 
 The choice to check correlation using roll angle rate was driven by it being the only available, reliable trace at the time. Roll and pitch angle traces were found to drift, and the sensor mount itself could be more rigid. Improvements to the sensor mount and trace selection will follow with future data collection runs.
 
+## ML Training Data Synthesis
+ChassisDyne can iterate through a range of values of a vehicle property and simulate the chassis response of a vehicle with those properties, all for a given acceleration input. The graphic below shows a range of center of mass heights and their related impact on roll angle rate. These series can be combined with the real-world chassis response of that acceleration input, and packaged as a dataset for machine learning projects. See the method `data_synth_for_ML()` in `vehicle.py` for more detail.
+
+![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/images/mlTrainDemo.png)
+
 ## Ongoing Development
 ChassisDyne's core functionality is practically complete, but much work remains on capturing increasingly-granular details of vehicle response. This includes but is not limited to:
 - Heave springs and dampers
