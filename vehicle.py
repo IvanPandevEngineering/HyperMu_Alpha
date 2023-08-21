@@ -337,14 +337,12 @@ class vehicle:
         
         '''
         Designed for a ML project which seeks to estimate CM height based on lat/long acceleration and roll/pitch angles.
-        Input dims are [[300x1], [300x1], [300x1], [300x1]], representing 3 seconds of 4 driving parameters, sampled at 100hz
-        Input format is List[np.array[floats], np.array[floats], np.array[floats], np.array[floats]]
-        Output dims are [1], representing CM height
-        Output format is List[float]
+        Training data for the NN contains both telemetry and simulated results.
         '''
 
         # Create return array
         synth_data = [('Inputs','Outputs')]
+        window_size = 100
 
         # Create initial entry into return array, only telemetry data, no simulated data
         force_function, \
@@ -355,16 +353,16 @@ class vehicle:
         roll_angle_f, roll_angle_r, pitch_angle,\
         roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
-        synth_data.append(([
-                np.array(force_function['accelerometerAccelerationX(G)']),
-                np.array(force_function['accelerometerAccelerationY(G)']),
-                np.array(force_function['gyroRotationY(rad/s)']*180/np.pi),
-                np.array(force_function['gyroRotationX(rad/s)']*180/np.pi)],
-                [self.cm_height]
-            ))
+        for i in range(len(force_function)-window_size):
+            if i % window_size == 0:
+                synth_data.append(([
+                        np.array(force_function['accelerometerAccelerationX(G)'][i:i+window_size]),
+                        np.array(force_function['gyroRotationY(rad/s)'][i:i+window_size]*180/np.pi)],
+                        [self.cm_height]
+                    ))
 
         # Now vary vehicle property, add simulated response to training set
-        for height in np.linspace(0.38, 0.57, 5):
+        for height in np.linspace(0.28, 0.67, 20):
             self.cm_height = height
             print(f'Now solving with new parameter: {self.cm_height} cm_height')
 
@@ -376,15 +374,13 @@ class vehicle:
             roll_angle_f, roll_angle_r, pitch_angle,\
             roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate = self.Shaker(**kwargs)
 
-            synth_data.append(([
-                np.array(force_function['accelerometerAccelerationX(G)']),
-                np.array(force_function['accelerometerAccelerationY(G)']),
-                (roll_angle_rate_f+roll_angle_rate_r)/2, 
-                pitch_angle_rate],
-                [self.cm_height]
-            ))
-
-        vis.ML_set(synth_data)
+            for i in range(len(force_function)-window_size):
+                if i % window_size == 0:
+                    synth_data.append(([
+                        np.array(force_function['accelerometerAccelerationX(G)'][i:i+window_size]),
+                        (roll_angle_rate_f+roll_angle_rate_r)[i:i+window_size]/2],
+                        [self.cm_height]
+                    ))
 
         with open('ML_training_data_CM.pkl', 'wb') as file:
             pickle.dump(synth_data, file)

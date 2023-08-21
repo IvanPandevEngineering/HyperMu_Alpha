@@ -1,5 +1,9 @@
 import numpy as np
 
+'''
+SECTION 1. Begin helper functions for analytical properties below:
+'''
+
 def K_eq_series(k1, k2):
     return k1*k2 / (k1 + k2)
 
@@ -76,40 +80,6 @@ def get_K_pitch(sm_f, wheel_base, K_s_f_v, K_s_r_v, K_t_f, K_t_r):  # Nm/deg, th
     disp_per_deg_pitch_squat = get_disp_per_deg_pitch(wb_r)
 
     return wb_f * K_end_f * disp_per_deg_pitch_dive + wb_r * K_end_r * disp_per_deg_pitch_squat
-
-def LatLT_sm_elastic_alt(disp, K_s_v, K_arb_v, K_t):
-
-    return disp * K_eq_series(K_s_v+K_arb_v, K_t)
-
-def LatLT_sm_elastic_1g_axle(sm, rc_height, cm_height, tw):  # N, transferred to outside OR lifted from inside tire
-    
-    return 9.80665 * sm * (cm_height - rc_height) / tw
-
-def LatLT_sm_geometric_1g_axle(sm, rc_height, tw):  # N, transferred to outside OR lifted from inside tire
-    
-    return 9.80665 * sm * rc_height / tw
-
-def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to outside OR lifted from inside tire
-    
-    return 9.80665 * usm * (tire_diameter/2) / tw
-
-#TODO: Finalize and draw out the below equations. Not done yet.
-#TODO: Geo arms are approximation, spend time thinking through physics
-def LongLT_sm_elastic_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
-    
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / wb_end
-
-def LongLT_sm_geometric_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
-    
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * anti_geo) / wb_end
-
-def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
-    
-    return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
-
-'''
-Begin vehicle properties definitions below.
-'''
 
 def roll_gradient(
         tw_v, rc_height_f, rc_height_r, cm_height, m, weight_dist_f,
@@ -192,6 +162,10 @@ def roll_LatLD_per_g(
 
     return (LLT_f_per_g, LLT_r_per_g, LLT_ratio)
 
+def LatLT_sm_elastic_alt(disp, K_s_v, K_arb_v, K_t):
+
+    return disp * K_eq_series(K_s_v+K_arb_v, K_t)
+
 def get_roll_tip_G(tw_f, tw_r, m_f, cm_height, m, df_f, df_r):
 
     tw_at_cg = tw_r + (tw_f - tw_r) * m_f
@@ -259,9 +233,35 @@ def aero_platform_response(test_df_f, test_df_r, m_f, wheel_base, K_s_f_v, K_s_r
     return(pitch, dive, squat, stability_margin)  # In degrees dive, m, m, and m respectively
 
 '''
-Begin functions for supporting time-dependent solving below.
+SECTION 2. Begin functions for supporting time-dependent solving below.
 #TODO:Dummy functions still to finalize.
 '''
+
+def LatLT_sm_elastic_1g_axle(sm, rc_height, cm_height, tw):  # N, transferred to outside OR lifted from inside tire
+    
+    return 9.80665 * sm * (cm_height - rc_height) / tw
+
+def LatLT_sm_geometric_1g_axle(sm, rc_height, tw):  # N, transferred to outside OR lifted from inside tire
+    
+    return 9.80665 * sm * rc_height / tw
+
+def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to outside OR lifted from inside tire
+    
+    return 9.80665 * usm * (tire_diameter/2) / tw
+
+#TODO: Finalize and draw out the below equations. Not done yet.
+#TODO: Geo arms are approximation, spend time thinking through physics
+def LongLT_sm_elastic_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
+    
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / wb_end
+
+def LongLT_sm_geometric_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
+    
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * anti_geo) / wb_end
+
+def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
+    
+    return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
 
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
@@ -297,5 +297,21 @@ def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
 def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
 
+# TO BE DEPRICATED.
 def get_tire_load(self, b, b_d, c, c_d, m_dist):
     return (b - c) * self.K_t_f + (b_d - c_d) * self.C_t_f + (self.m * m_dist) * 9.80655
+
+def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw):
+    return K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (tw / 2)
+
+def get_ride_spring_F(K_s, a, b):
+    return K_s * (a - b)
+
+def get_ARB_F(K_arb, a_r, b_r, a_l, b_l):
+    return K_arb * ((a_r - b_r) - (a_l - b_l))
+
+def get_tire_spring_F(K_t, b, c):
+    return K_t * (b - c)
+
+def get_tire_damper_F(C_t, b_d, c_d):
+    return C_t * (b_d - c_d)

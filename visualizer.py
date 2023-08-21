@@ -157,9 +157,9 @@ def ML_set(synth_data):
 
     for i, sample in enumerate(synth_data[1:]):
         if i == 0:
-            subplots[1].plot(sample[0][2], label=f'Telemetry Response, CM Height: {sample[1][0]:.3f} m')
+            subplots[1].plot(sample[0][1], label=f'Telemetry Response, CM Height: {sample[1][0]:.3f} m')
         else:
-            subplots[1].plot(sample[0][2], label=f'Simulated Response, CM Height: {sample[1][0]:.3f} m')
+            subplots[1].plot(sample[0][1], label=f'Simulated Response, CM Height: {sample[1][0]:.3f} m')
         #subplots[1].plot(sample[0][3])
         subplots[1].legend(fontsize = '9', loc = 'upper right')
         subplots[1].set_xlabel('Time (s/100)')

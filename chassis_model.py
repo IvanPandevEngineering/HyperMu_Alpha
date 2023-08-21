@@ -1,5 +1,5 @@
 '''
-Ivan Pandev, March 2023
+Copyright 2023 Ivan Pandev
 
 This document defines the chassis model used in ChassisDyne, as a system of equations
 relating the wheel and body displacements over time to chassis parameters such as
@@ -61,15 +61,15 @@ def get_dd_matrix(
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
-    chassis_flex_LT_f = self.K_ch * ((state.a_fr - state.a_fl) - (state.a_rr - state.a_rl)) / (self.tw_f / 2)
-    chassis_flex_LT_r = self.K_ch * ((state.a_fr - state.a_fl) - (state.a_rr - state.a_rl)) / (self.tw_r / 2)
-    ride_spring_F_fr = self.K_s_f * (state.a_fr - state.b_fr)
-    ride_spring_F_fl = self.K_s_f * (state.a_fl - state.b_fl)
-    ride_spring_F_rr = self.K_s_r * (state.a_rr - state.b_rr)
-    ride_spring_F_rl = self.K_s_r * (state.a_rl - state.b_rl)
-    ARB_F_f = self.K_arb_f * ((state.a_fr - state.b_fr) - (state.a_fl - state.b_fl))
-    ARB_F_r = self.K_arb_r * ((state.a_rr - state.b_rr) - (state.a_rl - state.b_rl))
-    
+    chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
+    chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
+    ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr)
+    ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl)
+    ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr)
+    ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl)
+    ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
+    ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
+
     ride_damper_F_ideal_fr = f.get_ideal_damper_force(
         C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
     )
@@ -86,14 +86,14 @@ def get_dd_matrix(
     #  Heave spring
     #  Heave damper
 
-    tire_spring_F_fr = self.K_t_f * (state.b_fr - state.c_fr)
-    tire_spring_F_fl = self.K_t_f * (state.b_fl - state.c_fl)
-    tire_spring_F_rr = self.K_t_r * (state.b_rr - state.c_rr)
-    tire_spring_F_rl = self.K_t_r * (state.b_rl - state.c_rl)
-    tire_damper_F_fr = self.C_t_f * (state.b_d_fr - state.c_d_fr)
-    tire_damper_F_fl = self.C_t_f * (state.b_d_fl - state.c_d_fl)
-    tire_damper_F_rr = self.C_t_r * (state.b_d_rr - state.c_d_rr)
-    tire_damper_F_rl = self.C_t_r * (state.b_d_rl - state.c_d_rl)
+    tire_spring_F_fr = f.get_tire_spring_F(self.K_t_f, state.b_fr, state.c_fr)
+    tire_spring_F_fl = f.get_tire_spring_F(self.K_t_f, state.b_fl, state.c_fl)
+    tire_spring_F_rr = f.get_tire_spring_F(self.K_t_r, state.b_rr, state.c_rr)
+    tire_spring_F_rl = f.get_tire_spring_F(self.K_t_r, state.b_rl, state.c_rl)
+    tire_damper_F_fr = f.get_tire_damper_F(self.C_t_f, state.b_d_fr, state.c_d_fr)
+    tire_damper_F_fl = f.get_tire_damper_F(self.C_t_f, state.b_d_fl, state.c_d_fl)
+    tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
+    tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
