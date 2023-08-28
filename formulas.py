@@ -298,8 +298,8 @@ def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
 
 # TO BE DEPRICATED.
-def get_tire_load(self, b, b_d, c, c_d, m_dist):
-    return (b - c) * self.K_t_f + (b_d - c_d) * self.C_t_f + (self.m * m_dist) * 9.80655
+def get_tire_load_dep(self, b, b_d, c, c_d, m_dist):
+    return (b - c) * self.K_t_f + (b_d - c_d) * self.C_t_f
 
 def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw):
     return K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (tw / 2)
@@ -315,3 +315,12 @@ def get_tire_spring_F(K_t, b, c):
 
 def get_tire_damper_F(C_t, b_d, c_d):
     return C_t * (b_d - c_d)
+
+def get_tire_load(tire_spring_F, tire_damper_F):
+    return tire_spring_F + tire_damper_F
+
+def get_init_b(sm, usm, K_t):
+    return (sm + usm) * 9.80655 / K_t
+
+def get_init_a(sm, usm, K_s, K_t):
+    return sm * 9.80655 / K_s + get_init_b(sm, usm, K_t)

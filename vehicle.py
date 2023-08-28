@@ -222,8 +222,15 @@ class vehicle:
             force_function = cd.get_demo_G_function()
 
         state = chassis_state(
-            0,0,0,0,0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,0,0,0,0
+            f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f),  # initial a_fr
+            f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f),  # initial a_fr
+            f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r),  # initial a_fr
+            f.get_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r),  # initial a_fr
+            f.get_init_b(self.sm_fr, self.usm_fr, self.K_t_f),  # initial b_fr
+            f.get_init_b(self.sm_fl, self.usm_fl, self.K_t_f),  # initial b_fr
+            f.get_init_b(self.sm_rr, self.usm_rr, self.K_t_r),  # initial b_fr
+            f.get_init_b(self.sm_rl, self.usm_rl, self.K_t_r),  # initial b_fr
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         )
         
         roll_angle_f, roll_angle_r, pitch_angle, roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate, \
@@ -267,10 +274,10 @@ class vehicle:
                 dt = dt, self = self, state = state, inputs_dt = inputs_dt
             )
 
-            tire_load_fr.append(f.get_tire_load(self, b = state.b_fr, b_d = state.b_d_fr, c = state.c_fr, c_d = state.c_d_fr, m_dist = self.m_f)) 
-            tire_load_fl.append(f.get_tire_load(self, b = state.b_fl, b_d = state.b_d_fl, c = state.c_fl, c_d = state.c_d_fl, m_dist = self.m_f))
-            tire_load_rr.append(f.get_tire_load(self, b = state.b_rr, b_d = state.b_d_rr, c = state.c_rr, c_d = state.c_d_rr, m_dist = self.m_r))
-            tire_load_rl.append(f.get_tire_load(self, b = state.b_rl, b_d = state.b_d_rl, c = state.c_rl, c_d = state.c_d_rl, m_dist = self.m_r))
+            tire_load_fr.append(f.get_tire_load_dep(self, b = state.b_fr, b_d = state.b_d_fr, c = state.c_fr, c_d = state.c_d_fr, m_dist = self.m_f)) 
+            tire_load_fl.append(f.get_tire_load_dep(self, b = state.b_fl, b_d = state.b_d_fl, c = state.c_fl, c_d = state.c_d_fl, m_dist = self.m_f))
+            tire_load_rr.append(f.get_tire_load_dep(self, b = state.b_rr, b_d = state.b_d_rr, c = state.c_rr, c_d = state.c_d_rr, m_dist = self.m_r))
+            tire_load_rl.append(f.get_tire_load_dep(self, b = state.b_rl, b_d = state.b_d_rl, c = state.c_rl, c_d = state.c_d_rl, m_dist = self.m_r))
 
             #damper vel is actually wheel vel, for now.
             damper_vel_fr.append(state.a_d_fr - state.b_d_fr)
@@ -291,7 +298,7 @@ class vehicle:
                 C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
             ))
 
-            roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14)
+            roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14) 
             roll_angle_r.append((state.a_rr - state.a_rl)*180/3.14)
             pitch_angle.append((state.a_fr+state.a_fl)*180/(2*3.14) - (state.a_rr+state.a_rl)*180/(2*3.14))
             roll_angle_rate_f.append((state.a_d_fr - state.a_d_fl)*180/3.14)

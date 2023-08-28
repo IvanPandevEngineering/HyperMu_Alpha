@@ -16,6 +16,10 @@ chassis_state = namedtuple('chassis_state',
     'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
 )
 
+variables_of_interest = namedtuple('variables_of_interest',
+    ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl']
+)
+
 def get_dd_matrix(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     state,
@@ -63,10 +67,12 @@ def get_dd_matrix(
     #TODO: Check K_ch implementation.
     chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
     chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
+
     ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr)
     ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl)
     ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr)
     ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl)
+
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
 
@@ -83,17 +89,20 @@ def get_dd_matrix(
         C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
     )
 
-    #  Heave spring
-    #  Heave damper
-
     tire_spring_F_fr = f.get_tire_spring_F(self.K_t_f, state.b_fr, state.c_fr)
     tire_spring_F_fl = f.get_tire_spring_F(self.K_t_f, state.b_fl, state.c_fl)
     tire_spring_F_rr = f.get_tire_spring_F(self.K_t_r, state.b_rr, state.c_rr)
     tire_spring_F_rl = f.get_tire_spring_F(self.K_t_r, state.b_rl, state.c_rl)
+
     tire_damper_F_fr = f.get_tire_damper_F(self.C_t_f, state.b_d_fr, state.c_d_fr)
     tire_damper_F_fl = f.get_tire_damper_F(self.C_t_f, state.b_d_fl, state.c_d_fl)
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
+
+    tire_load_fr = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr)
+    tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)
+    tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr)
+    tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)
 
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
@@ -133,15 +142,16 @@ def get_dd_matrix(
         [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_rl 
     ])
 
+    #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct.
     B_mat = np.array([
-        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr],
-        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl],
-        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr],
-        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl],
-        [ - ride_spring_F_fr - ARB_F_f - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr],
-        [ - ride_spring_F_fl + ARB_F_f - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl],
-        [ - ride_spring_F_rr - ARB_F_r - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr],
-        [ - ride_spring_F_rl + ARB_F_r - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl]
+        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT_f + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655],
+        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT_f - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655],
+        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT_r - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr - self.sm_rr*9.80655],
+        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT_r + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl - self.sm_rl*9.80655],
+        [ - ride_spring_F_fr - ARB_F_f - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fr + tire_damper_F_fr - self.usm_fr*9.80655],
+        [ - ride_spring_F_fl + ARB_F_f - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT_f - long_usm_geo_LT_f + tire_spring_F_fl + tire_damper_F_fl - self.usm_fl*9.80655],
+        [ - ride_spring_F_rr - ARB_F_r - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rr + tire_damper_F_rr - self.usm_rr*9.80655],
+        [ - ride_spring_F_rl + ARB_F_r - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl - self.usm_rl*9.80655]
     ])
 
     return np.matmul(np.linalg.inv(A_mat), B_mat)
