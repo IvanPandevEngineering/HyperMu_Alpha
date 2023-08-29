@@ -106,7 +106,7 @@ parameters:
     - 700
     - 'lbf/in'
   arb_rate_f:
-    - 200
+    - 225
     - 'lbf/in' #opposite wheel held static
   arb_rate_r:
     - 35
