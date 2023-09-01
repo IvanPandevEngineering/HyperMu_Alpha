@@ -9,7 +9,7 @@ import condition_data as cd
 from virtual_params import virtual_params
 from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
-from chassis_model import chassis_state
+import chassis_model as model
 import pickle
 
 def make_metric(value, unit: str):
@@ -58,6 +58,9 @@ class vehicle:
         self.K_s_r = vpd['spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
         self.K_arb_f = vpd['arb_rate_f']
         self.K_arb_r = vpd['arb_rate_r']
+
+        self.WD_motion_ratio_f = vpd['WD_motion_ratio_f']
+        self.WD_motion_ratio_r = vpd['WD_motion_ratio_r']
 
         self.C_lsc_f = vpd['slow_compression_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_lsc_r = vpd['slow_compression_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
@@ -221,7 +224,8 @@ class vehicle:
         else:
             force_function = cd.get_demo_G_function()
 
-        state = chassis_state(
+        #  Initiate the positional state of the chassis
+        state = model.chassis_state(
             f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f),  # initial a_fr
             f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f),  # initial a_fr
             f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r),  # initial a_fr
@@ -270,14 +274,15 @@ class vehicle:
                 c_d_rl_next = 0,
             )
 
-            state = RK4_step(
+            #  Forward-prediction of chassis model state using RK4
+            state, graphing_vars = RK4_step(
                 dt = dt, self = self, state = state, inputs_dt = inputs_dt
             )
 
-            tire_load_fr.append(f.get_tire_load_dep(self, b = state.b_fr, b_d = state.b_d_fr, c = state.c_fr, c_d = state.c_d_fr, m_dist = self.m_f)) 
-            tire_load_fl.append(f.get_tire_load_dep(self, b = state.b_fl, b_d = state.b_d_fl, c = state.c_fl, c_d = state.c_d_fl, m_dist = self.m_f))
-            tire_load_rr.append(f.get_tire_load_dep(self, b = state.b_rr, b_d = state.b_d_rr, c = state.c_rr, c_d = state.c_d_rr, m_dist = self.m_r))
-            tire_load_rl.append(f.get_tire_load_dep(self, b = state.b_rl, b_d = state.b_d_rl, c = state.c_rl, c_d = state.c_d_rl, m_dist = self.m_r))
+            tire_load_fr.append(graphing_vars.tire_load_fr)
+            tire_load_fl.append(graphing_vars.tire_load_fl)
+            tire_load_rr.append(graphing_vars.tire_load_rr)
+            tire_load_rl.append(graphing_vars.tire_load_rl)
 
             #damper vel is actually wheel vel, for now.
             damper_vel_fr.append(state.a_d_fr - state.b_d_fr)
@@ -285,18 +290,10 @@ class vehicle:
             damper_vel_rr.append(state.a_d_rr - state.b_d_rr)
             damper_vel_rl.append(state.a_d_rl - state.b_d_rl)
 
-            damper_force_fr.append(f.get_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-            ))
-            damper_force_fl.append(f.get_damper_force(
-                C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-            ))
-            damper_force_rr.append(f.get_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-            ))
-            damper_force_rl.append(f.get_damper_force(
-                C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-            ))
+            damper_force_fr.append(graphing_vars.damper_force_fr)
+            damper_force_fl.append(graphing_vars.damper_force_fl)
+            damper_force_rr.append(graphing_vars.damper_force_rr)
+            damper_force_rl.append(graphing_vars.damper_force_rl)
 
             roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14) 
             roll_angle_r.append((state.a_rr - state.a_rl)*180/3.14)
@@ -314,7 +311,7 @@ class vehicle:
 
         return(
             force_function[2:],
-            tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+            np.array(tire_load_fr), np.array(tire_load_fl), np.array(tire_load_rr), np.array(tire_load_rl),
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
             np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),

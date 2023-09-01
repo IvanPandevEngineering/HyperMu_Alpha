@@ -5,6 +5,10 @@ This document defines the chassis model used in ChassisDyne, as a system of equa
 relating the wheel and body displacements over time to chassis parameters such as
 springs, dampers, geometry, mass and inertia, etc.
 
+This document is also the most efficient place to define and varibles of interset
+(each variable should only be calculated once throughout the program) which will
+be plotted later.
+
 '''
 
 import numpy as np
@@ -17,10 +21,11 @@ chassis_state = namedtuple('chassis_state',
 )
 
 variables_of_interest = namedtuple('variables_of_interest',
-    ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl']
+    ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
+     'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl']
 )
 
-def get_dd_matrix(
+def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     state,
     G_lat, G_long  # lateral and longitudinal acceleration in G
@@ -55,12 +60,16 @@ def get_dd_matrix(
     lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(self.sm_r*self.sm, self.rc_height_r, self.tw_r)
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r)
 
-    long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_r, self.anti_dive, self.cm_height, self.wheel_base_f)
-    long_sm_geo_LT_f = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_r, self.anti_dive, self.cm_height, self.wheel_base_f)
+    long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
+    long_sm_geo_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
+    long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
+
+    long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_f, self.anti_dive, self.cm_height, self.wheel_base_f)
+    long_sm_geo_LT_f = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_f, self.anti_dive, self.cm_height, self.wheel_base_f)
     long_usm_geo_LT_f = G_long * f.LongLT_usm_geometric_1g_end(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
 
-    long_sm_elastic_LT_r = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_f, self.anti_squat, self.cm_height, self.wheel_base_r)
-    long_sm_geo_LT_r = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_f, self.anti_squat, self.cm_height, self.wheel_base_r)
+    long_sm_elastic_LT_r = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_r, self.anti_squat, self.cm_height, self.wheel_base_r)
+    long_sm_geo_LT_r = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_r, self.anti_squat, self.cm_height, self.wheel_base_r)
     long_usm_geo_LT_r = G_long * f.LongLT_usm_geometric_1g_end(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_r)
 
     #  Load transfers from springs and dampers
@@ -76,18 +85,10 @@ def get_dd_matrix(
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
 
-    ride_damper_F_ideal_fr = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-    )
-    ride_damper_F_ideal_fl = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f
-    )
-    ride_damper_F_ideal_rr = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-    )
-    ride_damper_F_ideal_rl = f.get_ideal_damper_force(
-        C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r
-    )
+    ride_damper_F_ideal_fr = f.get_ideal_damper_force(C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f)
+    ride_damper_F_ideal_fl = f.get_ideal_damper_force(C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f)
+    ride_damper_F_ideal_rr = f.get_ideal_damper_force(C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r)
+    ride_damper_F_ideal_rl = f.get_ideal_damper_force(C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r)
 
     tire_spring_F_fr = f.get_tire_spring_F(self.K_t_f, state.b_fr, state.c_fr)
     tire_spring_F_fl = f.get_tire_spring_F(self.K_t_f, state.b_fl, state.c_fl)
@@ -99,10 +100,17 @@ def get_dd_matrix(
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
-    tire_load_fr = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr)
-    tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)
-    tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr)
-    tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)
+    #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
+    VOI = variables_of_interest(
+        tire_load_fr = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr),
+        tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl),
+        tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
+        tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl),
+        damper_force_fr = ride_damper_F_ideal_fr * self.WD_motion_ratio_f**2,
+        damper_force_fl = ride_damper_F_ideal_fl * self.WD_motion_ratio_f**2,
+        damper_force_rr = ride_damper_F_ideal_rr * self.WD_motion_ratio_r**2,
+        damper_force_rl = ride_damper_F_ideal_rl * self.WD_motion_ratio_r**2
+    )
 
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
@@ -154,7 +162,7 @@ def get_dd_matrix(
         [ - ride_spring_F_rl + ARB_F_r - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT_r + long_usm_geo_LT_r + tire_spring_F_rl + tire_damper_F_rl - self.usm_rl*9.80655]
     ])
 
-    return np.matmul(np.linalg.inv(A_mat), B_mat)
+    return np.matmul(np.linalg.inv(A_mat), B_mat), VOI
 
 def get_x_matrix_1Dtest(
     m: float,

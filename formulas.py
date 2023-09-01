@@ -253,15 +253,29 @@ def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to ou
 #TODO: Geo arms are approximation, spend time thinking through physics
 def LongLT_sm_elastic_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
     
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / wb_end
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / (wb_end * 2)
 
 def LongLT_sm_geometric_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
     
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * anti_geo) / wb_end
+    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / (wb_end * 2)
 
 def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
     
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
+
+#TODO: anti-dive and anti-squat averaging
+def LongLT_sm_elastic_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
+    
+    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 2)
+
+def LongLT_sm_geometric_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
+    
+    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 2)
+
+def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
+    
+    return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
+
 
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r

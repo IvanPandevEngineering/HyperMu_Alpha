@@ -44,6 +44,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[1,1].plot(force_function['loggingTime(txt)'], tire_load_fl, label='tire load (N, fl)')
     subplots[1,1].plot(force_function['loggingTime(txt)'], tire_load_rr, label='tire load (N, rr)')
     subplots[1,1].plot(force_function['loggingTime(txt)'], tire_load_rl, label='tire load (N, rl)')
+    subplots[1,1].plot(force_function['loggingTime(txt)'], (tire_load_fr+tire_load_fl+tire_load_rr+tire_load_rl)/4, label='tire load (N, avg)')
     subplots[1,1].set_ylabel('Tire Load (N)')
     subplots[1,1].legend()
     subplots[1,1].grid(True)
@@ -100,8 +101,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     # PITCH CORR BELOW
 
-    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded roll angle rate (deg/s)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle_rate, label='predicted roll angle rate (deg/s, f)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded pitch angle rate (deg/s)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], -pitch_angle_rate, label='predicted pitch angle rate (deg/s, f)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], 2*force_function['accelerometerAccelerationY(G)'], label='recorded g force (G)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
     subplots[1][0].set_xlabel('Time')
@@ -109,15 +110,15 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[1][0].legend()
     subplots[1][0].grid(True)
 
-    slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(-pitch_angle_rate, (180*force_function['gyroRotationX(rad/s)']/3.14)+.2)
+    slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(pitch_angle_rate, (180*force_function['gyroRotationX(rad/s)']/3.14)+.2)
     r_squared_p = r_value_p ** 2
 
-    subplots[1][1].scatter(-pitch_angle_rate, (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='(deg/s)', s=10)
+    subplots[1][1].scatter(pitch_angle_rate, (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='(deg/s)', s=10)
     subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-10, 10, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
     subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[1][1].legend()
-    subplots[1][1].set_xlabel('Predicted Roll Rate (deg/s)')
-    subplots[1][1].set_ylabel('Recorded Roll Rate (deg/s)')
+    subplots[1][1].set_xlabel('Predicted Pitch Rate (deg/s)')
+    subplots[1][1].set_ylabel('Recorded Pitch Rate (deg/s)')
     subplots[1][1].grid(True)
 
     fig.tight_layout()

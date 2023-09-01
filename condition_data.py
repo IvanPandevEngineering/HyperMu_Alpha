@@ -13,7 +13,7 @@ def custom_smooth(array, rounds):
     
     return(array)
 
-def from_sensor_log_iOS_app(path: str):
+def from_sensor_log_iOS_app(path: str, smoothing_window_size=75):
 
     print('Converting file to dataframe...')
     data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']]
@@ -42,10 +42,10 @@ def from_sensor_log_iOS_app(path: str):
     data_in = data_in.interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
-    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = 75, center = False).mean()
-    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = 75, center = False).mean()
-    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = 75, center = False).mean()
-    data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = 75, center = False).mean()
+    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in = data_in.dropna(how='any')
 
     #create new time and timestep columns
