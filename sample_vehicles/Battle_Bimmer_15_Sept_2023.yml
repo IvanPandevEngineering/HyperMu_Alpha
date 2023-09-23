@@ -1,0 +1,156 @@
+---
+name: Battle_Bimmer_28_Dec_2022
+date: 31 Dec 2022
+number: 199 XP
+class: SCCA Solo II XP-Class
+driver: Ivan Pandev
+driver_mass: 147 lbs
+parameters:
+  test_lat_g:
+    - 1.4
+    - 'g'
+  test_downforce_front:
+    - 60
+    - 'lbf'
+  test_downforce_rear:
+    - 70
+    - 'lbf'
+  corner_mass_fr:
+    - 623
+    - 'lb'
+  corner_mass_fl:
+    - 633
+    - 'lb'
+  corner_mass_rr:
+    - 548
+    - 'lb'
+  corner_mass_rl:
+    - 573
+    - 'lb'
+  corner_unsprung_mass_fr:
+    - 80
+    - 'lb'
+  corner_unsprung_mass_fl:
+    - 80
+    - 'lb'
+  corner_unsprung_mass_rr:
+    - 90
+    - 'lb'
+  corner_unsprung_mass_rl:
+    - 90
+    - 'lb'
+  center_of_mass_height:
+    - 20
+    - 'in'
+  moment_of_inertia_about_cg_roll:
+    - 890000
+    - 'lbs-in^2'
+  moment_of_inertia_about_cg_pitch:
+    - 1600000
+    - 'lbs-in^2'
+  roll_center_height_front:
+    - 4.5
+    - 'in'
+  roll_center_height_rear:
+    - 7
+    - 'in'
+  WS_motion_ratio_f:
+    - 1.1
+    - '-/-'
+  WS_motion_ratio_r:
+    - 1.538
+    - '-/-'
+  WD_motion_ratio_f:
+    - 1.1
+    - '-/-'
+  WD_motion_ratio_r:
+    - 1.05
+    - '-/-'
+  pitch_center_height_accel:
+    - 4
+    - 'in'
+  pitch_center_height_decel:
+    - 8
+    - 'in'
+  pitch_center_height_ic2cp:
+    - 9
+    - 'in'
+  anti-dive:
+    - 0.20
+    - '-/-'
+  anti-squat:
+    - 0.80
+    - '-/-'
+  tire_diameter_front:
+    - 25.3
+    - 'in'
+  tire_diameter_rear:
+    - 25.8
+    - 'in'
+  track_width_front:
+    - 64
+    - 'in'
+  track_width_rear:
+    - 63
+    - 'in'
+  wheel_base:
+    - 107.3
+    - 'in'
+  torsional_spring_rate:
+    - 12500
+    - 'Nm/deg'
+  spring_rate_f:
+    - 450
+    - 'lbf/in'
+  spring_rate_r:
+    - 700
+    - 'lbf/in'
+  arb_rate_f:
+    - 225
+    - 'lbf/in' #opposite wheel held static
+  arb_rate_r:
+    - 70
+    - 'lbf/in' #opposite wheel held static
+  tire_rate_f:
+    - 300000
+    - 'N/m'
+  tire_rate_r:
+    - 300000
+    - 'N/m'
+  slow_compression_damper_rate_f:
+    - 3846 #500N @ 0.13m/s
+    - 'N/(m/s)'
+  slow_compression_damper_rate_r:
+    - 2384 #310N @ 0.13m/s
+    - 'N/(m/s)'
+  slow_rebound_damper_rate_f:
+    - 6153 #800N @ 0.13m/s
+    - 'N/(m/s)'
+  slow_rebound_damper_rate_r:
+    - 4615 #600N @ 0.13m/s
+    - 'N/(m/s)'
+  knee_speed_compression_f:
+    - 0.130
+    - 'm/s'
+  knee_speed_rebound_f:
+    - 0.130
+    - 'm/s'
+  knee_speed_compression_r:
+    - 0.130
+    - 'm/s'
+  knee_speed_rebound_r:
+    - 0.115
+    - 'm/s'
+  fast_compression_damper_rate_f:
+    - 2121 #700N @ 0.33m/s 
+    - 'N/(m/s)'
+  fast_compression_damper_rate_r:
+    - 1364 #450N @ 0.33m/s
+    - 'N/(m/s)'
+  fast_rebound_damper_rate_f:
+    - 3939 #1300N @ 0.33m/s
+    - 'N/(m/s)'
+  fast_rebound_damper_rate_r:
+    - 3485 #1150N @ 0.33m/s
+    - 'N/(m/s)'
+...
