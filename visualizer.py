@@ -55,7 +55,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[2,0].legend()
     subplots[2,0].grid(True)
 
-    subplots[2,1].plot(force_function['loggingTime(txt)'], lateral_load_dist_f/(lateral_load_dist_r+lateral_load_dist_f), label='lateral load dist ratio (%, f)')
+    subplots[2,1].plot(force_function['loggingTime(txt)'], 100*(lateral_load_dist_f/lateral_load_dist_r), label='lateral load dist ratio (%, f)')
     subplots[2,1].set_ylabel('Lat. Load Dist. Ratio (%)')
     subplots[2,1].legend()
     subplots[2,1].grid(True)

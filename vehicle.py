@@ -149,9 +149,9 @@ class vehicle:
         print(f'Roll Frequency: {f.roll_frequency(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll):.3f} hz')
         print(f'Roll Damping Ratio (Slow): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v):.3f}')
         print(f'Roll Damping Ratio (Fast): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v):.3f}')
-        print(f'Lateral Load Distribution Front: +{self.LatLT_properties[0]:.3%} % Outside/G')
-        print(f'Lateral Load Distribution Rear: +{self.LatLT_properties[1]:.3%} % Outside/G')
-        print(f'Lateral Load Distribution Ratio: +{self.LatLT_properties[2]:.3f} % Front/G')
+        print(f'Lateral Load Distribution Front: +{self.LatLT_properties[0]:.3%} Outside/G')
+        print(f'Lateral Load Distribution Rear: +{self.LatLT_properties[1]:.3%} Outside/G')
+        print(f'Lateral Load Distribution Ratio: +{self.LatLT_properties[2]:.1%} Front/G')
         print(f'Tip-Over G: {self.roll_tip_G:.3f} G')
         print('\n')
 
@@ -161,7 +161,7 @@ class vehicle:
         print(f'Pitch Frequency*: {self.pitch_frequency:.3f} hz')
         print(f'Pitch Damping Ratio* (Slow): {self.pitch_damping_slow:.3f}')
         print(f'Pitch Damping Ratio* (Fast): {self.pitch_damping_fast:.3f}')
-        print(f'Longitudinal Load Distribution: +/-{self.LongLD_per_g:.3%} % Front/G')
+        print(f'Longitudinal Load Distribution: +/-{self.LongLD_per_g:.3%} Front/G')
         print('* - taken from contact-patch-to-IC line, see documenation.')
         print('\n')
 

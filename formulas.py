@@ -266,11 +266,11 @@ def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, 
 #TODO: anti-dive and anti-squat averaging
 def LongLT_sm_elastic_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
     
-    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 2)
+    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 4)
 
 def LongLT_sm_geometric_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
     
-    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 2)
+    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 4)
 
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
     
