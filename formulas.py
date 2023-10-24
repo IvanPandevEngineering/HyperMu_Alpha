@@ -338,3 +338,9 @@ def get_init_b(sm, usm, K_t):
 
 def get_init_a(sm, usm, K_s, K_t):
     return sm * 9.80655 / K_s + get_init_b(sm, usm, K_t)
+
+def get_bump_stop_F(K_bs, max_compression, a, b):
+    if a - b < max_compression:
+        return 0 
+    else:
+        return K_bs * (a - b - max_compression)

@@ -56,6 +56,8 @@ class vehicle:
 
         self.K_s_f = vpd['spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
         self.K_s_r = vpd['spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
+        self.K_bs_f = vpd['bump_stop_spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
+        self.K_bs_r = vpd['bump_stop_spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
         self.K_arb_f = vpd['arb_rate_f']
         self.K_arb_r = vpd['arb_rate_r']
 
@@ -126,6 +128,8 @@ class vehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
+        self.max_compression_f = vpd['max_suspension_compression_front'] / vpd['WS_motion_ratio_f']
+        self.max_compression_r = vpd['max_suspension_compression_rear'] / vpd['WS_motion_ratio_r']
 
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
