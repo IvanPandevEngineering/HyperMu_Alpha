@@ -77,11 +77,10 @@ def solve_chassis_model(
     chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
     chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
 
-    ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, state.a_fr, state.b_fr)
-    print(f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, state.a_fr, state.b_fr))
-    ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, state.a_fl, state.b_fl)
-    ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, state.a_rr, state.b_rr)
-    ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, state.a_rl, state.b_rl)
+    ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
+    ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
+    ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rr, state.a_rr, self.init_b_rr, state.b_rr)
+    ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rl, state.a_rl, self.init_b_rl, state.b_rl)
 
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
