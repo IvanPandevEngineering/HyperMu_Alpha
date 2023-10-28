@@ -56,6 +56,8 @@ class vehicle:
 
         self.K_s_f = vpd['spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
         self.K_s_r = vpd['spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
+        self.K_bs_f = vpd['bump_stop_spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
+        self.K_bs_r = vpd['bump_stop_spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
         self.K_arb_f = vpd['arb_rate_f']
         self.K_arb_r = vpd['arb_rate_r']
 
@@ -126,6 +128,17 @@ class vehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
+        self.max_compression_f = vpd['max_suspension_compression_front'] / vpd['WS_motion_ratio_f']
+        self.max_compression_r = vpd['max_suspension_compression_rear'] / vpd['WS_motion_ratio_r']
+
+        self.init_a_fr = f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
+        self.init_a_fl = f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
+        self.init_a_rr = f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
+        self.init_a_rl = f.get_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
+        self.init_b_fr = f.get_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
+        self.init_b_fl = f.get_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
+        self.init_b_rr = f.get_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
+        self.init_b_rl = f.get_init_b(self.sm_rl, self.usm_rl, self.K_t_r)  # initial b_rl
 
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
@@ -226,14 +239,8 @@ class vehicle:
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
-            f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f),  # initial a_fr
-            f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f),  # initial a_fr
-            f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r),  # initial a_fr
-            f.get_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r),  # initial a_fr
-            f.get_init_b(self.sm_fr, self.usm_fr, self.K_t_f),  # initial b_fr
-            f.get_init_b(self.sm_fl, self.usm_fl, self.K_t_f),  # initial b_fr
-            f.get_init_b(self.sm_rr, self.usm_rr, self.K_t_r),  # initial b_fr
-            f.get_init_b(self.sm_rl, self.usm_rl, self.K_t_r),  # initial b_fr
+            self.init_a_fr, self.init_a_fl, self.init_a_rr, self.init_a_rl,
+            self.init_b_fr, self.init_b_fl, self.init_b_rr, self.init_b_rr,
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         )
         

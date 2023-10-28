@@ -25,7 +25,7 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size=75):
     #drop redundant column
     data_in = data_in.drop(columns='loggingTime(txt)')
     #select interesting time range
-    data_in = data_in[3100:5500]
+    data_in = data_in[2400:4200]
     #set index to be picked up by interpolation function
     data_in = data_in.set_index('datetime')
 

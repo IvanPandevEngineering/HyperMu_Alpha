@@ -319,7 +319,7 @@ def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw):
     return K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (tw / 2)
 
 def get_ride_spring_F(K_s, a, b):
-    return K_s * (a - b)
+    return max(K_s * (a - b), 0)
 
 def get_ARB_F(K_arb, a_r, b_r, a_l, b_l):
     return K_arb * ((a_r - b_r) - (a_l - b_l))
@@ -338,3 +338,6 @@ def get_init_b(sm, usm, K_t):
 
 def get_init_a(sm, usm, K_s, K_t):
     return sm * 9.80655 / K_s + get_init_b(sm, usm, K_t)
+
+def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):
+    return max(K_bs * ((a-init_a) - (b-init_b) - max_compression)  , 0)
