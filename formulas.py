@@ -276,7 +276,6 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
     
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
 
-
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
     ):
@@ -325,7 +324,7 @@ def get_ARB_F(K_arb, a_r, b_r, a_l, b_l):
     return K_arb * ((a_r - b_r) - (a_l - b_l))
 
 def get_tire_spring_F(K_t, b, c):
-    return K_t * (b - c)
+    return max(K_t * (b - c), 0)
 
 def get_tire_damper_F(C_t, b_d, c_d):
     return C_t * (b_d - c_d)

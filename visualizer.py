@@ -55,7 +55,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[2,0].legend()
     subplots[2,0].grid(True)
 
-    subplots[2,1].plot(force_function['loggingTime(txt)'], 100*(lateral_load_dist_f/lateral_load_dist_r), label='lateral load dist ratio (%, f)')
+    subplots[2,1].plot(force_function['loggingTime(txt)'], 100*(lateral_load_dist_f/(lateral_load_dist_f+lateral_load_dist_r)), label='lateral load dist ratio (%, f)')
     subplots[2,1].set_ylabel('Lat. Load Dist. Ratio (%)')
     subplots[2,1].legend()
     subplots[2,1].grid(True)
@@ -78,7 +78,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_28_Dec_2022 (Left-Smoothing Window = 750ms)', fontsize=14)
     fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2023 Ivan Pandev. All rights reserved.', fontsize=8)
 
-    subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.3, label='Recorded roll angle rate (deg/s)')
+    subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='predicted roll angle rate (deg/s, f)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_r, label='predicted roll angle rate (deg/s, r)')
     subplots[0][0].set_xlabel('Time')
@@ -88,10 +88,10 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     roll_angle_rate_avg = (np.array(roll_angle_rate_f) + np.array(roll_angle_rate_r)) / 2
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.3)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2)
     r_squared = r_value ** 2
 
-    subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.3, label='(deg/s)', s=10)
+    subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='(deg/s)', s=10)
     subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-10, 10, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
     subplots[0][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[0][1].legend()

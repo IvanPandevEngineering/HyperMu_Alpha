@@ -232,7 +232,7 @@ class vehicle:
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         if kwargs:
             force_function = cd.from_sensor_log_iOS_app(
-                kwargs['replay_src']
+                kwargs['replay_src'], kwargs['smoothing_window_size_ms']
             )
         else:
             force_function = cd.get_demo_G_function()

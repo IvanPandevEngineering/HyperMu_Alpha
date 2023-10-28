@@ -13,19 +13,25 @@ def custom_smooth(array, rounds):
     
     return(array)
 
-def from_sensor_log_iOS_app(path: str, smoothing_window_size=75):
+def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
+
+    smoothing_window_size = int(smoothing_window_size_ms/10)
 
     print('Converting file to dataframe...')
     data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']]
 
     print('Parsing timesteps...')
+
     #Create datetime column to be interpolated
     data_in['datetime'] = pd.to_datetime(data_in['loggingTime(txt)'])
     data_in['datetime'] = pd.DatetimeIndex(data_in['datetime'])
+    
     #drop redundant column
     data_in = data_in.drop(columns='loggingTime(txt)')
+    
     #select interesting time range
     data_in = data_in[2400:4200]
+    
     #set index to be picked up by interpolation function
     data_in = data_in.set_index('datetime')
 
@@ -42,11 +48,16 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size=75):
     data_in = data_in.interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
+    #apply left-smoothing
     data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in = data_in.dropna(how='any')
+
+    #apply vertical-offset corrections
+    data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'] - 0.03
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] - 0.01
 
     #create new time and timestep columns
     data_in['time'] = data_in.index
