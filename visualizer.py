@@ -14,7 +14,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
-    fig.suptitle('Race Telemetry on Battle_Bimmer_28_Dec_2022', fontsize=14)
+    fig.suptitle('Race Telemetry on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
     fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2023 Ivan Pandev. All rights reserved.', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
@@ -75,7 +75,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
-    fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_28_Dec_2022 (Left-Smoothing Window = 750ms)', fontsize=14)
+    fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
     fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2023 Ivan Pandev. All rights reserved.', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
@@ -101,8 +101,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], -pitch_angle_rate, label='predicted pitch angle rate (deg/s, f)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], 2*force_function['accelerometerAccelerationY(G)'], label='recorded g force (G)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], 2*force_function['accelerometerAccelerationY(G)'], label='recorded g force (G)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
     subplots[1][0].set_xlabel('Time')
     subplots[1][0].set_ylabel('Roll Rate (deg/s)')
     subplots[1][0].legend()

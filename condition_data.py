@@ -73,8 +73,8 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
 
 def get_demo_G_function(
         timespan: int = 3,
-        lat_magnitude: float = 1.4, lat_frequency: float = 0.5,
-        long_magnitude: float = 0.6, long_frequency: float = 1
+        lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
+        long_magnitude: float = 0.5, long_frequency: float = 1
     ):
 
     #  Default time resolution is set to 100hz
