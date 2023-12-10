@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define standard dataframe format for multiple data generation functions
-columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']
+columns_global=['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'c_fr', 'c_rr', 'timestep', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
 
 def custom_smooth(array, rounds):
     
@@ -18,7 +18,7 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     smoothing_window_size = int(smoothing_window_size_ms/10)
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)']]
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)']]
 
     print('Parsing timesteps...')
 
@@ -53,18 +53,24 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['gyroRotationY(rad/s)'] = data_in['gyroRotationY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['gyroRotationX(rad/s)'] = data_in['gyroRotationX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['gyroRotationZ(rad/s)'] = data_in['gyroRotationZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in = data_in.dropna(how='any')
 
     #apply vertical-offset corrections
     data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'] - 0.03
     data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] - 0.01
 
+    #apply angular frame-of-reference corrections
+    installed_pitch_angle = 10*math.pi/180
+    #data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] + installed_pitch_angle*np.sin(abs(data_in['gyroRotationZ(rad/s)'])) - installed_pitch_angle*np.sin(abs(data_in['gyroRotationY(rad/s)']))
+    data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationZ(rad/s)']))-1) - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationY(rad/s)']))-1)
+
     #create new time and timestep columns
     data_in['time'] = data_in.index
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['gyroRotationX(rad/s)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['gyroRotationX(rad/s)'], data_in['gyroRotationZ(rad/s)'], data_in['gyroRotationX_corrected(rad/s)'])), \
         columns=columns_global)
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
