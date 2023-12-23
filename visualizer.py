@@ -99,14 +99,10 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][1].set_ylabel('Recorded Roll Rate (deg/s)')
     subplots[0][1].grid(True)
 
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2, label='Corrected pitch angle rate (deg/s)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationZ(rad/s)']/3.14)+.2, label='Recorded yaw angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], -pitch_angle_rate, label='predicted pitch angle rate (deg/s, f)')
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], 2*force_function['accelerometerAccelerationY(G)'], label='recorded g force (G)')
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
     subplots[1][0].set_xlabel('Time')
-    subplots[1][0].set_ylabel('Roll Rate (deg/s)')
+    subplots[1][0].set_ylabel('Pitch Rate (deg/s)')
     subplots[1][0].legend()
     subplots[1][0].grid(True)
 

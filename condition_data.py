@@ -62,7 +62,7 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
 
     #apply angular frame-of-reference corrections
     installed_pitch_angle = 10*math.pi/180
-    #data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] + installed_pitch_angle*np.sin(abs(data_in['gyroRotationZ(rad/s)'])) - installed_pitch_angle*np.sin(abs(data_in['gyroRotationY(rad/s)']))
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] * (np.cos(installed_pitch_angle))
     data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationZ(rad/s)']))-1) - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationY(rad/s)']))-1)
 
     #create new time and timestep columns
