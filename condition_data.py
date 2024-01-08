@@ -61,9 +61,9 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] - 0.01
 
     #apply angular frame-of-reference corrections
-    installed_pitch_angle = 10*math.pi/180
-    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] * (np.cos(installed_pitch_angle))
-    data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationZ(rad/s)']))-1) - installed_pitch_angle*(np.cos(abs(data_in['gyroRotationY(rad/s)']))-1)
+    installed_pitch_angle = 5*math.pi/180  # Convert pitch installation angle to rad
+    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] * (np.cos(installed_pitch_angle))  # Scale long accel based on pitch install angle
+    data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['gyroRotationZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['gyroRotationY(rad/s)'])  # pitch rate correction by yaw and roll rates
 
     #create new time and timestep columns
     data_in['time'] = data_in.index

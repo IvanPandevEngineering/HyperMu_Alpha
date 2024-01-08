@@ -100,6 +100,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][1].grid(True)
 
     subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2, label='Corrected pitch angle rate (deg/s)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationZ(rad/s)']/3.14)+.2, label='Yaw angle rate (deg/s)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded raw pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], -pitch_angle_rate, label='predicted pitch angle rate (deg/s, f)')
     subplots[1][0].set_xlabel('Time')
     subplots[1][0].set_ylabel('Pitch Rate (deg/s)')
@@ -109,7 +111,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2)
     r_squared_p = r_value_p ** 2
 
-    subplots[1][1].scatter(-pitch_angle_rate, (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='(deg/s)', s=10)
+    subplots[1][1].scatter(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2, label='(deg/s)', s=10)
     subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-10, 10, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
     subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[1][1].legend()
