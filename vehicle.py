@@ -290,13 +290,10 @@ class vehicle:
             tire_load_fl.append(graphing_vars.tire_load_fl)
             tire_load_rr.append(graphing_vars.tire_load_rr)
             tire_load_rl.append(graphing_vars.tire_load_rl)
-
-            #damper vel is actually wheel vel, for now.
-            damper_vel_fr.append(state.a_d_fr - state.b_d_fr)
-            damper_vel_fl.append(state.a_d_fl - state.b_d_fl)
-            damper_vel_rr.append(state.a_d_rr - state.b_d_rr)
-            damper_vel_rl.append(state.a_d_rl - state.b_d_rl)
-
+            damper_vel_fr.append(graphing_vars.damper_vel_fr)
+            damper_vel_fl.append(graphing_vars.damper_vel_fl)
+            damper_vel_rr.append(graphing_vars.damper_vel_rr)
+            damper_vel_rl.append(graphing_vars.damper_vel_rl)
             damper_force_fr.append(graphing_vars.damper_force_fr)
             damper_force_fl.append(graphing_vars.damper_force_fl)
             damper_force_rr.append(graphing_vars.damper_force_rr)

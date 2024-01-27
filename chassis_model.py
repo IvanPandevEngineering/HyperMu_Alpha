@@ -22,6 +22,7 @@ chassis_state = namedtuple('chassis_state',
 
 variables_of_interest = namedtuple('variables_of_interest',
     ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
+     'damper_vel_fr', 'damper_vel_fl', 'damper_vel_rr', 'damper_vel_rl',
      'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl']
 )
 
@@ -60,17 +61,13 @@ def solve_chassis_model(
     lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(self.sm_r*self.sm, self.rc_height_r, self.tw_r)
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r)
 
+    # TODO: Need review
     long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
     long_sm_geo_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
     long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
 
-    long_sm_elastic_LT_f = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_f, self.anti_dive, self.cm_height, self.wheel_base_f)
-    long_sm_geo_LT_f = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_f, self.anti_dive, self.cm_height, self.wheel_base_f)
-    long_usm_geo_LT_f = G_long * f.LongLT_usm_geometric_1g_end(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
-
-    long_sm_elastic_LT_r = G_long * f.LongLT_sm_elastic_1g_end(self.sm, self.sm_r, self.anti_squat, self.cm_height, self.wheel_base_r)
-    long_sm_geo_LT_r = G_long * f.LongLT_sm_geometric_1g_end(self.sm, self.sm_r, self.anti_squat, self.cm_height, self.wheel_base_r)
-    long_usm_geo_LT_r = G_long * f.LongLT_usm_geometric_1g_end(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_r)
+    long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
+    long_sm_geo_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
@@ -94,7 +91,6 @@ def solve_chassis_model(
     tire_spring_F_fl = f.get_tire_spring_F(self.K_t_f, state.b_fl, state.c_fl)
     tire_spring_F_rr = f.get_tire_spring_F(self.K_t_r, state.b_rr, state.c_rr)
     tire_spring_F_rl = f.get_tire_spring_F(self.K_t_r, state.b_rl, state.c_rl)
-
     tire_damper_F_fr = f.get_tire_damper_F(self.C_t_f, state.b_d_fr, state.c_d_fr)
     tire_damper_F_fl = f.get_tire_damper_F(self.C_t_f, state.b_d_fl, state.c_d_fl)
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
@@ -106,10 +102,14 @@ def solve_chassis_model(
         tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl),
         tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
         tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl),
-        damper_force_fr = ride_damper_F_ideal_fr * self.WD_motion_ratio_f**2,
-        damper_force_fl = ride_damper_F_ideal_fl * self.WD_motion_ratio_f**2,
-        damper_force_rr = ride_damper_F_ideal_rr * self.WD_motion_ratio_r**2,
-        damper_force_rl = ride_damper_F_ideal_rl * self.WD_motion_ratio_r**2
+        damper_vel_fr = f.get_damper_vel(a_d = state.a_d_fr, b_d = state.b_d_fr, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_vel_fl = f.get_damper_vel(a_d = state.a_d_fl, b_d = state.b_d_fl, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_vel_rr = f.get_damper_vel(a_d = state.a_d_rr, b_d = state.b_d_rr, WD_motion_ratio = self.WD_motion_ratio_r),
+        damper_vel_rl = f.get_damper_vel(a_d = state.a_d_rl, b_d = state.b_d_rl, WD_motion_ratio = self.WD_motion_ratio_r),
+        damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r),
+        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r)
     )
 
     '''

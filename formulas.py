@@ -270,11 +270,24 @@ def LongLT_sm_elastic_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, tr
 
 def LongLT_sm_geometric_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
     
-    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 4)
+    return 9.80665 * sm * (cm_height * (anti_dive+anti_squat) / 2) / (wb_end * 4)
 
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
     
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
+
+# LongWT V3
+def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > 0.0:
+        return 9.80665 * sm * (cm_height * (1-anti_dive)) / (wheel_base * 2)
+    else:
+        return 9.80665 * sm * (cm_height * (1-anti_squat)) / (wheel_base * 2)
+
+def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > 0.0:
+        return 9.80665 * sm * (cm_height * (anti_dive)) / (wheel_base * 2)
+    else:
+        return 9.80665 * sm * (cm_height * (anti_squat)) / (wheel_base * 2)
 
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
@@ -331,6 +344,12 @@ def get_tire_damper_F(C_t, b_d, c_d):
 
 def get_tire_load(tire_spring_F, tire_damper_F):
     return tire_spring_F + tire_damper_F
+
+def get_damper_vel(a_d, b_d, WD_motion_ratio):
+    return (a_d - b_d) * WD_motion_ratio
+    
+def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
+    return ride_damper_F_ideal * WD_motion_ratio**2
 
 def get_init_b(sm, usm, K_t):
     return (sm + usm) * 9.80655 / K_t
