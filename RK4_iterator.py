@@ -9,7 +9,7 @@ import chassis_model as model
 from collections import namedtuple
 
 time_dependent_inputs = namedtuple('time_dependent_inputs',
-    ['G_lat', 'G_lat_half_next', 'G_lat_next', 'G_long', 'G_long_half_next', 'G_long_next',
+    ['G_lat', 'G_lat_half_next', 'G_lat_next', 'G_long', 'G_long_half_next', 'G_long_next', 'G_vert', 'G_vert_half_next', 'G_vert_next',
      'c_fr', 'c_fl', 'c_rr', 'c_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl',
      'c_fr_next', 'c_fl_next', 'c_rr_next', 'c_rl_next', 'c_d_fr_next', 'c_d_fl_next', 'c_d_rr_next', 'c_d_rl_next']
 )

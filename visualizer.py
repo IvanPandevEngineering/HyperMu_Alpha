@@ -19,6 +19,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
+    #subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
     subplots[0,0].set_ylabel('Function inputs (G, cm)')
@@ -27,7 +28,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     subplots[0,1].plot(force_function['loggingTime(txt)'], roll_angle_f, label='roll angle front (deg)')
     subplots[0,1].plot(force_function['loggingTime(txt)'], roll_angle_r, label='roll angle rear (deg)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], pitch_angle, label='pitch angle (deg)')
+    subplots[0,1].plot(force_function['loggingTime(txt)'], -pitch_angle, label='pitch angle (deg)')
     subplots[0,1].set_ylabel('Chassis Attitude (deg)')
     subplots[0,1].legend()
     subplots[0,1].grid(True)
