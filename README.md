@@ -1,5 +1,5 @@
 # ChassisDyne
-This repository is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. All rights reserved.
+This code is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne simulation results. ChassisDyne and its creators do not guarantee its suitability for any real-world applications at this time. All rights reserved, Copyright 2024 Ivan Pandev.
 
 ## Multibody, time-dependent vehicle simulations by Ivan Pandev
 ChassisDyne is a chassis response calculator solving for tire load, lateral load distribution, and other variables not directly measurable over time, using either real-world acceleration telemetry, or synthetic acceleration and road surface data as inputs. Intuitively speaking, ChassisDyne is a virtual '7+2'-post shaker rig, signifying that it can replay body acceleration inputs in addition to conventional 7-post shaker functionality.
