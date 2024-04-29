@@ -1,3 +1,8 @@
+'''
+Copyright 2024 Ivan Pandev
+'''
+
+
 import numpy as np
 
 '''

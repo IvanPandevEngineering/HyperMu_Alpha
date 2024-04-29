@@ -1,5 +1,5 @@
 '''
-Copyright 2023 Ivan Pandev
+Copyright 2024 Ivan Pandev
 '''
 
 import yaml
@@ -11,6 +11,20 @@ from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 import chassis_model as model
 import pickle
+
+
+def user_warning():
+
+    print('''
+_____ SAFETY WARNING: _____
+Do not apply changes to real-world vehicles based on ChassisDyne results. Doing so can alter the behavior of the vehicle and result in losses including injury, and death. ChassisDyne and its creators do not guarantee its suitability for any real-world application at this time. By continuing to use this software, you, the user, confirm you have read the above disclaimers, and agree to not use it in real-world applications. Do you understand, agree, and continue? [Y]es/[N]o?
+        ''')
+
+    user_response = input()
+
+    assert user_response == str('Y'), 'Not agreed.'
+
+    pass
 
 def make_metric(value, unit: str):
     if unit == 'in':
@@ -39,6 +53,8 @@ def unpack_yml(path: str):
 class vehicle:
 
     def __init__(self, vehicle_yml_path: str):
+
+        user_warning()
 
         vpd = unpack_yml(vehicle_yml_path)['parameters']  # Vehicle parameter dictionary
 

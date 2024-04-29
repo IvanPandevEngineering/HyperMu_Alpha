@@ -1,5 +1,5 @@
 '''
-Copyright 2023 Ivan Pandev
+Copyright 2024 Ivan Pandev
 
 This document defines the application of the Runge-Kutta 4th Order, 2nd derivative
 numerical iteration method to solve the x_dd matrix over time.

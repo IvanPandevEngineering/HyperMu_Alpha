@@ -1,5 +1,5 @@
 '''
-Copyright 2023 Ivan Pandev
+Copyright 2024 Ivan Pandev
 
 This document defines the chassis model used in ChassisDyne, as a system of equations
 relating the wheel and body displacements over time to chassis parameters such as
