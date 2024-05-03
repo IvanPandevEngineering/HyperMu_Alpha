@@ -4,6 +4,7 @@ Copyright 2024 Ivan Pandev
 
 
 import numpy as np
+import math
 
 '''
 SECTION 1. Begin helper functions for analytical properties below:
@@ -355,6 +356,12 @@ def get_damper_vel(a_d, b_d, WD_motion_ratio):
     
 def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
     return ride_damper_F_ideal * WD_motion_ratio**2
+
+def get_roll_angle_deg_per_axle(a_r, a_l):
+    return (a_r - a_l) * 180 / math.pi
+
+def get_pitch_angle(a_fr, a_fl, a_rr, a_rl):
+    return (a_fr + a_fl)*180/(2*3.14) - (a_rr + a_rl) * 180/(2*math.pi)
 
 def get_init_b(sm, usm, K_t):
     return (sm + usm) * 9.80655 / K_t

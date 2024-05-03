@@ -317,10 +317,10 @@ class vehicle:
             damper_force_fl.append(graphing_vars.damper_force_fl)
             damper_force_rr.append(graphing_vars.damper_force_rr)
             damper_force_rl.append(graphing_vars.damper_force_rl)
+            roll_angle_f.append(graphing_vars.roll_angle_f)
+            roll_angle_r.append(graphing_vars.roll_angle_r)
+            pitch_angle.append(graphing_vars.pitch_angle)
 
-            roll_angle_f.append((state.a_fr - state.a_fl)*180/3.14) 
-            roll_angle_r.append((state.a_rr - state.a_rl)*180/3.14)
-            pitch_angle.append((state.a_fr+state.a_fl)*180/(2*3.14) - (state.a_rr+state.a_rl)*180/(2*3.14))
             roll_angle_rate_f.append((state.a_d_fr - state.a_d_fl)*180/3.14)
             roll_angle_rate_r.append((state.a_d_rr - state.a_d_rl)*180/3.14)
             pitch_angle_rate.append((state.a_d_fr+state.a_d_fl)*180/(2*3.14) - (state.a_d_rr+state.a_d_rl)*180/(2*3.14))

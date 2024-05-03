@@ -20,10 +20,11 @@ chassis_state = namedtuple('chassis_state',
     'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
 )
 
-variables_of_interest = namedtuple('variables_of_interest',
+state_for_plotting = namedtuple('variables_of_interest',
     ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
      'damper_vel_fr', 'damper_vel_fl', 'damper_vel_rr', 'damper_vel_rl',
-     'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl']
+     'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl',
+     'roll_angle_f', 'roll_angle_r', 'pitch_angle']
 )
 
 def solve_chassis_model(
@@ -97,7 +98,7 @@ def solve_chassis_model(
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
-    VOI = variables_of_interest(
+    state_for_plotting_return = state_for_plotting(
         tire_load_fr = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr),
         tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl),
         tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
@@ -109,7 +110,10 @@ def solve_chassis_model(
         damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f),
         damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f),
         damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r)
+        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r),
+        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
+        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
+        pitch_angle = f.get_pitch_angle(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl)
     )
 
     '''
@@ -162,7 +166,7 @@ def solve_chassis_model(
         [ - ride_spring_F_rl + ARB_F_r - ride_damper_F_ideal_rl + lat_sm_geo_LT_r + lat_usm_geo_LT_r + long_sm_geo_LT + long_usm_geo_LT + tire_spring_F_rl + tire_damper_F_rl - self.usm_rl*9.80655]
     ])
 
-    return np.matmul(np.linalg.inv(A_mat), B_mat), VOI
+    return np.matmul(np.linalg.inv(A_mat), B_mat), state_for_plotting_return
 
 def get_x_matrix_1Dtest(
     m: float,
