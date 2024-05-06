@@ -256,28 +256,6 @@ def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to ou
     return 9.80665 * usm * (tire_diameter/2) / tw
 
 #TODO: Finalize and draw out the below equations. Not done yet.
-#TODO: Geo arms are approximation, spend time thinking through physics
-def LongLT_sm_elastic_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
-    
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / (wb_end * 2)
-
-def LongLT_sm_geometric_1g_end(sm, sm_dist_opposite, anti_geo, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
-    
-    return 9.80665 * sm * sm_dist_opposite * (cm_height * (1-anti_geo)) / (wb_end * 2)
-
-def LongLT_usm_geometric_1g_end(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
-    
-    return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
-
-#TODO: anti-dive and anti-squat averaging
-def LongLT_sm_elastic_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from ONE end tire
-    
-    return 9.80665 * sm * (cm_height * (1-(anti_dive+anti_squat)/2)) / (wb_end * 4)
-
-def LongLT_sm_geometric_1g(sm, anti_dive, anti_squat, cm_height, wb_end):  # N, transferred to outside OR lifted from One end tire
-    
-    return 9.80665 * sm * (cm_height * (anti_dive+anti_squat) / 2) / (wb_end * 4)
-
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
     
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
@@ -285,15 +263,15 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
 # LongWT V3
 def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > 0.0:
-        return 9.80665 * sm * (cm_height * (1-anti_dive)) / (wheel_base * 2)
+        return 9.80665 * sm/4 * (cm_height * (1-anti_dive)) / (wheel_base/2)
     else:
-        return 9.80665 * sm * (cm_height * (1-anti_squat)) / (wheel_base * 2)
+        return 9.80665 * sm/4 * (cm_height * (1-anti_squat)) / (wheel_base/2)
 
 def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > 0.0:
-        return 9.80665 * sm * (cm_height * (anti_dive)) / (wheel_base * 2)
+        return 9.80665 * sm/4 * (cm_height * (anti_dive)) / (wheel_base/2)
     else:
-        return 9.80665 * sm * (cm_height * (anti_squat)) / (wheel_base * 2)
+        return 9.80665 * sm/4 * (cm_height * (anti_squat)) / (wheel_base/2)
 
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
@@ -361,7 +339,7 @@ def get_roll_angle_deg_per_axle(a_r, a_l):
     return (a_r - a_l) * 180 / math.pi
 
 def get_pitch_angle(a_fr, a_fl, a_rr, a_rl):
-    return (a_fr + a_fl)*180/(2*3.14) - (a_rr + a_rl) * 180/(2*math.pi)
+    return (a_fr + a_fl)*180/(2*math.pi) - (a_rr + a_rl)*180/(2*math.pi)
 
 def get_init_b(sm, usm, K_t):
     return (sm + usm) * 9.80655 / K_t

@@ -62,13 +62,10 @@ def solve_chassis_model(
     lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(self.sm_r*self.sm, self.rc_height_r, self.tw_r)
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r)
 
-    # TODO: Need review
-    long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
-    long_sm_geo_LT = G_long * f.LongLT_sm_elastic_1g(self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base_f)
-    long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
-
+    # TODO: Need review, top priprity
     long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
-    long_sm_geo_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
+    long_sm_geo_LT = G_long * f.LongLT_sm_geometric_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
+    long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
