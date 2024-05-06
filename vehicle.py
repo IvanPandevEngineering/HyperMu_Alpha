@@ -10,6 +10,7 @@ from virtual_params import virtual_params
 from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
 import visualizer as vis
 import chassis_model as model
+from chassis_model import state_for_plotting
 import pickle
 
 
@@ -267,6 +268,10 @@ class vehicle:
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
         [[] for _ in range(20)]
 
+        graphing_dict={}
+        for var in state_for_plotting._fields:
+            graphing_dict[f'{var}']=[]
+
         print('Starting RK4 solver for G-replay...')
         for i, row in force_function.iterrows():
 
@@ -305,6 +310,9 @@ class vehicle:
                 dt = dt, self = self, state = state, inputs_dt = inputs_dt
             )
 
+            for var in state_for_plotting._fields:
+                graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
+
             tire_load_fr.append(graphing_vars.tire_load_fr)
             tire_load_fl.append(graphing_vars.tire_load_fl)
             tire_load_rr.append(graphing_vars.tire_load_rr)
@@ -330,10 +338,13 @@ class vehicle:
             if i == len(force_function)-3:
                 break
 
-        print('Solver complete.')
+        force_function = force_function[2:]
+        assert len(force_function) == len(tire_load_fr), 'Length mismatch.'
+
+        print('Shaker solver complete.\n')
 
         return(
-            force_function[2:],
+            force_function,
             np.array(tire_load_fr), np.array(tire_load_fl), np.array(tire_load_rr), np.array(tire_load_rl),
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
@@ -342,11 +353,11 @@ class vehicle:
             np.array(roll_angle_rate_f), np.array(roll_angle_rate_r), np.array(pitch_angle_rate)
         )
 
-    def plot_shaker(self, **kwargs):
+    def plot_shaker_basics(self, **kwargs):
 
         shaker_results = self.Shaker(**kwargs)
 
-        vis.plot_response(*shaker_results)
+        vis.plot_basics(*shaker_results)
     
     def correlation_check(self, **kwargs):
         
@@ -354,11 +365,11 @@ class vehicle:
 
         vis.check_correlation(*shaker_results)
 
-    def damper_response(self, **kwargs):
+    def damper_response_detail(self, **kwargs):
 
         shaker_results = self.Shaker(**kwargs)
 
-        vis.damper_response(*shaker_results)
+        vis.damper_response_detail(*shaker_results)
 
     def synth_data_for_ML(self, **kwargs):
         
