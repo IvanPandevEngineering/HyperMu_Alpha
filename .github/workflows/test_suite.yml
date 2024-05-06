@@ -22,4 +22,4 @@ jobs:
           pip install -r .\requirements.txt
       - name: Test Suite 1
         run: |
-          echo "Y" | python3 .\sample_usage.py
+          echo -n "Y" | python3 .\sample_usage.py
