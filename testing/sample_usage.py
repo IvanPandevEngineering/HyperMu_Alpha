@@ -1,6 +1,6 @@
-import vehicle as v
+from vehicle import vehicle
 
-BB = v.vehicle(r'sample_vehicles\\Battle_Bimmer_30_Sept_2023_w_pass.yml')
+BB = vehicle(r'sample_vehicles\\Battle_Bimmer_30_Sept_2023_w_pass.yml')
 
 BB.summary()
 
