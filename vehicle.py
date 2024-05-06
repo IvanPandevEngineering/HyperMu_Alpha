@@ -20,7 +20,7 @@ _____ SAFETY WARNING: _____
 Do not apply changes to real-world vehicles based on ChassisDyne results. Doing so can alter the behavior of the vehicle and result in losses including injury, and death. ChassisDyne and its creators do not guarantee its suitability for any real-world application at this time. By continuing to use this software, you, the user, confirm you have read the above disclaimers, and agree to not use it in real-world applications. Do you understand, agree, and continue? [Y]es/[N]o?
         ''')
 
-    user_response = input()
+    # user_response = input()
 
     assert user_response == str('Y'), 'Not agreed.'
 
