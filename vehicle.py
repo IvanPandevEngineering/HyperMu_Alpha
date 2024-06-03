@@ -329,13 +329,11 @@ class vehicle:
             roll_angle_f.append(graphing_vars.roll_angle_f)
             roll_angle_r.append(graphing_vars.roll_angle_r)
             pitch_angle.append(graphing_vars.pitch_angle)
-
-            roll_angle_rate_f.append((state.a_d_fr - state.a_d_fl)*180/3.14)
-            roll_angle_rate_r.append((state.a_d_rr - state.a_d_rl)*180/3.14)
-            #pitch_angle_rate.append((state.a_d_fr+state.a_d_fl)*180/(2*3.14) - (state.a_d_rr+state.a_d_rl)*180/(2*3.14))
-            pitch_angle_rate.append(math.atan(((state.a_d_fr+state.a_d_fl)/2 - (state.a_d_rr+state.a_d_rl)/2) / self.wheel_base) * 180/math.pi)
-            lateral_load_dist_f.append(tire_load_fr[i] / (tire_load_fr[i] + tire_load_fl[i]))
-            lateral_load_dist_r.append(tire_load_rr[i] / (tire_load_rr[i] + tire_load_rl[i]))
+            roll_angle_rate_f.append(graphing_vars.roll_angle_rate_f)
+            roll_angle_rate_r.append(graphing_vars.roll_angle_rate_r)
+            pitch_angle_rate.append(graphing_vars.pitch_angle_rate)
+            lateral_load_dist_f.append(graphing_vars.lateral_load_dist_f)
+            lateral_load_dist_r.append(graphing_vars.lateral_load_dist_r)
 
             if i == len(force_function)-3:
                 break

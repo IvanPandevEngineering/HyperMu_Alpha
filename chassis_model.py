@@ -24,7 +24,9 @@ state_for_plotting = namedtuple('variables_of_interest',
     ['tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
      'damper_vel_fr', 'damper_vel_fl', 'damper_vel_rr', 'damper_vel_rl',
      'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl',
-     'roll_angle_f', 'roll_angle_r', 'pitch_angle']
+     'roll_angle_f', 'roll_angle_r', 'pitch_angle',
+     'roll_angle_rate_f', 'roll_angle_rate_r', 'pitch_angle_rate',
+     'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio']
 )
 
 def solve_chassis_model(
@@ -110,7 +112,18 @@ def solve_chassis_model(
         damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r),
         roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
         roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
-        pitch_angle = f.get_pitch_angle(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl)
+        pitch_angle = f.get_pitch_angle(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
+        roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl),
+        roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl),
+        pitch_angle_rate = f.get_pitch_angle_rate(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl),
+        lateral_load_dist_f = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr), 
+                                                           tire_load_l = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)),
+        lateral_load_dist_r = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
+                                                           tire_load_l = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)),
+        lateral_load_dist_ratio = f.get_lateral_load_dist_ratio(lateral_load_dist_f = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr), 
+                                                                tire_load_l = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)),
+                                                                lateral_load_dist_r = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
+                                                                tire_load_l = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)))
     )
 
     '''

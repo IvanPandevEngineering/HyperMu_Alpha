@@ -341,6 +341,18 @@ def get_roll_angle_deg_per_axle(a_r, a_l):
 def get_pitch_angle(a_fr, a_fl, a_rr, a_rl):
     return (a_fr + a_fl)*180/(2*math.pi) - (a_rr + a_rl)*180/(2*math.pi)
 
+def get_roll_angle_rate_deg_per_axle(a_r_d, a_l_d):
+    return (a_r_d - a_l_d) * 180 / math.pi
+
+def get_pitch_angle_rate(a_fr_d, a_fl_d, a_rr_d, a_rl_d):
+    return (a_fr_d + a_fl_d)*180/(2*math.pi) - (a_rr_d + a_rl_d)*180/(2*math.pi)
+
+def get_lateral_load_dist_axle(tire_load_r, tire_load_l):
+    return tire_load_r / (tire_load_r + tire_load_l)
+
+def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
+    return lateral_load_dist_f / (lateral_load_dist_f + lateral_load_dist_r)
+
 def get_init_b(sm, usm, K_t):
     return (sm + usm) * 9.80655 / K_t
 
