@@ -164,7 +164,7 @@ def roll_LatLD_per_g(
 
     LLT_r_per_g = abs(load_outside_r) / (load_outside_r + load_inside_r) - 0.5
 
-    LLT_ratio = LLT_f_per_g / LLT_r_per_g
+    LLT_ratio = LLT_f_per_g / (LLT_r_per_g + LLT_f_per_g)
 
     return (LLT_f_per_g, LLT_r_per_g, LLT_ratio)
 
