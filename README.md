@@ -98,7 +98,8 @@ ChassisDyne can iterate through a range of values of a vehicle property and simu
 
 ## Ongoing Development
 ChassisDyne's core functionality is practically complete, but much work remains on capturing increasingly-granular details of vehicle response. This includes but is not limited to:
-- Heave springs and dampers
-- Roll angle effects from engine torque
+- Improved pitch response to engine torque
+- Frequency-domain analysis
+- Damper hysteresis
 
 Looking far ahead, ChassisDyne can also benefit from quality-of-life/ productization improvements such as a primitive GUI, synthetic input generator, and more generalized telemetry ingestion and reformatting.
