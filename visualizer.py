@@ -17,7 +17,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
-    fig.suptitle('Race Telemetry on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
+    fig.suptitle('Roll Frequency Sweep on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
     fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2024 Ivan Pandev. All rights reserved.', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
@@ -53,8 +53,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[1,1].legend()
     subplots[1,1].grid(True)
 
-    subplots[2,0].plot(force_function['loggingTime(txt)'], lateral_load_dist_f, label='lateral load dist (%, f)')
-    subplots[2,0].plot(force_function['loggingTime(txt)'], lateral_load_dist_r, label='lateral load dist (%, r)')
+    subplots[2,0].plot(force_function['loggingTime(txt)'], 100 * lateral_load_dist_f, label='lateral load dist (%, f)')
+    subplots[2,0].plot(force_function['loggingTime(txt)'], 100 * lateral_load_dist_r, label='lateral load dist (%, r)')
     subplots[2,0].set_ylabel('Lateral Load Distribution (%)')
     subplots[2,0].legend()
     subplots[2,0].grid(True)

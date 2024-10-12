@@ -10,6 +10,12 @@ columns_global=['loggingTime(txt)',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
 
+columns_global_unbiased=['loggingTime(txt)',
+                'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'accelerometerAccelerationZ(G)',
+                'c_fr', 'c_rr',
+                'timestep',
+                'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
+
 def custom_smooth(array, rounds):
     
     for all in range(rounds):
@@ -66,11 +72,12 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] - 0.01
 
     #apply angular frame-of-reference corrections
-    installed_pitch_angle = 3*math.pi/180  # Convert pitch installation angle to rad
-    data_in['accelerometerAccelerationY(G)'] = data_in['accelerometerAccelerationY(G)'] * (np.cos(installed_pitch_angle))  # Scale long accel based on pitch install angle
+    installed_pitch_angle = 4*math.pi/180  # Convert pitch installation angle to 
+    coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['gyroRotationZ(rad/s)']*abs(data_in['gyroRotationZ(rad/s)'])
+    #data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
     data_in['gyroRotationX_corrected(rad/s)'] = data_in['gyroRotationX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['gyroRotationZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['gyroRotationY(rad/s)'])  # pitch rate correction by yaw and roll rates
 
-    #create new time and timestep columns
+    #create new time and timestep columns   
     data_in['time'] = data_in.index
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
@@ -81,6 +88,73 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     data = data.reset_index(drop=True)
 
     return data
+
+def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
+
+    smoothing_window_size = int(smoothing_window_size_ms/10)
+
+    print('Converting file to dataframe...')
+    data_in = pd.read_csv(path)[['loggingTime(txt)', 'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'accelerometerAccelerationZ(G)', 'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)']]
+
+    print('Parsing timesteps...')
+
+    #Create datetime column to be interpolated
+    data_in['datetime'] = pd.to_datetime(data_in['loggingTime(txt)'])
+    data_in['datetime'] = pd.DatetimeIndex(data_in['datetime'])
+
+    #drop redundant column
+    data_in = data_in.drop(columns='loggingTime(txt)')
+
+    #select interesting time range
+    data_in = data_in[2400:4200]
+
+    #set index to be picked up by interpolation function
+    data_in = data_in.set_index('datetime')
+
+    data_in['c_fr_array'] = 0
+    data_in['c_rr_array'] = 0
+
+    #resampling to time resolution, interpolate linearly then drop all nans
+    data_in = data_in.resample('1ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    # #resampling to 10ms, interpolate linearly then drop all nans
+    data_in = data_in.resample('10ms')
+    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.dropna(how='any')
+
+    #apply left-smoothing
+    data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['accelerometerAccelerationZ(G)'] = data_in['accelerometerAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in = data_in.dropna(how='any')
+
+    #apply vertical-offset corrections
+    data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] - 0.03
+    data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'] - 0.01
+
+    #apply angular frame-of-reference corrections
+    installed_pitch_angle = 4*math.pi/180  # Convert pitch installation angle to 
+    #coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['gyroRotationZ(rad/s)']*abs(data_in['gyroRotationZ(rad/s)'])
+    #data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
+    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateY(rad/s)'])  # pitch rate correction by yaw and roll rates
+
+    #create new time and timestep columns
+    data_in['time'] = data_in.index
+    data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
+
+    #create dataframe and drop nans one more time
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['motionUserAccelerationX(G)'], data_in['motionUserAccelerationY(G)'], data_in['accelerometerAccelerationZ(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRotationRateY(rad/s)'], data_in['motionRotationRateX(rad/s)'], data_in['motionRotationRateZ(rad/s)'], data_in['gyroRotationX_corrected(rad/s)'])), \
+        columns=columns_global) #TODO: Must make changes downstream in visualizer to call unbiased values.
+    data = data.dropna(how='any')
+    data = data.reset_index(drop=True)
+
+    return data
+
 
 def get_demo_G_function(
         timespan: int = 3,
@@ -108,14 +182,53 @@ def get_demo_G_function(
     time_array = [x/time_res for x in range(len(G_lat_array))]
     dt_array = [1/time_res for all in range(len(G_lat_array))]
 
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
     control_array_roll = np.array([0.0 for x in range(time_res * timespan)])
     control_array_pitch = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_corrected = np.array([0.0 for x in range(time_res * timespan)])
 
-    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch)), \
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
         columns=columns_global)
 
     return data
 
+def get_unit_test_1(
+        timespan: int = 15,
+        lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
+        long_magnitude: float = 0.5, long_frequency: float = 1
+    ):
+
+    #  Default time resolution is set to 100hz
+    time_res = 1000  # hz
+
+    G_lat_array = np.array([math.sin(0.000001 * t**2) * lat_magnitude for t in range(time_res * timespan)]) # 100 steps is 1s
+    G_long_array = np.array([0.0 for t in range(time_res * timespan)])  # 100 steps is 1s
+
+    c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    time_array = [x/time_res for x in range(len(G_lat_array))]
+    dt_array = [1/time_res for all in range(len(G_lat_array))]
+
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_roll = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_corrected = np.array([0.0 for x in range(time_res * timespan)])
+
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
+        columns=columns_global)
+
+    return data
+
+
+'''
+Begin functions for dev purposes, exploring telemetry data.
+'''
 def get_bump_function(timespan: int = 9, magnitude: float = 0.020, frequency: float = 0.5):
 
     #  Default time resolution is set to 100hz
@@ -126,10 +239,6 @@ def get_bump_function(timespan: int = 9, magnitude: float = 0.020, frequency: fl
     time_array = [x/time_res for x in range(len(c_array))]
 
     return time_array, c_array, dt
-
-'''
-Begin functions for dev purposes, exploring telemetry data.
-'''
 
 def from_sensor_log_iOS_app_dev(path: str):
 

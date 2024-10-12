@@ -262,15 +262,15 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
 
 # LongWT V3
 def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0.0:
+    if LongG > 0.0:  # Braking Condition
         return 9.80665 * sm/4 * (cm_height * (1-anti_dive)) / (wheel_base/2)
-    else:
+    else:  # Accel Condition
         return 9.80665 * sm/4 * (cm_height * (1-anti_squat)) / (wheel_base/2)
 
 def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0.0:
+    if LongG > 0.0:  # Braking Condition
         return 9.80665 * sm/4 * (cm_height * (anti_dive)) / (wheel_base/2)
-    else:
+    else:  # Accel Condition
         return 9.80665 * sm/4 * (cm_height * (anti_squat)) / (wheel_base/2)
 
 def get_ideal_damper_force(
@@ -327,7 +327,7 @@ def get_tire_damper_F(C_t, b_d, c_d):
     return C_t * (b_d - c_d)
 
 def get_tire_load(tire_spring_F, tire_damper_F):
-    return tire_spring_F + tire_damper_F
+    return max(tire_spring_F + tire_damper_F, 0)
 
 def get_damper_vel(a_d, b_d, WD_motion_ratio):
     return (a_d - b_d) * WD_motion_ratio
@@ -348,7 +348,10 @@ def get_pitch_angle_rate(a_fr_d, a_fl_d, a_rr_d, a_rl_d):
     return (a_fr_d + a_fl_d)*180/(2*math.pi) - (a_rr_d + a_rl_d)*180/(2*math.pi)
 
 def get_lateral_load_dist_axle(tire_load_r, tire_load_l):
-    return tire_load_r / (tire_load_r + tire_load_l)
+    return max(
+        tire_load_r / (tire_load_r + tire_load_l),
+        tire_load_l / (tire_load_r + tire_load_l)
+    )
 
 def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
     return lateral_load_dist_f / (lateral_load_dist_f + lateral_load_dist_r)

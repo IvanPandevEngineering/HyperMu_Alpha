@@ -249,11 +249,12 @@ class vehicle:
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         if kwargs:
-            force_function = cd.from_sensor_log_iOS_app(
+            force_function = cd.from_sensor_log_iOS_app_unbiased(
                 kwargs['replay_src'], kwargs['smoothing_window_size_ms']
             )
         else:
-            force_function = cd.get_demo_G_function()
+            #force_function = cd.get_demo_G_function()
+            force_function = cd.get_unit_test_1()
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
