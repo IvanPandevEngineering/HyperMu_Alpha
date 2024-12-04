@@ -6,6 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 def plot_basics(force_function,
+a_dd_rear_axle,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
@@ -17,8 +18,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
-    fig.suptitle('Roll Frequency Sweep on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
-    fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2024 Ivan Pandev. All rights reserved.', fontsize=8)
+    fig.suptitle('Telemetry Replay on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
@@ -69,7 +70,8 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     return
 
-def check_correlation(force_function,
+def check_correlation_rollPitchRate(force_function,
+a_dd_rear_axle,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
@@ -93,7 +95,6 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][0].grid(True)
 
     roll_angle_rate_avg = (np.array(roll_angle_rate_f) + np.array(roll_angle_rate_r)) / 2
-
     slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2)
     r_squared = r_value ** 2
 
@@ -128,7 +129,65 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     fig.tight_layout()
     plt.show()
 
+def check_correlation_rollRateRearZ(force_function,
+a_dd_rear_axle,
+tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
+damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
+damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
+lateral_load_dist_f, lateral_load_dist_r,
+roll_angle_f, roll_angle_r, pitch_angle,
+roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
+
+    print('Graphing...')
+
+    plt.style.use('seaborn-v0_8')
+    fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
+    fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
+    fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2024 Ivan Pandev. All rights reserved.', fontsize=8)
+
+    subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
+    subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='predicted roll angle rate (deg/s, f)')
+    subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_r, label='predicted roll angle rate (deg/s, r)')
+    subplots[0][0].set_xlabel('Time')
+    subplots[0][0].set_ylabel('Roll Rate (deg/s)')
+    subplots[0][0].legend()
+    subplots[0][0].grid(True)
+
+    roll_angle_rate_avg = (np.array(roll_angle_rate_f) + np.array(roll_angle_rate_r)) / 2
+    slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2)
+    r_squared = r_value ** 2
+
+    subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='(deg/s)', s=10)
+    subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-10, 10, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
+    subplots[0][1].plot([-10,10], [-10,10], color='green', label='unity')
+    subplots[0][1].legend()
+    subplots[0][1].set_xlabel('Predicted Roll Rate (deg/s)')
+    subplots[0][1].set_ylabel('Recorded Roll Rate (deg/s)')
+    subplots[0][1].grid(True)
+
+    subplots[1][0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationZ(G)'], label='Recorded Vertical Accel, Rear Axle')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], a_dd_rear_axle, label='Predicted Vertical Accel, Rear Axle')
+    subplots[1][0].set_xlabel('Time')
+    subplots[1][0].set_ylabel('Vertical Acceleration')
+    subplots[1][0].legend()
+    subplots[1][0].grid(True)
+
+    slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(a_dd_rear_axle, force_function['accelerometerAccelerationZ(G)'])
+    r_squared_p = r_value_p ** 2
+
+    subplots[1][1].scatter(a_dd_rear_axle, force_function['accelerometerAccelerationZ(G)'], label='(deg/s)', s=10)
+    subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-10, 10, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
+    subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
+    subplots[1][1].legend()
+    subplots[1][1].set_xlabel('Predicted Vertical Accel, Rear Axle')
+    subplots[1][1].set_ylabel('Recorded Vertical Accel, Rear Axle')
+    subplots[1][1].grid(True)
+
+    fig.tight_layout()
+    plt.show()
+
 def damper_response_detail(force_function,
+a_dd_rear_axle,
 tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
 damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
 damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,

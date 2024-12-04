@@ -11,7 +11,7 @@ columns_global=['loggingTime(txt)',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
 
 columns_global_unbiased=['loggingTime(txt)',
-                'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'accelerometerAccelerationZ(G)',
+                'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'motionUserAccelerationZ(G)',
                 'c_fr', 'c_rr',
                 'timestep',
                 'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
@@ -28,7 +28,7 @@ def from_sensor_log_iOS_app(path: str, smoothing_window_size_ms:int):
     smoothing_window_size = int(smoothing_window_size_ms/10)
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)']]
+    data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)', 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)', 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)']]
 
     print('Parsing timesteps...')
 
@@ -94,7 +94,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     smoothing_window_size = int(smoothing_window_size_ms/10)
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path)[['loggingTime(txt)', 'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'accelerometerAccelerationZ(G)', 'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)']]
+    data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)', 'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'motionUserAccelerationZ(G)', 'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)']]
 
     print('Parsing timesteps...')
 
@@ -106,28 +106,29 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in.drop(columns='loggingTime(txt)')
 
     #select interesting time range
-    data_in = data_in[2400:4200]
+    data_in = data_in[10000:17000]
 
-    #set index to be picked up by interpolation function
+    #set index to be picked up by interpolation function, drop duplicated time stamps
     data_in = data_in.set_index('datetime')
+    data_in = data_in[~data_in.index.duplicated(keep='first')]
 
     data_in['c_fr_array'] = 0
     data_in['c_rr_array'] = 0
 
     #resampling to time resolution, interpolate linearly then drop all nans
-    data_in = data_in.resample('1ms')
-    data_in = data_in.interpolate(method='linear')
-    data_in = data_in.dropna(how='any')
+    # data_in = data_in.resample('1ms')
+    # data_in = data_in.interpolate(method='linear')
+    # data_in = data_in.dropna(how='any')
 
-    # #resampling to 10ms, interpolate linearly then drop all nans
-    data_in = data_in.resample('10ms')
-    data_in = data_in.interpolate(method='linear')
-    data_in = data_in.dropna(how='any')
+    #resampling to 10ms, interpolate linearly then drop all nans
+    # data_in = data_in.resample('10ms')
+    # data_in = data_in.interpolate(method='linear')
+    # data_in = data_in.dropna(how='any')
 
     #apply left-smoothing
     data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['accelerometerAccelerationZ(G)'] = data_in['accelerometerAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionUserAccelerationZ(G)'] = data_in['motionUserAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
@@ -148,7 +149,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data_in['time'], data_in['motionUserAccelerationX(G)'], data_in['motionUserAccelerationY(G)'], data_in['accelerometerAccelerationZ(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRotationRateY(rad/s)'], data_in['motionRotationRateX(rad/s)'], data_in['motionRotationRateZ(rad/s)'], data_in['gyroRotationX_corrected(rad/s)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'], data_in['motionUserAccelerationX(G)'], data_in['motionUserAccelerationY(G)'], data_in['motionUserAccelerationZ(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRotationRateY(rad/s)'], data_in['motionRotationRateX(rad/s)'], data_in['motionRotationRateZ(rad/s)'], data_in['gyroRotationX_corrected(rad/s)'])), \
         columns=columns_global) #TODO: Must make changes downstream in visualizer to call unbiased values.
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
@@ -194,7 +195,7 @@ def get_demo_G_function(
 
     return data
 
-def get_unit_test_1(
+def get_unit_test_Roll_Harmonic_Sweep(
         timespan: int = 15,
         lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
         long_magnitude: float = 0.5, long_frequency: float = 1
@@ -207,7 +208,6 @@ def get_unit_test_1(
     G_long_array = np.array([0.0 for t in range(time_res * timespan)])  # 100 steps is 1s
 
     c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
-
     c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
 
     time_array = [x/time_res for x in range(len(G_lat_array))]

@@ -19,7 +19,7 @@ def user_warning():
 
     print('''
 _____ SAFETY WARNING: _____
-Do not apply changes to real-world vehicles based on ChassisDyne results. Doing so can alter the behavior of the vehicle and result in losses including injury, and death. ChassisDyne and its creators do not guarantee its suitability for any real-world application at this time. By continuing to use this software, you, the user, confirm you have read the above disclaimers, and agree to not use it in real-world applications. Do you understand, agree, and wish to continue? [Y]es/[N]o?
+This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev. Do you understand, agree, and wish to continue? [Y]es/[N]o?
         ''')
 
     user_response = input()
@@ -52,7 +52,7 @@ def unpack_yml(path: str):
 
     return(dict)
 
-class vehicle:
+class HyperMuVehicle:
 
     def __init__(self, vehicle_yml_path: str):
 
@@ -249,12 +249,14 @@ class vehicle:
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         if kwargs:
-            force_function = cd.from_sensor_log_iOS_app_unbiased(
-                kwargs['replay_src'], kwargs['smoothing_window_size_ms']
-            )
+            if kwargs['replay_src'] == 'roll_frequency_sweep':
+                force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
+            else:
+                force_function = cd.from_sensor_log_iOS_app_unbiased(
+                    kwargs['replay_src'], kwargs['smoothing_window_size_ms']
+                )
         else:
-            #force_function = cd.get_demo_G_function()
-            force_function = cd.get_unit_test_1()
+            force_function = cd.get_demo_G_function()
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
@@ -263,12 +265,13 @@ class vehicle:
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         )
         
+        a_dd_rear_axle, \
         roll_angle_f, roll_angle_r, pitch_angle, roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate, \
         tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
         lateral_load_dist_f, lateral_load_dist_r, \
         damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
         damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
-        [[] for _ in range(20)]
+        [[] for _ in range(21)]
 
         graphing_dict={}
         for var in state_for_plotting._fields:
@@ -315,6 +318,7 @@ class vehicle:
             for var in state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
 
+            a_dd_rear_axle.append(graphing_vars.a_dd_rear_axle)
             tire_load_fr.append(graphing_vars.tire_load_fr)
             tire_load_fl.append(graphing_vars.tire_load_fl)
             tire_load_rr.append(graphing_vars.tire_load_rr)
@@ -346,6 +350,7 @@ class vehicle:
 
         return(
             force_function,
+            np.array(a_dd_rear_axle),
             np.array(tire_load_fr), np.array(tire_load_fl), np.array(tire_load_rr), np.array(tire_load_rl),
             damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
             damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
@@ -360,11 +365,17 @@ class vehicle:
 
         vis.plot_basics(*shaker_results)
     
-    def correlation_check(self, **kwargs):
+    def correlation_rollPitchRate(self, **kwargs):
         
         shaker_results = self.Shaker(**kwargs)
 
-        vis.check_correlation(*shaker_results)
+        vis.check_correlation_rollPitchRate(*shaker_results)
+    
+    def correlation_rollRateRearZ(self, **kwargs):
+        
+        shaker_results = self.Shaker(**kwargs)
+
+        vis.check_correlation_rollRateRearZ(*shaker_results)
 
     def damper_response_detail(self, **kwargs):
 
