@@ -9,6 +9,17 @@ This document is also the most efficient place to define and varibles of interse
 (each variable should only be calculated once throughout the program) which will
 be plotted later.
 
+Dimensional variables in HyperMu follow these conventions:
+- a_fr = displacement of the chassis at the front-right corner, taken from the (tire and springs') free-spring length, positive downward
+- a_d_fr = first time-derivative of the displacement of the chassis at the front-right corner, taken from the (tire and springs') free-spring length, positive downward
+- a_dd_fr = second time-derivative of the displacement of the chassis at the front-right corner, taken from the (tire and springs') free-spring length, positive downward
+- b_rl = displacement of the wheel at the right-left corner, taken from the (tire's) free-spring length, positive downward
+- b_d_rl = first time-derivative of the displacement of the wheel at the right-left corner, taken from the (tire's) free-spring length, positive downward
+- b_dd_rl = second time-derivative of the displacement of the wheel at the right-left corner, taken from the (tire's) free-spring length, positive downward
+- c_fr = road height change at the front-right tire, positive downward
+- c_d_fr = first time-derivative of road height at the front-right tire, positive downward
+
+A consequence of these conventions is that no suspension travel ratios will be used in solving the vehicle model.
 '''
 
 import numpy as np
@@ -52,8 +63,8 @@ def solve_chassis_model(
     '''
 
     #  Get instantaneous body inertias
-    I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, state.a_d_fr, state.a_d_fl, self.tw_f)
-    I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, state.a_d_rr, state.a_d_rl, self.tw_r)
+    I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, self.tw_f)
+    I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, self.tw_r)
     I_pitch_inst, I_pitch_arm_inst_f, I_pitch_arm_inst_r = f.get_inst_I_pitch_properties(self.I_pitch, self.wheel_base, self.sm_f)
 
     #  Load transfers from lat- and long- acceleration

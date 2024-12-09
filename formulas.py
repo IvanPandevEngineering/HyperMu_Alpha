@@ -260,7 +260,6 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
     
     return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
 
-# LongWT V3
 def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > 0.0:  # Braking Condition
         return 9.80665 * sm/4 * (cm_height * (1-anti_dive)) / (wheel_base/2)
@@ -276,6 +275,7 @@ def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel
 def get_ideal_damper_force(
         C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
     ):
+    'Inputs are given at the tire. Returns hysteresis-free damper force at the tire.'
     if (a_d-b_d) > 0:  # Compression domain
         if (a_d-b_d) > knee_c:  # High-speed compression domain
             return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c)
@@ -287,29 +287,11 @@ def get_ideal_damper_force(
         else:  # Low-speed rebound domain
             return (C_lsr * (a_d - b_d))
 
-def get_damper_force(
-        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
-    ):
-    if (a_d-b_d) > 0:  # Compression domain
-        if (a_d-b_d) > knee_c:  # High-speed compression domain
-            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c)
-        else:  # Low-speed compression domain
-            return (C_lsc * (a_d - b_d))
-    else:  # Rebound domain
-        if (a_d-b_d) < -knee_r:  # High-speed rebound domain
-            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r)
-        else:  # Low-speed rebound domain
-            return (C_lsr * (a_d - b_d))
-
-def get_inst_I_roll_properties(I_roll, a_d_r, a_d_l, tw):
+def get_inst_I_roll_properties(I_roll, tw):
     return I_roll, tw/2
 
 def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
-
-# TO BE DEPRICATED.
-def get_tire_load_dep(self, b, b_d, c, c_d, m_dist):
-    return (b - c) * self.K_t_f + (b_d - c_d) * self.C_t_f
 
 def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw):
     return K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (tw / 2)
@@ -330,9 +312,11 @@ def get_tire_load(tire_spring_F, tire_damper_F):
     return max(tire_spring_F + tire_damper_F, 0)
 
 def get_damper_vel(a_d, b_d, WD_motion_ratio):
+    'Inputs are given at the tire. Returns damper velocity at the wheel.'
     return (a_d - b_d) * WD_motion_ratio
     
 def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
+    'Inputs are given at the tire. Returns damper force at the damper.'
     return ride_damper_F_ideal * WD_motion_ratio**2
 
 def get_roll_angle_deg_per_axle(a_r, a_l):
@@ -357,9 +341,11 @@ def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
     return lateral_load_dist_f / (lateral_load_dist_f + lateral_load_dist_r)
 
 def get_init_b(sm, usm, K_t):
+    'Returns at-rest tire-to-ground deflection, taken from the unloaded position.'
     return (sm + usm) * 9.80655 / K_t
 
 def get_init_a(sm, usm, K_s, K_t):
+    'Returns at-rest chassis-to-ground deflection, taken from the unloaded position.'
     return sm * 9.80655 / K_s + get_init_b(sm, usm, K_t)
 
 def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):

@@ -441,7 +441,7 @@ class HyperMuVehicle:
 
     def G_replay_1Dtest(self, telemetry_path: str):
 
-        force_function = cd.from_sensor_log_iOS_app(telemetry_path)
+        force_function = cd.from_sensor_log_iOS_app_unbiased(telemetry_path)
 
         #  Initialize variables
         a, a_d, b, b_d, c, c_d = [0] * 6
