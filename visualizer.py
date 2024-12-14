@@ -4,6 +4,10 @@ from scipy import stats
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+def fft_convert(series):
+    'return frequencies, magnitude of a time series from the shaker. Currently fixed at 100hz'
+    
+    return  np.fft.fftfreq(len(series), 1 / 100), np.abs(np.fft.fft(series))
 
 def plot_basics(force_function,
 a_dd_rear_axle,
@@ -18,7 +22,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
-    fig.suptitle('Telemetry Replay on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
+    fig.suptitle('G-Force Replay on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
@@ -84,9 +88,9 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
-    fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2024 Ivan Pandev. All rights reserved.', fontsize=8)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
-    subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
+    subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14), label='Recorded roll angle rate (deg/s)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='predicted roll angle rate (deg/s, f)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_r, label='predicted roll angle rate (deg/s, r)')
     subplots[0][0].set_xlabel('Time')
@@ -95,10 +99,10 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][0].grid(True)
 
     roll_angle_rate_avg = (np.array(roll_angle_rate_f) + np.array(roll_angle_rate_r)) / 2
-    slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14))
     r_squared = r_value ** 2
 
-    subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='(deg/s)', s=10)
+    subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14), label='(deg/s)', s=10)
     subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-10, 10, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
     subplots[0][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[0][1].legend()
@@ -106,7 +110,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[0][1].set_ylabel('Recorded Roll Rate (deg/s)')
     subplots[0][1].grid(True)
 
-    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2, label='Corrected pitch angle rate (deg/s)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='Corrected pitch angle rate (deg/s)')
     #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationZ(rad/s)']/3.14)+.2, label='Yaw angle rate (deg/s)')
     #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded raw pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], -pitch_angle_rate, label='predicted pitch angle rate (deg/s, f)')
@@ -115,10 +119,10 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     subplots[1][0].legend()
     subplots[1][0].grid(True)
 
-    slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2)
+    slope_p, intercept_p, r_value_p, p_value, std_err = stats.linregress(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14))
     r_squared_p = r_value_p ** 2
 
-    subplots[1][1].scatter(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14)+.2, label='(deg/s)', s=10)
+    subplots[1][1].scatter(-pitch_angle_rate, (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='(deg/s)', s=10)
     subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-10, 10, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
     subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[1][1].legend()
@@ -143,7 +147,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
-    fig.text(0.005, 0.005, 'This software is strictly for academic purposes. Do not apply changes to real-world vehicles based on ChassisDyne results. Copyright 2024 Ivan Pandev. All rights reserved.', fontsize=8)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='predicted roll angle rate (deg/s, f)')
@@ -210,6 +214,84 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
 
     fig.tight_layout()
     plt.show()
+
+def tire_response_detail_comparison(force_function, self, other):
+
+    print('Graphing...')
+
+    plt.style.use('seaborn-v0_8')
+    fig, subplots = plt.subplots(2, 4, figsize=(14, 8))
+    fig.suptitle('Tire Response Detail Comparison, Self v. Other', fontsize=14)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+
+    subplots[0,0].hist(self['tire_load_fl'], bins=50, label='self tire load, fl')
+    subplots[0,0].hist(other['tire_load_fl'], bins=50, label='other tire load, fl')
+    subplots[0,0].set_ylabel('Tire Load (N)')
+    subplots[0,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_fl']):.4}\n other std_dev: {np.std(other['tire_load_fl']):.4}")
+    subplots[0,0].legend()
+    subplots[0,0].grid(True)
+
+    subplots[0,1].hist(self['tire_load_fr'], bins=50, label='self tire load, fr')
+    subplots[0,1].hist(other['tire_load_fr'], bins=50, label='other tire load, fr')
+    subplots[0,1].set_ylabel('Tire Load (N)')
+    subplots[0,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_fr']):.4}\n other std_dev: {np.std(other['tire_load_fr']):.4}")
+    subplots[0,1].legend()
+    subplots[0,1].grid(True)
+
+    subplots[1,0].hist(self['tire_load_rl'], bins=50, label='self tire load, fr')
+    subplots[1,0].hist(other['tire_load_rl'], bins=50, label='other tire load, fr')
+    subplots[1,0].set_ylabel('Tire Load (N)')
+    subplots[1,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_rl']):.4}\n other std_dev: {np.std(other['tire_load_rl']):.4}")
+    subplots[1,0].legend()
+    subplots[1,0].grid(True)
+
+    subplots[1,1].hist(self['tire_load_rr'], bins=50, label='self tire load, rr')
+    subplots[1,1].hist(other['tire_load_rr'], bins=50, label='other tire load, rr')
+    subplots[1,1].set_ylabel('Tire Load (N)')
+    subplots[1,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_rr']):.4}\n other std_dev: {np.std(other['tire_load_rr']):.4}")
+    subplots[1,1].legend()
+    subplots[1,1].grid(True)
+
+    subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0][0:], fft_convert(self['tire_load_fl'])[1][0:], label='self_tire_load_fl')
+    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0][0:], fft_convert(other['tire_load_fl'])[1][0:], label='other_tire_load_fl')
+    subplots[0,2].set_ylabel('Function inputs (G, cm)')
+    subplots[0,2].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_fl'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_fl'])[1]**2):.3}")
+    subplots[0,2].set_ylim(top=4e6)
+    subplots[0,2].legend()
+    subplots[0,2].grid(True)
+    subplots[0,2].set_xscale('log')
+
+    subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0][0:], fft_convert(self['tire_load_fr'])[1][0:], label='self_tire_load_fr')
+    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0][0:], fft_convert(other['tire_load_fr'])[1][0:], label='other_tire_load_fr')
+    subplots[0,3].set_ylabel('Function inputs (G, cm)')
+    subplots[0,3].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_fr'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_fr'])[1]**2):.3}")
+    subplots[0,3].set_ylim(top=4e6)
+    subplots[0,3].legend()
+    subplots[0,3].grid(True)
+    subplots[0,3].set_xscale('log')
+
+    subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0][0:], fft_convert(self['tire_load_rl'])[1][0:], label='self_tire_load_rl')
+    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0][0:], fft_convert(other['tire_load_rl'])[1][0:], label='other_tire_load_rl')
+    subplots[1,2].set_ylabel('Function inputs (G, cm)')
+    subplots[1,2].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_rl'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_rl'])[1]**2):.3}")
+    subplots[1,2].set_ylim(top=4e6)
+    subplots[1,2].legend()
+    subplots[1,2].grid(True)
+    subplots[1,2].set_xscale('log')
+
+    subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0][0:], fft_convert(self['tire_load_rr'])[1][0:], label='self_tire_load_rr')
+    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0][0:], fft_convert(other['tire_load_rr'])[1][0:], label='other_tire_load_rr')
+    subplots[1,3].set_ylabel('Function inputs (G, cm)')
+    subplots[1,3].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_rr'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_rr'])[1]**2):.3}")
+    subplots[1,3].set_ylim(top=4e6)
+    subplots[1,3].legend()
+    subplots[1,3].grid(True)
+    subplots[1,3].set_xscale('log')
+
+    fig.tight_layout()
+    plt.show()
+
+    return
 
 def ML_set(synth_data):
 

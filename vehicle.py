@@ -348,6 +348,9 @@ class HyperMuVehicle:
 
         print('Shaker solver complete.\n')
 
+        if kwargs['return_dict'] == True:
+            return force_function, graphing_dict
+
         return(
             force_function,
             np.array(a_dd_rear_axle),
@@ -362,26 +365,28 @@ class HyperMuVehicle:
     def plot_shaker_basics(self, **kwargs):
 
         shaker_results = self.Shaker(**kwargs)
-
         vis.plot_basics(*shaker_results)
     
     def correlation_rollPitchRate(self, **kwargs):
-        
-        shaker_results = self.Shaker(**kwargs)
 
+        shaker_results = self.Shaker(**kwargs)
         vis.check_correlation_rollPitchRate(*shaker_results)
     
     def correlation_rollRateRearZ(self, **kwargs):
-        
-        shaker_results = self.Shaker(**kwargs)
 
+        shaker_results = self.Shaker(**kwargs)
         vis.check_correlation_rollRateRearZ(*shaker_results)
 
     def damper_response_detail(self, **kwargs):
 
         shaker_results = self.Shaker(**kwargs)
-
         vis.damper_response_detail(*shaker_results)
+    
+    def compare(self, other_vehicle, **kwargs):
+        
+        force_function, shaker_results_self = self.Shaker(**kwargs)
+        force_function, shaker_results_other = other_vehicle.Shaker(**kwargs)
+        vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other)
 
     def synth_data_for_ML(self, **kwargs):
         
