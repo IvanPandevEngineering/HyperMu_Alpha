@@ -42,14 +42,12 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in['c_rr_array'] = 0
 
     #resampling to time resolution, interpolate linearly then drop all nans
-    data_in = data_in.resample('1ms')
-    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.resample('1ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
     smoothing_window_size = int(smoothing_window_size_ms)
 
     #resampling to 10ms, interpolate linearly then drop all nans
-    data_in = data_in.resample('10ms')
-    data_in = data_in.interpolate(method='linear')
+    data_in = data_in.resample('10ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
     smoothing_window_size = int(smoothing_window_size_ms/10)
 
@@ -84,29 +82,65 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
 
     return data
 
-
-def get_demo_G_function(
+def get_unit_test_Slalom_w_Curbs(
         timespan: int = 3,
         lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
         long_magnitude: float = 0.5, long_frequency: float = 1
     ):
 
     #  Default time resolution is set to 100hz
-    time_res = 100  # hz
+    time_res = 1000  # hz
 
     G_lat_array = np.array([math.sin(2 * math.pi * lat_frequency * x / time_res) * lat_magnitude for x in range(time_res * timespan)]) # 100 steps is 1s
-    G_lat_array[200:] = 0
+    G_lat_array[2000:] = 0
 
     G_long_array = np.array([math.sin(2 * math.pi * long_frequency * x / time_res) * long_magnitude for x in range(time_res * timespan)])  # 100 steps is 1s
-    G_long_array[175:] = -long_magnitude
+    G_long_array[1750:] = -long_magnitude
 
     c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
-    c_fr_array[130:160] = -0.008  # m
-    c_fr_array = custom_smooth(c_fr_array, 3)
+    c_fr_array[1300:1600] = -0.008  # m
+    c_fr_array = custom_smooth(c_fr_array, 10)
 
     c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
-    c_rr_array[150:180] = -0.010  # m
-    c_rr_array = custom_smooth(c_rr_array, 3)
+    c_rr_array[1500:1800] = -0.010  # m
+    c_rr_array = custom_smooth(c_rr_array, 10)
+
+    time_array = [x/time_res for x in range(len(G_lat_array))]
+    dt_array = [1/time_res for all in range(len(G_lat_array))]
+
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_roll = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_corrected = np.array([0.0 for x in range(time_res * timespan)])
+
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
+        columns=columns_global)
+
+    return data
+
+def get_unit_test_Curbs(
+        timespan: int = 10,
+        lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
+        long_magnitude: float = 0.5, long_frequency: float = 1
+    ):
+
+    #  Default time resolution is set to 100hz
+    time_res = 1000  # hz
+
+    G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
+    G_long_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_fr_array[1300:1600] = -0.008  # m
+    c_fr_array[5300:5600] = -0.012  # m
+    c_fr_array = custom_smooth(c_fr_array, 10)
+
+    c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rr_array[1500:1800] = -0.010  # m
+    c_rr_array[7500:7800] = -0.020  # m
+    c_rr_array = custom_smooth(c_rr_array, 10)
 
     time_array = [x/time_res for x in range(len(G_lat_array))]
     dt_array = [1/time_res for all in range(len(G_lat_array))]

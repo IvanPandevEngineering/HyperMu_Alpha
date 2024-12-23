@@ -249,14 +249,18 @@ class HyperMuVehicle:
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         if kwargs:
-            if kwargs['replay_src'] == 'roll_frequency_sweep':
+            if kwargs['replay_src'] == 'demo':
+                force_function = cd.get_unit_test_Slalom_w_Curbs()
+            elif kwargs['replay_src'] == 'curbs':
+                force_function = cd.get_unit_test_Curbs()
+            elif kwargs['replay_src'] == 'roll_frequency_sweep':
                 force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
             else:
                 force_function = cd.from_sensor_log_iOS_app_unbiased(
                     kwargs['replay_src'], kwargs['smoothing_window_size_ms']
                 )
         else:
-            force_function = cd.get_demo_G_function()
+            force_function = cd.get_unit_test_Slalom_w_Curbs()
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
@@ -264,14 +268,6 @@ class HyperMuVehicle:
             self.init_b_fr, self.init_b_fl, self.init_b_rr, self.init_b_rr,
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         )
-        
-        a_dd_rear_axle, \
-        roll_angle_f, roll_angle_r, pitch_angle, roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate, \
-        tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl, \
-        lateral_load_dist_f, lateral_load_dist_r, \
-        damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl, \
-        damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl = \
-        [[] for _ in range(21)]
 
         graphing_dict={}
         for var in state_for_plotting._fields:
@@ -318,59 +314,26 @@ class HyperMuVehicle:
             for var in state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
 
-            a_dd_rear_axle.append(graphing_vars.a_dd_rear_axle)
-            tire_load_fr.append(graphing_vars.tire_load_fr)
-            tire_load_fl.append(graphing_vars.tire_load_fl)
-            tire_load_rr.append(graphing_vars.tire_load_rr)
-            tire_load_rl.append(graphing_vars.tire_load_rl)
-            damper_vel_fr.append(graphing_vars.damper_vel_fr)
-            damper_vel_fl.append(graphing_vars.damper_vel_fl)
-            damper_vel_rr.append(graphing_vars.damper_vel_rr)
-            damper_vel_rl.append(graphing_vars.damper_vel_rl)
-            damper_force_fr.append(graphing_vars.damper_force_fr)
-            damper_force_fl.append(graphing_vars.damper_force_fl)
-            damper_force_rr.append(graphing_vars.damper_force_rr)
-            damper_force_rl.append(graphing_vars.damper_force_rl)
-            roll_angle_f.append(graphing_vars.roll_angle_f)
-            roll_angle_r.append(graphing_vars.roll_angle_r)
-            pitch_angle.append(graphing_vars.pitch_angle)
-            roll_angle_rate_f.append(graphing_vars.roll_angle_rate_f)
-            roll_angle_rate_r.append(graphing_vars.roll_angle_rate_r)
-            pitch_angle_rate.append(graphing_vars.pitch_angle_rate)
-            lateral_load_dist_f.append(graphing_vars.lateral_load_dist_f)
-            lateral_load_dist_r.append(graphing_vars.lateral_load_dist_r)
-
             if i == len(force_function)-3:
                 break
 
         force_function = force_function[2:]
-        assert len(force_function) == len(tire_load_fr), 'Length mismatch.'
+        assert len(force_function) == len(graphing_dict['tire_load_fr']), 'Length mismatch.'
 
         print('Shaker solver complete.\n')
 
-        if kwargs['return_dict'] == True:
-            return force_function, graphing_dict
-
-        return(
-            force_function,
-            np.array(a_dd_rear_axle),
-            np.array(tire_load_fr), np.array(tire_load_fl), np.array(tire_load_rr), np.array(tire_load_rl),
-            damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-            damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
-            np.array(lateral_load_dist_f), np.array(lateral_load_dist_r),
-            np.array(roll_angle_f), np.array(roll_angle_r), np.array(pitch_angle),
-            np.array(roll_angle_rate_f), np.array(roll_angle_rate_r), np.array(pitch_angle_rate)
-        )
+        return force_function, graphing_dict
+    
 
     def plot_shaker_basics(self, **kwargs):
 
-        shaker_results = self.Shaker(**kwargs)
-        vis.plot_basics(*shaker_results)
+        force_function, shaker_results = self.Shaker(**kwargs)
+        vis.plot_basics(force_function, shaker_results)
     
     def correlation_rollPitchRate(self, **kwargs):
 
-        shaker_results = self.Shaker(**kwargs)
-        vis.check_correlation_rollPitchRate(*shaker_results)
+        force_function, shaker_results = self.Shaker(**kwargs)
+        vis.check_correlation_rollPitchRate(force_function, shaker_results)
     
     def correlation_rollRateRearZ(self, **kwargs):
 
