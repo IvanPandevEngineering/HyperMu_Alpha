@@ -27,8 +27,12 @@ import formulas as f
 from collections import namedtuple
 
 chassis_state = namedtuple('chassis_state',
-    ['a_fr', 'a_fl', 'a_rr', 'a_rl', 'b_fr', 'b_fl', 'b_rr', 'b_rl', 'c_fr', 'c_fl', 'c_rr', 'c_rl',\
-    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl', 'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl', 'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
+    ['a_fr', 'a_fl', 'a_rr', 'a_rl',
+     'b_fr', 'b_fl', 'b_rr', 'b_rl',
+     'c_fr', 'c_fl', 'c_rr', 'c_rl',
+    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl',
+    'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl',
+    'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
 )
 
 state_for_plotting = namedtuple('variables_of_interest',

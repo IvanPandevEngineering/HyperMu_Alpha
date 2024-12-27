@@ -12,7 +12,6 @@ import visualizer as vis
 import chassis_model as model
 from chassis_model import state_for_plotting
 import pickle
-import math
 
 
 def user_warning():
@@ -51,6 +50,55 @@ def unpack_yml(path: str):
         dict['parameters'][key] = make_metric(dict['parameters'][key][0], dict['parameters'][key][1])
 
     return(dict)
+
+def get_force_function(**kwargs):
+
+    if kwargs['replay_src'] == 'demo':
+        force_function = cd.get_unit_test_Slalom_w_Curbs()
+        scenario = 'Unit Test: Demo'
+    elif kwargs['replay_src'] == 'curbs':
+        force_function = cd.get_unit_test_Curbs()
+        scenario = 'Unit Test: Curb Riding'
+    elif kwargs['replay_src'] == 'roll_frequency_sweep':
+        force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
+        scenario = 'Unit Test: Lat Accel Freq Sweep'
+    else:
+        force_function = cd.from_sensor_log_iOS_app_unbiased(kwargs['replay_src'], kwargs['smoothing_window_size_ms'])
+        scenario = 'G-Replay from Telemetry'
+
+    return force_function, scenario
+
+def get_inputs_dt(i, row, force_function):
+
+    inputs_dt = time_dependent_inputs(
+        G_lat = row['accelerometerAccelerationX(G)'],
+        G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
+        G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
+        G_long = row['accelerometerAccelerationY(G)'],
+        G_long_next = force_function['accelerometerAccelerationY(G)'][i+1],
+        G_long_half_next = (row['accelerometerAccelerationY(G)'] + force_function['accelerometerAccelerationY(G)'][i+1])/2,
+        G_vert = row['accelerometerAccelerationZ(G)'],
+        G_vert_next = force_function['accelerometerAccelerationZ(G)'][i+1],
+        G_vert_half_next = (row['accelerometerAccelerationZ(G)'] + force_function['accelerometerAccelerationZ(G)'][i+1])/2,
+        c_fr = row['c_fr'],
+        c_fl = 0,
+        c_rr = row['c_rr'],
+        c_rl = 0,
+        c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
+        c_d_fl = 0,
+        c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
+        c_d_rl = 0,
+        c_fr_next = force_function['c_fr'][i+1],
+        c_fl_next = 0,
+        c_rr_next = force_function['c_rr'][i+1],
+        c_rl_next = 0,
+        c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
+        c_d_fl_next = 0,
+        c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
+        c_d_rl_next = 0,
+    )
+
+    return inputs_dt
 
 class HyperMuVehicle:
 
@@ -248,19 +296,7 @@ class HyperMuVehicle:
     def Shaker(self, **kwargs):
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
-        if kwargs:
-            if kwargs['replay_src'] == 'demo':
-                force_function = cd.get_unit_test_Slalom_w_Curbs()
-            elif kwargs['replay_src'] == 'curbs':
-                force_function = cd.get_unit_test_Curbs()
-            elif kwargs['replay_src'] == 'roll_frequency_sweep':
-                force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
-            else:
-                force_function = cd.from_sensor_log_iOS_app_unbiased(
-                    kwargs['replay_src'], kwargs['smoothing_window_size_ms']
-                )
-        else:
-            force_function = cd.get_unit_test_Slalom_w_Curbs()
+        force_function, scenario = get_force_function(**kwargs)
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
@@ -276,39 +312,10 @@ class HyperMuVehicle:
         print('Starting RK4 solver for G-replay...')
         for i, row in force_function.iterrows():
 
-            dt = force_function['timestep'][i+1]
-
-            inputs_dt = time_dependent_inputs(
-                G_lat = row['accelerometerAccelerationX(G)'],
-                G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
-                G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
-                G_long = row['accelerometerAccelerationY(G)'],
-                G_long_next = force_function['accelerometerAccelerationY(G)'][i+1],
-                G_long_half_next = (row['accelerometerAccelerationY(G)'] + force_function['accelerometerAccelerationY(G)'][i+1])/2,
-                G_vert = row['accelerometerAccelerationZ(G)'],
-                G_vert_next = force_function['accelerometerAccelerationZ(G)'][i+1],
-                G_vert_half_next = (row['accelerometerAccelerationZ(G)'] + force_function['accelerometerAccelerationZ(G)'][i+1])/2,
-                c_fr = row['c_fr'],
-                c_fl = 0,
-                c_rr = row['c_rr'],
-                c_rl = 0,
-                c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
-                c_d_fl = 0,
-                c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
-                c_d_rl = 0,
-                c_fr_next = force_function['c_fr'][i+1],
-                c_fl_next = 0,
-                c_rr_next = force_function['c_rr'][i+1],
-                c_rl_next = 0,
-                c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
-                c_d_fl_next = 0,
-                c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
-                c_d_rl_next = 0,
-            )
-
-            #  Forward-prediction of chassis model state using RK4
             state, graphing_vars = RK4_step(
-                dt = dt, self = self, state = state, inputs_dt = inputs_dt
+                dt = force_function['timestep'][i+1],
+                self = self,
+                state = state, inputs_dt = get_inputs_dt(i, row, force_function)
             )
 
             for var in state_for_plotting._fields:
@@ -322,18 +329,18 @@ class HyperMuVehicle:
 
         print('Shaker solver complete.\n')
 
-        return force_function, graphing_dict
+        return force_function, graphing_dict, scenario
     
 
     def plot_shaker_basics(self, **kwargs):
 
-        force_function, shaker_results = self.Shaker(**kwargs)
-        vis.plot_basics(force_function, shaker_results)
+        force_function, shaker_results, scenario = self.Shaker(**kwargs)
+        vis.plot_basics(force_function, shaker_results, scenario)
     
     def correlation_rollPitchRate(self, **kwargs):
 
-        force_function, shaker_results = self.Shaker(**kwargs)
-        vis.check_correlation_rollPitchRate(force_function, shaker_results)
+        force_function, shaker_results, scenario = self.Shaker(**kwargs)
+        vis.check_correlation_rollPitchRate(force_function, shaker_results, scenario)
     
     def correlation_rollRateRearZ(self, **kwargs):
 
@@ -347,9 +354,9 @@ class HyperMuVehicle:
     
     def compare(self, other_vehicle, **kwargs):
         
-        force_function, shaker_results_self = self.Shaker(**kwargs)
-        force_function, shaker_results_other = other_vehicle.Shaker(**kwargs)
-        vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other)
+        force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
+        force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
+        vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
 
     def synth_data_for_ML(self, **kwargs):
         

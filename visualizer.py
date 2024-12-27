@@ -8,7 +8,7 @@ def fft_convert(series):
     
     return  np.fft.fftfreq(len(series), 1 / 100), np.abs(np.fft.fft(series))
 
-def plot_basics(force_function, results):
+def plot_basics(force_function, results, scenario):
 
     print('Graphing...')
 
@@ -70,16 +70,15 @@ def plot_basics(force_function, results):
 
     return
 
-def check_correlation_rollPitchRate(force_function, results):
+def check_correlation_rollPitchRate(force_function, results, scenario):
 
     print('Graphing...')
-
     plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
-    fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
+    fig.suptitle('Correlation on Race Telemetry (Left-Smoothing Window = 750ms)', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14), label='Recorded roll angle rate (deg/s)')
@@ -207,7 +206,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     fig.tight_layout()
     plt.show()
 
-def tire_response_detail_comparison(force_function, self, other):
+def tire_response_detail_comparison(force_function, self, other, scenario):
 
     print('Graphing...')
 
@@ -217,11 +216,11 @@ def tire_response_detail_comparison(force_function, self, other):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 4, figsize=(14, 8))
-    fig.suptitle('Tire Response Detail Comparison, Self v. Other', fontsize=14)
+    fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0,0].hist(self['tire_load_fl'], bins=50, label='self tire load, fl')
-    subplots[0,0].hist(other['tire_load_fl'], bins=50, label='other tire load, fl')
+    subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='other tire load, fl')
     subplots[0,0].set_ylabel('Tire Load (N)')
     subplots[0,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_fl']):.4}\n other std_dev: {np.std(other['tire_load_fl']):.4}")
     subplots[0,0].legend()
@@ -229,7 +228,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[0,0].set_yscale('log')
 
     subplots[0,1].hist(self['tire_load_fr'], bins=50, label='self tire load, fr')
-    subplots[0,1].hist(other['tire_load_fr'], bins=50, label='other tire load, fr')
+    subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='other tire load, fr')
     subplots[0,1].set_ylabel('Tire Load (N)')
     subplots[0,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_fr']):.4}\n other std_dev: {np.std(other['tire_load_fr']):.4}")
     subplots[0,1].legend()
@@ -237,7 +236,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[0,1].set_yscale('log')
 
     subplots[1,0].hist(self['tire_load_rl'], bins=50, label='self tire load, fr')
-    subplots[1,0].hist(other['tire_load_rl'], bins=50, label='other tire load, fr')
+    subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='other tire load, fr')
     subplots[1,0].set_ylabel('Tire Load (N)')
     subplots[1,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_rl']):.4}\n other std_dev: {np.std(other['tire_load_rl']):.4}")
     subplots[1,0].legend()
@@ -245,7 +244,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[1,0].set_yscale('log')
 
     subplots[1,1].hist(self['tire_load_rr'], bins=50, label='self tire load, rr')
-    subplots[1,1].hist(other['tire_load_rr'], bins=50, label='other tire load, rr')
+    subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='other tire load, rr')
     subplots[1,1].set_ylabel('Tire Load (N)')
     subplots[1,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_rr']):.4}\n other std_dev: {np.std(other['tire_load_rr']):.4}")
     subplots[1,1].legend()
@@ -253,7 +252,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[1,1].set_yscale('log')
 
     subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0][0:], fft_convert(self['tire_load_fl'])[1][0:], label='self_tire_load_fl')
-    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0][0:], fft_convert(other['tire_load_fl'])[1][0:], label='other_tire_load_fl')
+    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0][0:], fft_convert(other['tire_load_fl'])[1][0:], alpha = 0.7, label='other_tire_load_fl')
     subplots[0,2].set_ylabel('Function inputs (G, cm)')
     subplots[0,2].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_fl'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_fl'])[1]**2):.3}")
     subplots[0,2].set_ylim(top=4e6)
@@ -262,7 +261,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[0,2].set_xscale('log')
 
     subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0][0:], fft_convert(self['tire_load_fr'])[1][0:], label='self_tire_load_fr')
-    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0][0:], fft_convert(other['tire_load_fr'])[1][0:], label='other_tire_load_fr')
+    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0][0:], fft_convert(other['tire_load_fr'])[1][0:], alpha = 0.7, label='other_tire_load_fr')
     subplots[0,3].set_ylabel('Function inputs (G, cm)')
     subplots[0,3].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_fr'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_fr'])[1]**2):.3}")
     subplots[0,3].set_ylim(top=4e6)
@@ -271,7 +270,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[0,3].set_xscale('log')
 
     subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0][0:], fft_convert(self['tire_load_rl'])[1][0:], label='self_tire_load_rl')
-    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0][0:], fft_convert(other['tire_load_rl'])[1][0:], label='other_tire_load_rl')
+    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0][0:], fft_convert(other['tire_load_rl'])[1][0:], alpha = 0.7, label='other_tire_load_rl')
     subplots[1,2].set_ylabel('Function inputs (G, cm)')
     subplots[1,2].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_rl'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_rl'])[1]**2):.3}")
     subplots[1,2].set_ylim(top=4e6)
@@ -280,7 +279,7 @@ def tire_response_detail_comparison(force_function, self, other):
     subplots[1,2].set_xscale('log')
 
     subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0][0:], fft_convert(self['tire_load_rr'])[1][0:], label='self_tire_load_rr')
-    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0][0:], fft_convert(other['tire_load_rr'])[1][0:], label='other_tire_load_rr')
+    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0][0:], fft_convert(other['tire_load_rr'])[1][0:], alpha = 0.7, label='other_tire_load_rr')
     subplots[1,3].set_ylabel('Function inputs (G, cm)')
     subplots[1,3].set_xlabel(f"self total energy: {np.sum(fft_convert(self['tire_load_rr'])[1]**2):.3}\n other total energy: {np.sum(fft_convert(other['tire_load_rr'])[1]**2):.3}")
     subplots[1,3].set_ylim(top=4e6)
