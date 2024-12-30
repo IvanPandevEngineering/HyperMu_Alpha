@@ -358,4 +358,4 @@ def get_init_a(sm, usm, K_s, K_t):
 
 def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
-    return max(K_bs * ((a-init_a) - (b-init_b) - max_compression)  , 0) #TODO: check max-compression is at wheel, not spring/damper
+    return max(K_bs * ((a-init_a) - (b-init_b) - max_compression)  , 0)
