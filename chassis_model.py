@@ -37,6 +37,8 @@ chassis_state = namedtuple('chassis_state',
 
 state_for_plotting = namedtuple('variables_of_interest',
     ['a_dd_rear_axle',
+     'spring_disp_fr', 'spring_disp_fl', 'spring_disp_rl', 'spring_disp_rr',
+     'damper_disp_fr', 'damper_disp_fl', 'damper_disp_rl', 'damper_disp_rr',
      'tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
      'damper_vel_fr', 'damper_vel_fl', 'damper_vel_rr', 'damper_vel_rl',
      'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl',
@@ -168,6 +170,14 @@ def solve_chassis_model(
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
     state_for_plotting_return = state_for_plotting(
         a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
+        spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),
+        spring_disp_fl = f.get_spring_disp(a = state.a_fl, b = state.b_fl, WS_motion_ratio = self.WS_motion_ratio_f),
+        spring_disp_rr = f.get_spring_disp(a = state.a_rr, b = state.b_rr, WS_motion_ratio = self.WS_motion_ratio_r),
+        spring_disp_rl = f.get_spring_disp(a = state.a_rl, b = state.b_rl, WS_motion_ratio = self.WS_motion_ratio_r),
+        damper_disp_fr = f.get_damper_disp(a = state.a_fr, b = state.b_fr, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_disp_fl = f.get_damper_disp(a = state.a_fl, b = state.b_fl, WD_motion_ratio = self.WD_motion_ratio_f),
+        damper_disp_rr = f.get_damper_disp(a = state.a_rr, b = state.b_rr, WD_motion_ratio = self.WD_motion_ratio_r),
+        damper_disp_rl = f.get_damper_disp(a = state.a_rl, b = state.b_rl, WD_motion_ratio = self.WD_motion_ratio_r),
         tire_load_fr = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr),
         tire_load_fl = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl),
         tire_load_rr = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),

@@ -18,12 +18,12 @@ def plot_basics(force_function, results, scenario):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
-    fig.suptitle('G-Force Replay on Battle_Bimmer_30_Sept_w_Pass', fontsize=14)
+    fig.suptitle(f'Performance Overview, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
-    #subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
     subplots[0,0].set_ylabel('Function inputs (G, cm)')
@@ -78,10 +78,11 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
-    fig.suptitle('Correlation on Race Telemetry (Left-Smoothing Window = 750ms)', fontsize=14)
+    fig.suptitle(f'Correlation on Roll/Pitch Rate, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14), label='Recorded roll angle rate (deg/s)')
+    subplots[0][0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], results['roll_angle_rate_f'], label='predicted roll angle rate (deg/s, f)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], results['roll_angle_rate_r'], label='predicted roll angle rate (deg/s, r)')
     subplots[0][0].set_xlabel('Time')

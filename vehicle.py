@@ -120,16 +120,20 @@ class HyperMuVehicle:
         self.tire_diam_f = vpd['tire_diameter_front']
         self.tire_diam_r = vpd['tire_diameter_rear']
 
-        self.K_s_f = vpd['spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
-        self.K_s_r = vpd['spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
-        self.K_bs_f = vpd['bump_stop_spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
-        self.K_bs_r = vpd['bump_stop_spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
-        self.K_arb_f = vpd['arb_rate_f']
-        self.K_arb_r = vpd['arb_rate_r']
-
+        self.WS_motion_ratio_f = vpd['WS_motion_ratio_f']
+        self.WS_motion_ratio_r = vpd['WS_motion_ratio_r']
         self.WD_motion_ratio_f = vpd['WD_motion_ratio_f']
         self.WD_motion_ratio_r = vpd['WD_motion_ratio_r']
 
+        #  K's to be used in ChassisDyne chassis model solver. All spring rates converted to at-wheel rates.
+        self.K_s_f = vpd['spring_rate_f'] / (vpd['WS_motion_ratio_f']**2)
+        self.K_s_r = vpd['spring_rate_r'] / (vpd['WS_motion_ratio_r']**2)
+        self.K_bs_f = vpd['bump_stop_spring_rate_f'] / self.WS_motion_ratio_f**2 # front bump stop is at strut
+        self.K_bs_r = vpd['bump_stop_spring_rate_r'] / self.WD_motion_ratio_r**2 # rear bump stop is at damper
+        self.K_arb_f = vpd['arb_rate_f']
+        self.K_arb_r = vpd['arb_rate_r']
+
+        #  C's to be used in ChassisDyne chassis model solver. All damper rates converted to at-wheel rates.
         self.C_lsc_f = vpd['slow_compression_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_lsc_r = vpd['slow_compression_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
         self.C_lsr_f = vpd['slow_rebound_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
@@ -138,10 +142,10 @@ class HyperMuVehicle:
         self.C_hsc_r = vpd['fast_compression_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
         self.C_hsr_f = vpd['fast_rebound_damper_rate_f'] / (vpd['WD_motion_ratio_f']**2)
         self.C_hsr_r = vpd['fast_rebound_damper_rate_r'] / (vpd['WD_motion_ratio_r']**2)
-        self.knee_c_f = vpd['knee_speed_compression_f'] / (vpd['WD_motion_ratio_f']**2)
-        self.knee_c_r = vpd['knee_speed_compression_r'] / (vpd['WD_motion_ratio_r']**2)
-        self.knee_r_f = vpd['knee_speed_rebound_f'] / (vpd['WD_motion_ratio_f']**2)
-        self.knee_r_r = vpd['knee_speed_rebound_r'] / (vpd['WD_motion_ratio_r']**2)
+        self.knee_c_f = vpd['knee_speed_compression_f'] / self.WD_motion_ratio_f
+        self.knee_c_r = vpd['knee_speed_compression_r'] / self.WD_motion_ratio_r
+        self.knee_r_f = vpd['knee_speed_rebound_f'] / self.WD_motion_ratio_f
+        self.knee_r_r = vpd['knee_speed_rebound_r'] / self.WD_motion_ratio_r
 
         self.tw_v, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v,\
         self.C_lsc_f_v, self.C_lsc_r_v,\
@@ -194,8 +198,8 @@ class HyperMuVehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
-        self.max_compression_f = vpd['max_suspension_compression_front'] / vpd['WS_motion_ratio_f']
-        self.max_compression_r = vpd['max_suspension_compression_rear'] / vpd['WS_motion_ratio_r']
+        self.max_compression_f = vpd['max_suspension_compression_front'] * vpd['WS_motion_ratio_f']
+        self.max_compression_r = vpd['max_suspension_compression_rear'] * vpd['WD_motion_ratio_r'] # rear bump stop on rear damper, not spring
 
         self.init_a_fr = f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
         self.init_a_fl = f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
