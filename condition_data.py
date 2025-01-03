@@ -65,9 +65,9 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'] - 0.01
 
     #apply angular frame-of-reference corrections
-    installed_pitch_angle = 4*math.pi/180  # Convert pitch installation angle to 
-    #coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['gyroRotationZ(rad/s)']*abs(data_in['gyroRotationZ(rad/s)'])
-    #data_in['accelerometerAccelerationX(G)'] = data_in['accelerometerAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
+    installed_pitch_angle = 4.5*math.pi/180  # Convert pitch installation angle to 
+    # coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['motionRotationRateZ(rad/s)']*abs(data_in['motionRotationRateZ(rad/s)'])
+    # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
     data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateY(rad/s)'])  # pitch rate correction by yaw and roll rates
 
     #create new time and timestep columns
