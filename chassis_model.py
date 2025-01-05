@@ -42,6 +42,7 @@ state_for_plotting = namedtuple('variables_of_interest',
      'tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
      'damper_vel_fr', 'damper_vel_fl', 'damper_vel_rr', 'damper_vel_rl',
      'damper_force_fr', 'damper_force_fl', 'damper_force_rr', 'damper_force_rl',
+     'bump_stop_F_fr', 'bump_stop_F_fl', 'bump_stop_F_rr', 'bump_stop_F_rl', 
      'roll_angle_f', 'roll_angle_r', 'pitch_angle',
      'roll_angle_rate_f', 'roll_angle_rate_r', 'pitch_angle_rate',
      'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio']
@@ -92,10 +93,15 @@ def solve_chassis_model(
     chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
     chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
 
-    ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
-    ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl) + f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
-    ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rr, state.a_rr, self.init_b_rr, state.b_rr)
-    ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl) + f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rl, state.a_rl, self.init_b_rl, state.b_rl)
+    bump_stop_F_fr = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
+    bump_stop_F_fl = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
+    bump_stop_F_rr = f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rr, state.a_rr, self.init_b_rr, state.b_rr)
+    bump_stop_F_rl = f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rl, state.a_rl, self.init_b_rl, state.b_rl)
+
+    ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr) + bump_stop_F_fr
+    ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl) + bump_stop_F_fl
+    ride_spring_F_rr = f.get_ride_spring_F(self.K_s_r, state.a_rr, state.b_rr) + bump_stop_F_rr
+    ride_spring_F_rl = f.get_ride_spring_F(self.K_s_r, state.a_rl, state.b_rl) + bump_stop_F_rl
 
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
@@ -146,10 +152,10 @@ def solve_chassis_model(
          ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
          0, 0, 0, 0],  # Node a_dd_rl
 
-        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # Node b_fr
-        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # Node b_fl
-        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # Node b_rr
-        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_rl 
+        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # Node b_dd_fr
+        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # Node b_dd_fl
+        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # Node b_dd_rr
+        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_dd_rl 
     ])
 
     #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct.
@@ -190,12 +196,16 @@ def solve_chassis_model(
         damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f),
         damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r),
         damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r),
+        bump_stop_F_fr = bump_stop_F_fr,
+        bump_stop_F_fl = bump_stop_F_fl,
+        bump_stop_F_rr = bump_stop_F_rr,
+        bump_stop_F_rl = bump_stop_F_fl,
         roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
         roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
-        pitch_angle = f.get_pitch_angle(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
+        pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
         roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl),
         roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl),
-        pitch_angle_rate = f.get_pitch_angle_rate(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl),
+        pitch_angle_rate = f.get_pitch_angle_rate_deg(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl),
         lateral_load_dist_f = 100 * f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr), 
                                                            tire_load_l = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)),
         lateral_load_dist_r = 100 * f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),

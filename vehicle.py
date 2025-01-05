@@ -165,8 +165,8 @@ class HyperMuVehicle:
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
-        self.C_t_f = vpd['tire_rate_f'] / 10000
-        self.C_t_r = vpd['tire_rate_r'] / 10000
+        self.C_t_f = self.K_t_f / 1000
+        self.C_t_r = self.K_t_r / 1000
 
         self.cm_height = vpd['center_of_mass_height']
         self.rc_height_f = vpd['roll_center_height_front']
@@ -359,7 +359,7 @@ class HyperMuVehicle:
         shaker_results = self.Shaker(**kwargs)
         vis.damper_response_detail(*shaker_results)
     
-    def compare(self, other_vehicle, **kwargs):
+    def compare_tire_response_detail(self, other_vehicle, **kwargs):
         
         force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
         force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)

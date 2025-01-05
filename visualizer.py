@@ -288,7 +288,7 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
 
     subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0], fft_convert(self['tire_load_fl'])[1], label='self_tire_load_fl')
     subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0], fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='other_tire_load_fl')
-    subplots[0,2].set_ylabel('Normalized Amplitude (N)')
+    subplots[0,2].set_ylabel('Normalized Tire Load Amplitude (N)')
     subplots[0,2].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_fl']):.3}\n other total energy: {get_fft_energy(other['tire_load_fl']):.3}")
     subplots[0,2].legend()
     subplots[0,2].grid(True)
@@ -297,7 +297,7 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
 
     subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0], fft_convert(self['tire_load_fr'])[1], label='self_tire_load_fr')
     subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0], fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='other_tire_load_fr')
-    subplots[0,3].set_ylabel('Normalized Amplitude (N)')
+    subplots[0,3].set_ylabel('Normalized Tire Load Amplitude (N)')
     subplots[0,3].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_fr']):.3}\n other total energy: {get_fft_energy(other['tire_load_fr']):.3}")
     subplots[0,3].legend()
     subplots[0,3].grid(True)
@@ -306,7 +306,7 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
 
     subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0], fft_convert(self['tire_load_rl'])[1], label='self_tire_load_rl')
     subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0], fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='other_tire_load_rl')
-    subplots[1,2].set_ylabel('Normalized Amplitude (N)')
+    subplots[1,2].set_ylabel('Normalized Tire Load Amplitude (N)')
     subplots[1,2].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_rl']):.3}\n other total energy: {get_fft_energy(other['tire_load_rl']):.3}")
     subplots[1,2].legend()
     subplots[1,2].grid(True)
@@ -315,7 +315,7 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
 
     subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0], fft_convert(self['tire_load_rr'])[1], label='self_tire_load_rr')
     subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0], fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='other_tire_load_rr')
-    subplots[1,3].set_ylabel('Normalized Amplitude (N)')
+    subplots[1,3].set_ylabel('Normalized Tire Load Amplitude (N)')
     subplots[1,3].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_rr']):.3}\n other total energy: {get_fft_energy(other['tire_load_rr']):.3}")
     subplots[1,3].legend()
     subplots[1,3].grid(True)
