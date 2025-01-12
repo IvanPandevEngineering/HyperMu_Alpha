@@ -4,13 +4,13 @@ import numpy as np
 from scipy import stats
 
 def fft_convert(series):
-    'return frequencies, normalized magnitudes of a time series from the shaker. Currently fixed at 100hz'
+    'return frequencies, normalized magnitudes of a time series from the shaker. Currently fixed at 1000hz'
 
     #  Remove mean from series to prevent DC component 
     series = series - np.mean(series)
 
     #  Perform FFT transform
-    freqs = np.fft.fftfreq(len(series), 1 / 100)
+    freqs = np.fft.fftfreq(len(series), 1 / 1000)
     mags = np.abs(np.fft.fft(series))
 
     #  Normalize to preserve comparability to time-domain values
@@ -20,12 +20,15 @@ def fft_convert(series):
     #  Apply fftshift to remove horizontal line when plotting
     return  np.fft.fftshift(freqs), np.fft.fftshift(mags_norm)
 
-def get_fft_energy(series):
-    'return normalized FFT energy of a time series from the shaker. Energy is a metric describing load variation.'
+def get_RMS(series):
+    'return RMS of a time series from the shaker. Energy is a metric describing load variation.'
 
     mags = np.fft.fft(series)
 
-    return np.sum(np.abs(mags)**2) / len(series)
+    #  Normalized signal energy is useful for "work" calculations given other factors like displacement, etc...
+    signal_energy = np.sum(np.abs(mags)**2) / len(series)
+
+    return np.sqrt(signal_energy)
 
 def plot_basics(force_function, results, scenario):
 
@@ -254,73 +257,142 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
-    subplots[0,0].hist(self['tire_load_fl'], bins=50, label='self tire load, fl')
-    subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='other tire load, fl')
-    subplots[0,0].set_ylabel('Tire Load (N)')
-    subplots[0,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_fl']):.4}\n other std_dev: {np.std(other['tire_load_fl']):.4}")
+    subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Self (fl)')
+    subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Other (fl)')
+    subplots[0,0].set_ylabel('Count')
+    subplots[0,0].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_fl']):.4}\n Other Std Dev: {np.std(other['tire_load_fl']):.4}")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
 
-    subplots[0,1].hist(self['tire_load_fr'], bins=50, label='self tire load, fr')
-    subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='other tire load, fr')
-    subplots[0,1].set_ylabel('Tire Load (N)')
-    subplots[0,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_fr']):.4}\n other std_dev: {np.std(other['tire_load_fr']):.4}")
+    subplots[0,1].hist(self['tire_load_fr'], bins=50, label='Self (fr)')
+    subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='Other (fr)')
+    subplots[0,1].set_ylabel('Count')
+    subplots[0,1].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_fr']):.4}\n Other Std Dev: {np.std(other['tire_load_fr']):.4}")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_yscale('log')
 
-    subplots[1,0].hist(self['tire_load_rl'], bins=50, label='self tire load, fr')
-    subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='other tire load, fr')
-    subplots[1,0].set_ylabel('Tire Load (N)')
-    subplots[1,0].set_xlabel(f"self std_dev: {np.std(self['tire_load_rl']):.4}\n other std_dev: {np.std(other['tire_load_rl']):.4}")
+    subplots[1,0].hist(self['tire_load_rl'], bins=50, label='Self (rl)')
+    subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='Other (rl)')
+    subplots[1,0].set_ylabel('Count')
+    subplots[1,0].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_rl']):.4}\n Other Std Dev: {np.std(other['tire_load_rl']):.4}")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
 
-    subplots[1,1].hist(self['tire_load_rr'], bins=50, label='self tire load, rr')
-    subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='other tire load, rr')
-    subplots[1,1].set_ylabel('Tire Load (N)')
-    subplots[1,1].set_xlabel(f"self std_dev: {np.std(self['tire_load_rr']):.4}\n other std_dev: {np.std(other['tire_load_rr']):.4}")
+    subplots[1,1].hist(self['tire_load_rr'], bins=50, label='Self (rr)')
+    subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='Other (rr)')
+    subplots[1,1].set_ylabel('Count')
+    subplots[1,1].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_rr']):.4}\n Other Std Dev: {np.std(other['tire_load_rr']):.4}")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')
 
-    subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0], fft_convert(self['tire_load_fl'])[1], label='self_tire_load_fl')
-    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0], fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='other_tire_load_fl')
+    subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0], fft_convert(self['tire_load_fl'])[1], label='Self (fl)')
+    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0], fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='Other (fl)')
     subplots[0,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,2].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_fl']):.3}\n other total energy: {get_fft_energy(other['tire_load_fl']):.3}")
+    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_fl']):.3}\n Other RMS (N): {get_RMS(other['tire_load_fl']):.3}")
     subplots[0,2].legend()
     subplots[0,2].grid(True)
     subplots[0,2].set_xscale('log')
-    #subplots[0,2].set_yscale('log')
+    subplots[0,2].set_xlim(left = None, right = 100)
 
-    subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0], fft_convert(self['tire_load_fr'])[1], label='self_tire_load_fr')
-    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0], fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='other_tire_load_fr')
+    subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0], fft_convert(self['tire_load_fr'])[1], label='Self (fr)')
+    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0], fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='Other (fr)')
     subplots[0,3].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,3].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_fr']):.3}\n other total energy: {get_fft_energy(other['tire_load_fr']):.3}")
+    subplots[0,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_fr']):.3}\n Other RMS (N): {get_RMS(other['tire_load_fr']):.3}")
     subplots[0,3].legend()
     subplots[0,3].grid(True)
     subplots[0,3].set_xscale('log')
-    #subplots[0,3].set_yscale('log')
+    subplots[0,3].set_xlim(left = None, right = 100)
 
-    subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0], fft_convert(self['tire_load_rl'])[1], label='self_tire_load_rl')
-    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0], fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='other_tire_load_rl')
+    subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0], fft_convert(self['tire_load_rl'])[1], label='Self (rl)')
+    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0], fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='Other (rl)')
     subplots[1,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[1,2].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_rl']):.3}\n other total energy: {get_fft_energy(other['tire_load_rl']):.3}")
+    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_rl']):.3}\n Other RMS (N): {get_RMS(other['tire_load_rl']):.3}")
     subplots[1,2].legend()
     subplots[1,2].grid(True)
     subplots[1,2].set_xscale('log')
-    #subplots[1,2].set_yscale('log')
+    subplots[1,2].set_xlim(left = None, right = 100)
 
-    subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0], fft_convert(self['tire_load_rr'])[1], label='self_tire_load_rr')
-    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0], fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='other_tire_load_rr')
-    subplots[1,3].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[1,3].set_xlabel(f"self total energy: {get_fft_energy(self['tire_load_rr']):.3}\n other total energy: {get_fft_energy(other['tire_load_rr']):.3}")
+    subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0], fft_convert(self['tire_load_rr'])[1], label='Self (rr)')
+    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0], fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='Other (rr)')
+    subplots[1,3].set_ylabel('Normalized Amplitude (N)')
+    subplots[1,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_rr']):.3}\n Other RMS (N): {get_RMS(other['tire_load_rr']):.3}")
     subplots[1,3].legend()
     subplots[1,3].grid(True)
     subplots[1,3].set_xscale('log')
-    #subplots[1,3].set_yscale('log')
+    subplots[1,3].set_xlim(left = None, right = 100)
+
+    fig.tight_layout()
+    plt.show()
+
+    return
+
+def load_transfer_detail_comparison(force_function, self, other, scenario):
+
+    print('Graphing...')
+
+    plt.style.use('ggplot')
+    mpl.rcParams['axes.labelsize'] = 10
+    mpl.rcParams['legend.fontsize'] = 8
+    mpl.rcParams['xtick.labelsize'] = 8
+    mpl.rcParams['ytick.labelsize'] = 8
+    fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
+    fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+
+    subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Self')
+    subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Other')
+    subplots[0,0].set_ylabel('Count')
+    subplots[0,0].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(self['lateral_load_dist_f']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_f']):.4}")
+    subplots[0,0].legend()
+    subplots[0,0].grid(True)
+    subplots[0,0].set_yscale('log')
+
+    subplots[1,0].hist(self['lateral_load_dist_r'], bins=50, label='Self')
+    subplots[1,0].hist(other['lateral_load_dist_r'], bins=50, alpha = 0.7, label='Other')
+    subplots[1,0].set_ylabel('Count')
+    subplots[1,0].set_xlabel(f"Lateral Load Distribution (Outer %, Rear)\n Self Std Dev: {np.std(self['lateral_load_dist_r']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_r']):.4}")
+    subplots[1,0].legend()
+    subplots[1,0].grid(True)
+    subplots[1,0].set_yscale('log')
+
+    subplots[2,0].hist(self['lateral_load_dist_ratio'], bins=50, label='Self')
+    subplots[2,0].hist(other['lateral_load_dist_ratio'], bins=50, alpha = 0.7, label='Other')
+    subplots[2,0].set_ylabel('Count')
+    subplots[2,0].set_xlabel(f"Lateral Load Distribution Ratio (% Front)\n Self Std Dev: {np.std(self['lateral_load_dist_ratio']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_ratio']):.4}")
+    subplots[2,0].legend()
+    subplots[2,0].grid(True)
+    subplots[2,0].set_yscale('log')
+
+    subplots[0,1].plot(fft_convert(self['lateral_load_dist_f'])[0], fft_convert(self['lateral_load_dist_f'])[1], label='Self')
+    subplots[0,1].plot(fft_convert(other['lateral_load_dist_f'])[0], fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Other')
+    subplots[0,1].set_ylabel('Norm. Lat. Load % Amp (Front)')
+    subplots[0,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_f']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_f']):.3}")
+    subplots[0,1].legend()
+    subplots[0,1].grid(True)
+    subplots[0,1].set_xscale('log')
+    subplots[0,1].set_xlim(left = None, right = 100)
+
+    subplots[1,1].plot(fft_convert(self['lateral_load_dist_r'])[0], fft_convert(self['lateral_load_dist_r'])[1], label='Self')
+    subplots[1,1].plot(fft_convert(other['lateral_load_dist_r'])[0], fft_convert(other['lateral_load_dist_r'])[1], alpha = 0.7, label='Other')
+    subplots[1,1].set_ylabel('Norm. Lat. Load % Amp (Rear)')
+    subplots[1,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_r']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_r']):.3}")
+    subplots[1,1].legend()
+    subplots[1,1].grid(True)
+    subplots[1,1].set_xscale('log')
+    subplots[1,1].set_xlim(left = None, right = 100)
+
+    subplots[2,1].plot(fft_convert(self['lateral_load_dist_ratio'])[0], fft_convert(self['lateral_load_dist_ratio'])[1], label='Self')
+    subplots[2,1].plot(fft_convert(other['lateral_load_dist_ratio'])[0], fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Other')
+    subplots[2,1].set_ylabel('Norm. Lat. Load Ratio % Amp (Front)')
+    subplots[2,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_ratio']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_ratio']):.3}")
+    subplots[2,1].legend()
+    subplots[2,1].grid(True)
+    subplots[2,1].set_xscale('log')
+    subplots[2,1].set_xlim(left = None, right = 100)
 
     fig.tight_layout()
     plt.show()

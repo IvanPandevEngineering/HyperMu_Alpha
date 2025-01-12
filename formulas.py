@@ -340,20 +340,20 @@ def get_pitch_angle_rate_deg(a_fr_d, a_fl_d, a_rr_d, a_rl_d):
     return (a_fr_d + a_fl_d)*180/(2*math.pi) - (a_rr_d + a_rl_d)*180/(2*math.pi)
 
 def get_lateral_load_dist_axle(tire_load_r, tire_load_l):
-    try:
+    if (tire_load_r + tire_load_l) > 0:
         return max(
             tire_load_r / (tire_load_r + tire_load_l),
             tire_load_l / (tire_load_r + tire_load_l)
     )
     #  Handle div0 cases when both tires have zero load
-    finally:
+    else:
         return -1
 
 def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
-    try:
+    if (lateral_load_dist_f + lateral_load_dist_r) > 0:
         return lateral_load_dist_f / (lateral_load_dist_f + lateral_load_dist_r)
     #  Handle div0 cases when both axles have zero load transfer
-    finally:
+    else:
         return -1
 
 def get_init_b(sm, usm, K_t):

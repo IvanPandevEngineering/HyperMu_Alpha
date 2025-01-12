@@ -364,6 +364,12 @@ class HyperMuVehicle:
         force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
         force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
         vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
+    
+    def compare_load_transfer_detail(self, other_vehicle, **kwargs):
+        
+        force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
+        force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
+        vis.load_transfer_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
 
     def synth_data_for_ML(self, **kwargs):
         
