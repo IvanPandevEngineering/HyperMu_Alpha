@@ -132,7 +132,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     r_squared = r_value ** 2
 
     subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14), label='(deg/s)', s=10)
-    subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-10, 10, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
+    subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-8, 8, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
     subplots[0][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[0][1].legend()
     subplots[0][1].set_xlabel('Predicted Roll Rate (deg/s)')
@@ -152,7 +152,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     r_squared_p = r_value_p ** 2
 
     subplots[1][1].scatter(-np.array(results['pitch_angle_rate']), (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='(deg/s)', s=10)
-    subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-10, 10, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
+    subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-8, 8, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
     subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
     subplots[1][1].legend()
     subplots[1][1].set_xlabel('Predicted Pitch Rate (deg/s)')

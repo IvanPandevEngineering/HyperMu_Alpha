@@ -1,7 +1,7 @@
 import pandas as pd
 import math
 import numpy as np
-from scipy.signal import butter, filtfilt
+from scipy.signal import bessel, butter, filtfilt
 
 # define standard dataframe format for multiple data generation functions
 columns_global=['loggingTime(txt)',
@@ -21,6 +21,13 @@ def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, samp
 
     nyquist = sampling_freq / 2
     b, a = butter(order, cutoff_freq / nyquist, btype='low')
+
+    return filtfilt(b, a, signal)
+
+def bidirectional_bessel_lowpass(signal, order = 4, cutoff_freq = 0.7, sampling_freq = 1000):
+
+    nyquist = sampling_freq / 2
+    b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
 
     return filtfilt(b, a, signal)
 
@@ -70,12 +77,19 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     # data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     # data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
     # data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionUserAccelerationX(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationX(G)'])
-    data_in['motionUserAccelerationY(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationY(G)'])
-    data_in['motionUserAccelerationZ(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationZ(G)'])
-    data_in['motionRotationRateY(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateY(rad/s)'])
-    data_in['motionRotationRateX(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateX(rad/s)'])
-    data_in['motionRotationRateZ(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateZ(rad/s)'])
+    # data_in['motionUserAccelerationX(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationX(G)'])
+    # data_in['motionUserAccelerationY(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationY(G)'])
+    # data_in['motionUserAccelerationZ(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationZ(G)'])
+    # data_in['motionRotationRateY(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateY(rad/s)'])
+    # data_in['motionRotationRateX(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateX(rad/s)'])
+    # data_in['motionRotationRateZ(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateZ(rad/s)'])
+
+    data_in['motionUserAccelerationX(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationX(G)'])
+    data_in['motionUserAccelerationY(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationY(G)'])
+    data_in['motionUserAccelerationZ(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationZ(G)'])
+    data_in['motionRotationRateY(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateY(rad/s)'])
+    data_in['motionRotationRateX(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateX(rad/s)'])
+    data_in['motionRotationRateZ(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateZ(rad/s)'])
     data_in = data_in.dropna(how='any')
 
     #apply vertical-offset corrections
@@ -83,7 +97,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'] - 0.01
 
     #apply angular frame-of-reference corrections
-    installed_pitch_angle = 4.5*math.pi/180  # Convert pitch installation angle to 
+    installed_pitch_angle = 4.5*math.pi/180  # Convert pitch installation angle to
     # coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['motionRotationRateZ(rad/s)']*abs(data_in['motionRotationRateZ(rad/s)'])
     # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
     data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateY(rad/s)'])  # pitch rate correction by yaw and roll rates
