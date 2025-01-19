@@ -1,7 +1,7 @@
 import pandas as pd
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+from scipy.signal import butter, filtfilt
 
 # define standard dataframe format for multiple data generation functions
 columns_global=['loggingTime(txt)',
@@ -17,10 +17,23 @@ def custom_smooth(array, rounds):
     
     return(array)
 
+def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, sampling_freq = 1000):
+
+    nyquist = sampling_freq / 2
+    b, a = butter(order, cutoff_freq / nyquist, btype='low')
+
+    return filtfilt(b, a, signal)
+
 def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
 
     print('Converting file to dataframe...')
-    data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)', 'motionUserAccelerationX(G)', 'motionUserAccelerationY(G)', 'motionUserAccelerationZ(G)', 'motionRotationRateY(rad/s)', 'motionRotationRateX(rad/s)', 'motionRotationRateZ(rad/s)']]
+    data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)',
+                                                   'motionUserAccelerationX(G)',
+                                                   'motionUserAccelerationY(G)',
+                                                   'motionUserAccelerationZ(G)',
+                                                   'motionRotationRateY(rad/s)',
+                                                   'motionRotationRateX(rad/s)',
+                                                   'motionRotationRateZ(rad/s)']]
 
     print('Parsing timesteps...')
 
@@ -44,20 +57,25 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     #resampling to time resolution, interpolate linearly then drop all nans
     data_in = data_in.resample('1ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
-    smoothing_window_size = int(smoothing_window_size_ms)
 
     #resampling to 10ms, interpolate linearly then drop all nans
-    data_in = data_in.resample('10ms').interpolate(method='linear')
-    data_in = data_in.dropna(how='any')
-    smoothing_window_size = int(smoothing_window_size_ms/10)
+    # data_in = data_in.resample('10ms').interpolate(method='linear')
+    # data_in = data_in.dropna(how='any')
+    # smoothing_window_size = int(smoothing_window_size_ms/10)
 
-    #apply left-smoothing
-    data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionUserAccelerationZ(G)'] = data_in['motionUserAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    #  Apply Pandas rolling average, left-smoothing window as a quick, easy low-pass filter
+    # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    # data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    # data_in['motionUserAccelerationZ(G)'] = data_in['motionUserAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
+    # data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    # data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    # data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+    data_in['motionUserAccelerationX(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationX(G)'])
+    data_in['motionUserAccelerationY(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationY(G)'])
+    data_in['motionUserAccelerationZ(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationZ(G)'])
+    data_in['motionRotationRateY(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateY(rad/s)'])
+    data_in['motionRotationRateX(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateX(rad/s)'])
+    data_in['motionRotationRateZ(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateZ(rad/s)'])
     data_in = data_in.dropna(how='any')
 
     #apply vertical-offset corrections
@@ -75,7 +93,17 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
     #create dataframe and drop nans one more time
-    data = pd.DataFrame(list(zip(data_in['time'], data_in['motionUserAccelerationX(G)'], data_in['motionUserAccelerationY(G)'], data_in['motionUserAccelerationZ(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['motionRotationRateY(rad/s)'], data_in['motionRotationRateX(rad/s)'], data_in['motionRotationRateZ(rad/s)'], data_in['gyroRotationX_corrected(rad/s)'])), \
+    data = pd.DataFrame(list(zip(data_in['time'],
+                                 data_in['motionUserAccelerationX(G)'],
+                                 data_in['motionUserAccelerationY(G)'],
+                                 data_in['motionUserAccelerationZ(G)'],
+                                 data_in['c_fr_array'],
+                                 data_in['c_rr_array'],
+                                 data_in['timestep'],
+                                 data_in['motionRotationRateY(rad/s)'],
+                                 data_in['motionRotationRateX(rad/s)'],
+                                 data_in['motionRotationRateZ(rad/s)'],
+                                 data_in['gyroRotationX_corrected(rad/s)'])), \
         columns=columns_global) #TODO: Must make changes downstream in visualizer to call unbiased values.
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
