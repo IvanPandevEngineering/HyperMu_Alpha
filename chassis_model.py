@@ -176,6 +176,7 @@ def solve_chassis_model(
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
     state_for_plotting_return = state_for_plotting(
         a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
+        # TODO: Spring forces calculated here need to have gas chamber, bump stop, and spring forces separated before motion ratios applied.
         spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),
         spring_disp_fl = f.get_spring_disp(a = state.a_fl, b = state.b_fl, WS_motion_ratio = self.WS_motion_ratio_f),
         spring_disp_rr = f.get_spring_disp(a = state.a_rr, b = state.b_rr, WS_motion_ratio = self.WS_motion_ratio_r),
@@ -199,7 +200,7 @@ def solve_chassis_model(
         bump_stop_F_fr = bump_stop_F_fr,
         bump_stop_F_fl = bump_stop_F_fl,
         bump_stop_F_rr = bump_stop_F_rr,
-        bump_stop_F_rl = bump_stop_F_fl,
+        bump_stop_F_rl = bump_stop_F_rl,
         roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
         roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
         pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
