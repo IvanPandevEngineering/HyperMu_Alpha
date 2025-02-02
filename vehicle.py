@@ -356,8 +356,8 @@ class HyperMuVehicle:
 
     def damper_response_detail(self, **kwargs):
 
-        shaker_results = self.Shaker(**kwargs)
-        vis.damper_response_detail(*shaker_results)
+        force_function, shaker_results, scenario = self.Shaker(**kwargs)
+        vis.damper_response_detail(force_function, shaker_results, scenario)
     
     def compare_tire_response_detail(self, other_vehicle, **kwargs):
         

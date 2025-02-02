@@ -132,30 +132,30 @@ def solve_chassis_model(
          ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         0, 0, 0, 0],  # Node a_dd_fr
+         0, 0, 0, 0],  # sprung x_dd-dependent forces, front-right
 
         [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         0, 0, 0, 0],  # Node a_dd_fl
+         0, 0, 0, 0],  # sprung x_dd-dependent forces, front-left
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         0, 0, 0, 0],  # Node a_dd_rr
+         0, 0, 0, 0],  # sprung x_dd-dependent forces, rear-right
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
-         0, 0, 0, 0],  # Node a_dd_rl
+         0, 0, 0, 0],  # sprung x_dd-dependent forces, rear-left
 
-        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # Node b_dd_fr
-        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # Node b_dd_fl
-        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # Node b_dd_rr
-        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # Node b_dd_rl 
+        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # unsprung x_dd-dependent forces, front-right
+        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # unsprung x_dd-dependent forces, front-left
+        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # unsprung x_dd-dependent forces, rear-right
+        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # unsprung x_dd-dependent forces, rear-left
     ])
 
     #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct.

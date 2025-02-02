@@ -219,14 +219,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     fig.tight_layout()
     plt.show()
 
-def damper_response_detail(force_function,
-a_dd_rear_axle,
-tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl,
-damper_vel_fr, damper_vel_fl, damper_vel_rr, damper_vel_rl,
-damper_force_fr, damper_force_fl, damper_force_rr, damper_force_rl,
-lateral_load_dist_f, lateral_load_dist_r,
-roll_angle_f, roll_angle_r, pitch_angle,
-roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
+def damper_response_detail(force_function, shaker_results, scenario):
 
     print('Graphing...')
 
@@ -234,10 +227,10 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
     fig.suptitle('Damper Response on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
-    subplots.scatter(damper_vel_fr, damper_force_fr, label='fr')
-    subplots.scatter(damper_vel_fl, damper_force_fl, label='fl')
-    subplots.scatter(damper_vel_rr, damper_force_rr, label='rr')
-    subplots.scatter(damper_vel_rl, damper_force_rl, label='rl')
+    subplots.scatter(shaker_results['damper_vel_fr'], shaker_results['damper_force_fr'], label='fr')
+    subplots.scatter(shaker_results['damper_vel_fl'], shaker_results['damper_force_fl'], label='fl')
+    subplots.scatter(shaker_results['damper_vel_rr'], shaker_results['damper_force_rr'], label='rr')
+    subplots.scatter(shaker_results['damper_vel_rl'], shaker_results['damper_force_rl'], label='rl')
     subplots.legend()
     subplots.grid(True)
 
