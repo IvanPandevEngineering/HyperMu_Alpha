@@ -325,6 +325,8 @@ class HyperMuVehicle:
                 state = state, inputs_dt = get_inputs_dt(i, row, force_function)
             )
 
+            # z = new_z
+
             for var in state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
 
