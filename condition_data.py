@@ -201,7 +201,7 @@ def get_unit_test_Curbs(
 
 def get_unit_test_Roll_Harmonic_Sweep(
         timespan: int = 15,
-        lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
+        lat_magnitude: float = 0.5, lat_frequency: float = 0.5,
         long_magnitude: float = 0.5, long_frequency: float = 1
     ):
 

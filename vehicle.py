@@ -322,7 +322,9 @@ class HyperMuVehicle:
             state, graphing_vars = RK4_step(
                 dt = force_function['timestep'][i+1],
                 self = self,
-                state = state, inputs_dt = get_inputs_dt(i, row, force_function)
+                state = state,
+                inputs_dt = get_inputs_dt(i, row, force_function)
+                # z = new_z here? Should z be added as an inputs_dt??
             )
 
             # z = new_z

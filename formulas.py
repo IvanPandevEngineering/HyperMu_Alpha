@@ -368,5 +368,11 @@ def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
     return max(K_bs * ((a-init_a) - (b-init_b) - max_compression)  , 0)
 
-def BoucWen_hysteresis(k, z):
-    return k * z
+def get_hysteresis_saturation_component(a_d, b_d, weight):
+    return 1 / np.cosh(weight * (a_d - b_d))
+
+def get_hysteresis_coef(Hy, a_d, b_d):
+    return Hy * get_hysteresis_saturation_component(a_d, b_d, 6)
+
+def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
+    return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
