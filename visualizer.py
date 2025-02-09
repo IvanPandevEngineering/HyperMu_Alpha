@@ -227,10 +227,10 @@ def damper_response_detail(force_function, shaker_results, scenario):
     fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
     fig.suptitle('Damper Response on Battle_Bimmer_28_Dec_2022', fontsize=14)
 
-    subplots.scatter(shaker_results['damper_vel_fr'], shaker_results['damper_force_fr'], label='fr')
-    subplots.scatter(shaker_results['damper_vel_fl'], shaker_results['damper_force_fl'], label='fl')
-    subplots.scatter(shaker_results['damper_vel_rr'], shaker_results['damper_force_rr'], label='rr')
-    subplots.scatter(shaker_results['damper_vel_rl'], shaker_results['damper_force_rl'], label='rl')
+    subplots.plot(shaker_results['damper_vel_fr'], shaker_results['damper_force_fr'], label='fr')
+    subplots.plot(shaker_results['damper_vel_fl'], shaker_results['damper_force_fl'], label='fl')
+    subplots.plot(shaker_results['damper_vel_rr'], shaker_results['damper_force_rr'], label='rr')
+    subplots.plot(shaker_results['damper_vel_rl'], shaker_results['damper_force_rl'], label='rl')
     subplots.legend()
     subplots.grid(True)
 

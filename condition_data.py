@@ -8,7 +8,8 @@ columns_global=['loggingTime(txt)',
                 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)',
                 'c_fr', 'c_rr',
                 'timestep',
-                'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)', 'gyroRotationX_corrected(rad/s)']
+                'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
+                'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)']
 
 def custom_smooth(array, rounds):
     
@@ -65,10 +66,8 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in.resample('1ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
-    #resampling to 10ms, interpolate linearly then drop all nans
-    # data_in = data_in.resample('10ms').interpolate(method='linear')
-    # data_in = data_in.dropna(how='any')
-    # smoothing_window_size = int(smoothing_window_size_ms/10)
+    #get derivative of yaw rate
+    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)']
 
     #  Apply Pandas rolling average, left-smoothing window as a quick, easy low-pass filter
     # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
@@ -98,9 +97,8 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
 
     #apply angular frame-of-reference corrections
     installed_pitch_angle = 4.5*math.pi/180  # Convert pitch installation angle to
-    # coriolis_accel_lat_from_yaw = 2 * 0.1 * data_in['motionRotationRateZ(rad/s)']*abs(data_in['motionRotationRateZ(rad/s)'])
-    # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] + coriolis_accel_lat_from_yaw  # Scale long accel based on pitch install angle
-    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateZ(rad/s)']) - np.sin(installed_pitch_angle)*abs(data_in['motionRotationRateY(rad/s)'])  # pitch rate correction by yaw and roll rates
+    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + 2*np.sin(installed_pitch_angle)*abs(1-np.cos(data_in['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
+
 
     #create new time and timestep columns
     data_in['time'] = data_in.index
@@ -117,6 +115,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
                                  data_in['motionRotationRateY(rad/s)'],
                                  data_in['motionRotationRateX(rad/s)'],
                                  data_in['motionRotationRateZ(rad/s)'],
+                                 data_in['motionRotationRateZ_diff(rad/s)'],
                                  data_in['gyroRotationX_corrected(rad/s)'])), \
         columns=columns_global) #TODO: Must make changes downstream in visualizer to call unbiased values.
     data = data.dropna(how='any')
@@ -201,7 +200,7 @@ def get_unit_test_Curbs(
 
 def get_unit_test_Roll_Harmonic_Sweep(
         timespan: int = 15,
-        lat_magnitude: float = 1.2, lat_frequency: float = 0.5,
+        lat_magnitude: float = 0.5, lat_frequency: float = 0.5,
         long_magnitude: float = 0.5, long_frequency: float = 1
     ):
 

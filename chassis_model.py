@@ -30,9 +30,9 @@ chassis_state = namedtuple('chassis_state',
     ['a_fr', 'a_fl', 'a_rr', 'a_rl',
      'b_fr', 'b_fl', 'b_rr', 'b_rl',
      'c_fr', 'c_fl', 'c_rr', 'c_rl',
-    'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl',
-    'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl',
-    'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
+     'a_d_fr', 'a_d_fl', 'a_d_rr', 'a_d_rl',
+     'b_d_fr', 'b_d_fl', 'b_d_rr', 'b_d_rl',
+     'c_d_fr', 'c_d_fl', 'c_d_rr', 'c_d_rl']
 )
 
 state_for_plotting = namedtuple('variables_of_interest',
@@ -120,6 +120,12 @@ def solve_chassis_model(
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
+    Hy=50
+    Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
+    Hy_fl = f.get_hysteresis_coef(Hy, a_d=state.a_d_fl, b_d=state.b_d_fl)
+    Hy_rr = f.get_hysteresis_coef(Hy, a_d=state.a_d_rr, b_d=state.b_d_rr)
+    Hy_rl = f.get_hysteresis_coef(Hy, a_d=state.a_d_rl, b_d=state.b_d_rl)
+
     '''
     The first 4 rows of A_mat are adaptations of the load transfers from sprung body inertias.
     The last 4 rows are unsprung body inertias.
@@ -128,34 +134,34 @@ def solve_chassis_model(
     #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
 
     A_mat = np.array([
-        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2),\
+        [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - Hy_fr,\
          ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         0, 0, 0, 0],  # sprung x_dd-dependent forces, front-right
+         Hy_fr, 0, 0, 0],  # sprung x_dd-dependent forces, front-right
 
         [( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2),\
+         ( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - Hy_fl,\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
-         0, 0, 0, 0],  # sprung x_dd-dependent forces, front-left
+         0, Hy_fl, 0, 0],  # sprung x_dd-dependent forces, front-left
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2) - Hy_rr,\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         0, 0, 0, 0],  # sprung x_dd-dependent forces, rear-right
+         0, 0, Hy_rr, 0],  # sprung x_dd-dependent forces, rear-right
 
         [( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
          ( + I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2)),\
-         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2),\
-         0, 0, 0, 0],  # sprung x_dd-dependent forces, rear-left
+         ( - I_roll_inst_r/(I_roll_arm_inst_r**2) - I_pitch_inst/(4*I_pitch_arm_inst_r**2) - self.sm_r*self.sm/2) - Hy_rl,\
+         0, 0, 0, Hy_rl],  # sprung x_dd-dependent forces, rear-left
 
-        [0, 0, 0, 0, - self.usm_f, 0, 0, 0],  # unsprung x_dd-dependent forces, front-right
-        [0, 0, 0, 0, 0, - self.usm_f, 0, 0],  # unsprung x_dd-dependent forces, front-left
-        [0, 0, 0, 0, 0, 0, - self.usm_r, 0],  # unsprung x_dd-dependent forces, rear-right
-        [0, 0, 0, 0, 0, 0, 0, - self.usm_r]  # unsprung x_dd-dependent forces, rear-left
+        [Hy_fr, 0, 0, 0, - self.usm_f - Hy_fr, 0, 0, 0],  # unsprung x_dd-dependent forces, front-right
+        [0, Hy_fl, 0, 0, 0, - self.usm_f - Hy_fl, 0, 0],  # unsprung x_dd-dependent forces, front-left
+        [0, 0, Hy_rr, 0, 0, 0, - self.usm_r - Hy_rr, 0],  # unsprung x_dd-dependent forces, rear-right
+        [0, 0, 0, Hy_rl, 0, 0, 0, - self.usm_r - Hy_rl]  # unsprung x_dd-dependent forces, rear-left
     ])
 
     #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct.
@@ -193,11 +199,15 @@ def solve_chassis_model(
         damper_vel_fl = f.get_damper_vel(a_d = state.a_d_fl, b_d = state.b_d_fl, WD_motion_ratio = self.WD_motion_ratio_f),
         damper_vel_rr = f.get_damper_vel(a_d = state.a_d_rr, b_d = state.b_d_rr, WD_motion_ratio = self.WD_motion_ratio_r),
         damper_vel_rl = f.get_damper_vel(a_d = state.a_d_rl, b_d = state.b_d_rl, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r),
-        bump_stop_F_fr = bump_stop_F_fr,
+        damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f)
+                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fr, b_d=state.b_d_fr, a_dd=body_accelerations[0], b_dd=body_accelerations[4]),
+        damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f)
+                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fl, b_d=state.b_d_fl,  a_dd=body_accelerations[1], b_dd=body_accelerations[5]),
+        damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r)
+                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rr, b_d=state.b_d_rr,  a_dd=body_accelerations[2], b_dd=body_accelerations[6]),
+        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r)
+                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rl, b_d=state.b_d_rl,  a_dd=body_accelerations[3], b_dd=body_accelerations[7]),
+        bump_stop_F_fr = bump_stop_F_fr,  # TODO: We don't need to apply WD/WS motion ratios to this?
         bump_stop_F_fl = bump_stop_F_fl,
         bump_stop_F_rr = bump_stop_F_rr,
         bump_stop_F_rl = bump_stop_F_rl,
