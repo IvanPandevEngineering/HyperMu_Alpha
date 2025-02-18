@@ -18,6 +18,48 @@ def custom_smooth(array, rounds):
     
     return(array)
 
+def apply_filter(data, filter_type, smoothing_window_size):
+    if filter_type == 'bidirectional_bessel':
+        data['motionUserAccelerationX(G)'] = bidirectional_bessel_lowpass(data['motionUserAccelerationX(G)'])
+        data['motionUserAccelerationY(G)'] = bidirectional_bessel_lowpass(data['motionUserAccelerationY(G)'])
+        data['motionUserAccelerationZ(G)'] = bidirectional_bessel_lowpass(data['motionUserAccelerationZ(G)'])
+        data['motionRotationRateY(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateY(rad/s)'])
+        data['motionRotationRateX(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateX(rad/s)'])
+        data['motionRotationRateZ(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateZ(rad/s)'])
+        data = data.dropna(how='any')
+        print('Applying lowpass filter (bessel_bidirectional)...')
+    
+    elif filter_type == 'bidirectional_butterworth_lowpass':
+        data['motionUserAccelerationX(G)'] = bidirectional_butterworth_lowpass(data['motionUserAccelerationX(G)'])
+        data['motionUserAccelerationY(G)'] = bidirectional_butterworth_lowpass(data['motionUserAccelerationY(G)'])
+        data['motionUserAccelerationZ(G)'] = bidirectional_butterworth_lowpass(data['motionUserAccelerationZ(G)'])
+        data['motionRotationRateY(rad/s)'] = bidirectional_butterworth_lowpass(data['motionRotationRateY(rad/s)'])
+        data['motionRotationRateX(rad/s)'] = bidirectional_butterworth_lowpass(data['motionRotationRateX(rad/s)'])
+        data['motionRotationRateZ(rad/s)'] = bidirectional_butterworth_lowpass(data['motionRotationRateZ(rad/s)'])
+        print('Applying lowpass filter (butterworth_bidirectional)...')
+
+    elif filter_type == 'pandas_rolling':
+        data['motionUserAccelerationX(G)'] = data['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
+        data['motionUserAccelerationY(G)'] = data['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
+        data['motionUserAccelerationZ(G)'] = data['motionUserAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
+        data['motionRotationRateY(rad/s)'] = data['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+        data['motionRotationRateX(rad/s)'] = data['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+        data['motionRotationRateZ(rad/s)'] = data['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
+        print('Applying lowpass filter (pandas rolling)...')
+
+    else:
+        print('filter_type not recognized.')
+        return
+
+    return data.dropna(how='any')
+
+def yaw_rate_correction(data, pitch_installation_angle_deg):
+
+    installed_pitch_angle = pitch_installation_angle_deg*math.pi/180  # Convert pitch installation angle to rad
+    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + 2*np.sin(installed_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
+    
+    return data
+
 def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, sampling_freq = 1000):
 
     nyquist = sampling_freq / 2
@@ -67,38 +109,23 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in.dropna(how='any')
 
     #get derivative of yaw rate
-    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)']
-
-    #  Apply Pandas rolling average, left-smoothing window as a quick, easy low-pass filter
-    # data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionUserAccelerationZ(G)'] = data_in['motionUserAccelerationZ(G)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionRotationRateY(rad/s)'] = data_in['motionRotationRateY(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionRotationRateX(rad/s)'] = data_in['motionRotationRateX(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionRotationRateZ(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].rolling(window = smoothing_window_size, center = False).mean()
-    # data_in['motionUserAccelerationX(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationX(G)'])
-    # data_in['motionUserAccelerationY(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationY(G)'])
-    # data_in['motionUserAccelerationZ(G)'] = bidirectional_butterworth_lowpass(data_in['motionUserAccelerationZ(G)'])
-    # data_in['motionRotationRateY(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateY(rad/s)'])
-    # data_in['motionRotationRateX(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateX(rad/s)'])
-    # data_in['motionRotationRateZ(rad/s)'] = bidirectional_butterworth_lowpass(data_in['motionRotationRateZ(rad/s)'])
-
-    data_in['motionUserAccelerationX(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationX(G)'])
-    data_in['motionUserAccelerationY(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationY(G)'])
-    data_in['motionUserAccelerationZ(G)'] = bidirectional_bessel_lowpass(data_in['motionUserAccelerationZ(G)'])
-    data_in['motionRotationRateY(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateY(rad/s)'])
-    data_in['motionRotationRateX(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateX(rad/s)'])
-    data_in['motionRotationRateZ(rad/s)'] = bidirectional_bessel_lowpass(data_in['motionRotationRateZ(rad/s)'])
+    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
     data_in = data_in.dropna(how='any')
+
+    data_in = apply_filter(
+        data = data_in,
+        filter_type = 'bidirectional_bessel',
+        smoothing_window_size = smoothing_window_size_ms
+    )
 
     #apply vertical-offset corrections
     data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] - 0.03
     data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'] - 0.01
 
-    #apply angular frame-of-reference corrections
-    installed_pitch_angle = 4.5*math.pi/180  # Convert pitch installation angle to
-    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)'] + 2*np.sin(installed_pitch_angle)*abs(1-np.cos(data_in['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
-
+    data_in = yaw_rate_correction(
+        data = data_in,
+        installed_pitch_angle_deg = 5
+    )
 
     #create new time and timestep columns
     data_in['time'] = data_in.index
@@ -117,11 +144,9 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
                                  data_in['motionRotationRateZ(rad/s)'],
                                  data_in['motionRotationRateZ_diff(rad/s)'],
                                  data_in['gyroRotationX_corrected(rad/s)'])), \
-        columns=columns_global) #TODO: Must make changes downstream in visualizer to call unbiased values.
-    data = data.dropna(how='any')
-    data = data.reset_index(drop=True)
-
-    return data
+        columns=columns_global)
+    
+    return data.dropna(how='any').reset_index(drop=True)
 
 def get_unit_test_Slalom_w_Curbs(
         timespan: int = 3,
