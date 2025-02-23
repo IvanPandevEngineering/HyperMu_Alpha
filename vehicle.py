@@ -90,18 +90,18 @@ def get_inputs_dt(i, row, force_function):
         c_fl = row['c_fl'],
         c_rr = row['c_rr'],
         c_rl = row['c_rl'],
-        c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
-        c_d_fl = (row['c_fl']+force_function['c_fl'][i+1]) / row['timestep'],
-        c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
-        c_d_rl = (row['c_rl']+force_function['c_rl'][i+1]) / row['timestep'],
+        c_d_fr = (row['c_fr']-force_function['c_fr'][i+1]) / row['timestep'],
+        c_d_fl = (row['c_fl']-force_function['c_fl'][i+1]) / row['timestep'],
+        c_d_rr = (row['c_rr']-force_function['c_rr'][i+1]) / row['timestep'],
+        c_d_rl = (row['c_rl']-force_function['c_rl'][i+1]) / row['timestep'],
         c_fr_next = force_function['c_fr'][i+1],
         c_fl_next = force_function['c_fl'][i+1],
         c_rr_next = force_function['c_rr'][i+1],
         c_rl_next = force_function['c_rl'][i+1],
-        c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
-        c_d_fl_next = (force_function['c_fl'][i+1]+force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
-        c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
-        c_d_rl_next = (force_function['c_rl'][i+1]+force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
+        c_d_fr_next = (force_function['c_fr'][i+1]-force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
+        c_d_fl_next = (force_function['c_fl'][i+1]-force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
+        c_d_rr_next = (force_function['c_rr'][i+1]-force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
+        c_d_rl_next = (force_function['c_rl'][i+1]-force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
     )
 
     return inputs_dt
@@ -376,7 +376,10 @@ class HyperMuVehicle:
             **kwargs, warp_mag = warp_data_dict['rl_offset_magnitude'], warp_corner = 'RL')
         
         a = warp_data_dict['fr_offset_load_fr'] - shaker_results_fr['tire_load_fr'][-1]
-        print(a)
+        b = warp_data_dict['fr_offset_load_fl'] - shaker_results_fr['tire_load_fl'][-1]
+        c = warp_data_dict['fr_offset_load_rr'] - shaker_results_fr['tire_load_rr'][-1]
+        d = warp_data_dict['fr_offset_load_rl'] - shaker_results_fr['tire_load_rl'][-1]
+        print(a, b, c, d)
 
     def damper_response_detail(self, **kwargs):
 

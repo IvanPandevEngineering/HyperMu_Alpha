@@ -36,7 +36,9 @@ chassis_state = namedtuple('chassis_state',
 )
 
 state_for_plotting = namedtuple('variables_of_interest',
-    ['a_dd_rear_axle',
+    ['a_fr', 'a_fl', 'a_rr', 'a_rl',
+     'b_fr', 'b_fl', 'b_rr', 'b_rl',
+     'a_dd_rear_axle',
      'spring_disp_fr', 'spring_disp_fl', 'spring_disp_rl', 'spring_disp_rr',
      'damper_disp_fr', 'damper_disp_fl', 'damper_disp_rl', 'damper_disp_rr',
      'tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
@@ -164,7 +166,7 @@ def solve_chassis_model(
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
-    Hy=50
+    Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
     Hy_fl = f.get_hysteresis_coef(Hy, a_d=state.a_d_fl, b_d=state.b_d_fl)
     Hy_rr = f.get_hysteresis_coef(Hy, a_d=state.a_d_rr, b_d=state.b_d_rr)
@@ -225,6 +227,14 @@ def solve_chassis_model(
 
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
     state_for_plotting_return = state_for_plotting(
+        a_fr=state.a_fr,
+        a_fl=state.a_fl,
+        a_rr=state.a_rr,
+        a_rl=state.a_rl,
+        b_fr=state.b_fr,
+        b_fl=state.b_fl,
+        b_rr=state.b_rr,
+        b_rl=state.b_rl,
         a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
         # TODO: Spring forces calculated here need to have gas chamber, bump stop, and spring forces separated before motion ratios applied.
         spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),

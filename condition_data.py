@@ -260,7 +260,7 @@ def get_unit_test_warp(
 
     #  Default time resolution is set to 100hz
     warp_mag = -warp_mag
-    timespan = 5 # s
+    timespan = 10 # s
     time_res = 1000  # hz
 
     G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
