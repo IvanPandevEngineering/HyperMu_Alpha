@@ -260,7 +260,7 @@ def get_unit_test_warp(
 
     #  Default time resolution is set to 100hz
     warp_mag = -warp_mag
-    timespan = 10 # s
+    timespan = 7 # s
     time_res = 1000  # hz
 
     G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
@@ -277,14 +277,20 @@ def get_unit_test_warp(
         c_fr_array = custom_smooth(c_fr_array, 1000)
         c_fr_array[4000:] = warp_mag
     elif warp_corner == 'FL':
-        c_fl_array[2000:] = warp_mag
+        c_fl_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_fl_array[3000:] = warp_mag
         c_fl_array = custom_smooth(c_fl_array, 1000)
+        c_fl_array[4000:] = warp_mag
     elif warp_corner == 'RR':
-        c_rr_array[2000:] = warp_mag
+        c_rr_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_rr_array[3000:] = warp_mag
         c_rr_array = custom_smooth(c_rr_array, 1000)
+        c_rr_array[4000:] = warp_mag
     elif warp_corner == 'RL':
-        c_rl_array[2000:] = warp_mag
+        c_rl_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_rl_array[3000:] = warp_mag
         c_rl_array = custom_smooth(c_rl_array, 1000)
+        c_rl_array[4000:] = warp_mag
     else:
         print('Specify single corner in format "FR".')
         return None

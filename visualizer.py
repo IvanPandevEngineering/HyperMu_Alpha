@@ -247,6 +247,38 @@ def damper_response_detail(force_function, shaker_results, scenario):
     fig.tight_layout()
     plt.show()
 
+def check_correlation_one_wheel_warp(recorded_results, simulated_results, scenario):
+
+    print('Graphing...')
+
+    plt.style.use('seaborn-v0_8')
+    fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
+    fig.suptitle('One Wheel Warp Results', fontsize=14)
+
+    slope, intercept, r_value, p_value, std_err = stats.linregress(recorded_results, simulated_results)
+    r_squared = r_value ** 2
+
+    subplots.scatter(recorded_results, simulated_results)
+    subplots.plot(
+        np.linspace(1800, 3700, 3),
+        slope*np.linspace(1800, 3700, 3)+intercept,
+        color='orange',
+        label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}'
+    )
+    subplots.plot(
+        [1800,3700],
+        [1800,3700],
+        color='green',
+        label='unity'
+    )
+    subplots.set_xlabel('Recorded Results (N)')
+    subplots.set_ylabel('Simulated Results (N)')
+    subplots.legend()
+    subplots.grid(True)
+
+    fig.tight_layout()
+    plt.show()
+
 def tire_response_detail_comparison(force_function, self, other, scenario):
 
     print('Graphing...')
