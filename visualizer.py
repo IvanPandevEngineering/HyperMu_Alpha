@@ -60,8 +60,10 @@ def plot_basics(force_function, results, scenario):
     subplots[0,1].grid(True)
 
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_fr'], label='spring displacement (m, fr)')
+    subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_fl'], label='spring displacement (m, fl)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rr'], label='spring displacement (m, rr)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['damper_disp_rr'], label='damper displacement (m, rr)')
+    subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rl'], label='spring displacement (m, rl)')
     subplots[1,0].set_ylabel('Suspesion Displacements (m)')
     subplots[1,0].legend()
     subplots[1,0].grid(True)

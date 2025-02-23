@@ -62,6 +62,12 @@ def get_force_function(**kwargs):
     elif kwargs['replay_src'] == 'roll_frequency_sweep':
         force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
         scenario = 'Unit Test: Lat Accel Freq Sweep'
+    elif kwargs['replay_src'] == 'one_wheel_warp':
+        force_function = cd.get_unit_test_warp(
+            warp_mag = kwargs['warp_mag'],
+            warp_corner = kwargs['warp_corner']
+        )
+        scenario = 'Unit Test: One-Wheel Warp Offset'
     else:
         force_function = cd.from_sensor_log_iOS_app_unbiased(kwargs['replay_src'], kwargs['smoothing_window_size_ms'])
         scenario = 'G-Replay from Telemetry'
@@ -81,21 +87,21 @@ def get_inputs_dt(i, row, force_function):
         G_vert_next = force_function['accelerometerAccelerationZ(G)'][i+1],
         G_vert_half_next = (row['accelerometerAccelerationZ(G)'] + force_function['accelerometerAccelerationZ(G)'][i+1])/2,
         c_fr = row['c_fr'],
-        c_fl = 0,
+        c_fl = row['c_fl'],
         c_rr = row['c_rr'],
-        c_rl = 0,
+        c_rl = row['c_rl'],
         c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
-        c_d_fl = 0,
+        c_d_fl = (row['c_fl']+force_function['c_fl'][i+1]) / row['timestep'],
         c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
-        c_d_rl = 0,
+        c_d_rl = (row['c_rl']+force_function['c_rl'][i+1]) / row['timestep'],
         c_fr_next = force_function['c_fr'][i+1],
-        c_fl_next = 0,
+        c_fl_next = force_function['c_fl'][i+1],
         c_rr_next = force_function['c_rr'][i+1],
-        c_rl_next = 0,
+        c_rl_next = force_function['c_rl'][i+1],
         c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
-        c_d_fl_next = 0,
+        c_d_fl_next = (force_function['c_fl'][i+1]+force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
         c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
-        c_d_rl_next = 0,
+        c_d_rl_next = (force_function['c_rl'][i+1]+force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
     )
 
     return inputs_dt
@@ -201,6 +207,8 @@ class HyperMuVehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
+        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheen originally.
+        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheen originally.
         self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
@@ -324,10 +332,7 @@ class HyperMuVehicle:
                 self = self,
                 state = state,
                 inputs_dt = get_inputs_dt(i, row, force_function)
-                # z = new_z here? Should z be added as an inputs_dt??
             )
-
-            # z = new_z
 
             for var in state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
@@ -342,7 +347,6 @@ class HyperMuVehicle:
 
         return force_function, graphing_dict, scenario
     
-
     def plot_shaker_basics(self, **kwargs):
 
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
@@ -357,6 +361,22 @@ class HyperMuVehicle:
 
         shaker_results = self.Shaker(**kwargs)
         vis.check_correlation_rollRateRearZ(*shaker_results)
+
+    def static_correlation(self, **kwargs):
+
+        warp_data_dict = unpack_yml(kwargs['control_data_file_path'])['parameters']
+
+        force_function_fr, shaker_results_fr, scenario_fr = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['fr_offset_magnitude'], warp_corner = 'FR')
+        force_function_fl, shaker_results_fl, scenario_fl = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['fl_offset_magnitude'], warp_corner = 'FL')
+        force_function_rr, shaker_results_rr, scenario_rr = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['rr_offset_magnitude'], warp_corner = 'RR')
+        force_function_rl, shaker_results_rl, scenario_rl = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['rl_offset_magnitude'], warp_corner = 'RL')
+        
+        a = warp_data_dict['fr_offset_load_fr'] - shaker_results_fr['tire_load_fr'][-1]
+        print(a)
 
     def damper_response_detail(self, **kwargs):
 

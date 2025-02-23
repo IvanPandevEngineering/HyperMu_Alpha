@@ -6,7 +6,7 @@ from scipy.signal import bessel, butter, filtfilt
 # define standard dataframe format for multiple data generation functions
 columns_global=['loggingTime(txt)',
                 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)',
-                'c_fr', 'c_rr',
+                'c_fr', 'c_fl', 'c_rr', 'c_rl',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
                 'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)']
@@ -253,6 +253,60 @@ def get_unit_test_Roll_Harmonic_Sweep(
 
     return data
 
+def get_unit_test_warp(
+        warp_mag,
+        warp_corner
+    ):
+
+    #  Default time resolution is set to 100hz
+    warp_mag = -warp_mag
+    timespan = 5 # s
+    time_res = 1000  # hz
+
+    G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
+    G_long_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_fl_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rl_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    if warp_corner == 'FR':
+        c_fr_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_fr_array[3000:] = warp_mag
+        c_fr_array = custom_smooth(c_fr_array, 1000)
+        c_fr_array[4000:] = warp_mag
+    elif warp_corner == 'FL':
+        c_fl_array[2000:] = warp_mag
+        c_fl_array = custom_smooth(c_fl_array, 1000)
+    elif warp_corner == 'RR':
+        c_rr_array[2000:] = warp_mag
+        c_rr_array = custom_smooth(c_rr_array, 1000)
+    elif warp_corner == 'RL':
+        c_rl_array[2000:] = warp_mag
+        c_rl_array = custom_smooth(c_rl_array, 1000)
+    else:
+        print('Specify single corner in format "FR".')
+        return None
+
+    time_array = [x/time_res for x in range(len(G_lat_array))]
+    dt_array = [1/time_res for all in range(len(G_lat_array))]
+
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_roll_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate_corrected = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_accel_corrected = np.array([0.0 for x in range(time_res * timespan)])
+
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_fl_array, c_rr_array, c_rl_array,
+        dt_array,
+        control_array_roll_rate, control_array_pitch_rate, control_array_yaw_rate,
+        control_array_pitch_rate_corrected, control_array_pitch_accel_corrected)),
+        columns=columns_global)
+
+    return data
 
 '''
 Begin functions for dev purposes, exploring telemetry data.
