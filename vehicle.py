@@ -171,8 +171,8 @@ class HyperMuVehicle:
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
-        self.C_t_f = self.K_t_f / 1000
-        self.C_t_r = self.K_t_r / 1000
+        self.C_t_f = self.K_t_f / 100
+        self.C_t_r = self.K_t_r / 100
 
         self.cm_height = vpd['center_of_mass_height']
         self.rc_height_f = vpd['roll_center_height_front']
@@ -204,6 +204,10 @@ class HyperMuVehicle:
         self.m = vpd['corner_mass_fr'] + vpd['corner_mass_fl'] + vpd['corner_mass_rr'] + vpd['corner_mass_rl']
         self.m_f = (vpd['corner_mass_fr'] + vpd['corner_mass_fl']) / self.m
         self.m_r = (vpd['corner_mass_rr'] + vpd['corner_mass_rl']) / self.m
+        self.resting_load_fr_N = vpd['corner_mass_fr'] * 9.80665
+        self.resting_load_fl_N = vpd['corner_mass_fl'] * 9.80665
+        self.resting_load_rr_N = vpd['corner_mass_rr'] * 9.80665
+        self.resting_load_rl_N = vpd['corner_mass_rl'] * 9.80665
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
@@ -375,11 +379,26 @@ class HyperMuVehicle:
         force_function_rl, shaker_results_rl, scenario_rl = self.Shaker(
             **kwargs, warp_mag = warp_data_dict['rl_offset_magnitude'], warp_corner = 'RL')
         
-        a = warp_data_dict['fr_offset_load_fr'] - shaker_results_fr['tire_load_fr'][-1]
-        b = warp_data_dict['fr_offset_load_fl'] - shaker_results_fr['tire_load_fl'][-1]
-        c = warp_data_dict['fr_offset_load_rr'] - shaker_results_fr['tire_load_rr'][-1]
-        d = warp_data_dict['fr_offset_load_rl'] - shaker_results_fr['tire_load_rl'][-1]
-        print(a, b, c, d)
+        recorded_results_forR2, recorded_delta_results_forR2, simulated_results_forR2, simulated_delta_results_forR2 = self.static_correlation_get_RSQ_series(
+            warp_data_dict = warp_data_dict,
+            shaker_results_fr = shaker_results_fr,
+            shaker_results_fl = shaker_results_fl,
+            shaker_results_rr = shaker_results_rr,
+            shaker_results_rl = shaker_results_rl
+        )
+        
+        vis.check_correlation_one_wheel_warp(
+            force_function = force_function_fr,
+            recorded_warp_data_dict = warp_data_dict,
+            shaker_results_fr = shaker_results_fr,
+            shaker_results_fl = shaker_results_fl,
+            shaker_results_rr = shaker_results_rr,
+            shaker_results_rl = shaker_results_rl,
+            recorded_results_forR2 = recorded_results_forR2,
+            recorded_delta_results_forR2 = recorded_delta_results_forR2,
+            simulated_results_forR2 = simulated_results_forR2,
+            simulated_delta_results_forR2 = simulated_delta_results_forR2
+        )
 
     def damper_response_detail(self, **kwargs):
 
@@ -451,6 +470,99 @@ class HyperMuVehicle:
             pickle.dump(synth_data, file)
 
         return synth_data
+
+    def static_correlation_get_RSQ_series(
+        self, warp_data_dict, shaker_results_fr, shaker_results_fl, shaker_results_rr, shaker_results_rl
+    ):
+        recorded_results = np.array([
+            warp_data_dict['fr_offset_load_fr'],
+            warp_data_dict['fr_offset_load_fl'],
+            warp_data_dict['fr_offset_load_rr'],
+            warp_data_dict['fr_offset_load_rl'],
+
+            warp_data_dict['fl_offset_load_fr'],
+            warp_data_dict['fl_offset_load_fl'],
+            warp_data_dict['fl_offset_load_rr'],
+            warp_data_dict['fl_offset_load_rl'],
+
+            warp_data_dict['rr_offset_load_fr'],
+            warp_data_dict['rr_offset_load_fl'],
+            warp_data_dict['rr_offset_load_rr'],
+            warp_data_dict['rr_offset_load_rl'],
+
+            warp_data_dict['rl_offset_load_fr'],
+            warp_data_dict['rl_offset_load_fl'],
+            warp_data_dict['rl_offset_load_rr'],
+            warp_data_dict['rl_offset_load_rl'],
+        ])
+
+        recorded_delta_results = np.array([
+            warp_data_dict['fr_offset_load_fr'] - self.resting_load_fr_N,
+            warp_data_dict['fr_offset_load_fl'] - self.resting_load_fl_N,
+            warp_data_dict['fr_offset_load_rr'] - self.resting_load_rr_N,
+            warp_data_dict['fr_offset_load_rl'] - self.resting_load_rl_N,
+
+            warp_data_dict['fl_offset_load_fr'] - self.resting_load_fr_N,
+            warp_data_dict['fl_offset_load_fl'] - self.resting_load_fl_N,
+            warp_data_dict['fl_offset_load_rr'] - self.resting_load_rr_N,
+            warp_data_dict['fl_offset_load_rl'] - self.resting_load_rl_N,
+
+            warp_data_dict['rr_offset_load_fr'] - self.resting_load_fr_N,
+            warp_data_dict['rr_offset_load_fl'] - self.resting_load_fl_N,
+            warp_data_dict['rr_offset_load_rr'] - self.resting_load_rr_N,
+            warp_data_dict['rr_offset_load_rl'] - self.resting_load_rl_N,
+
+            warp_data_dict['rl_offset_load_fr'] - self.resting_load_fr_N,
+            warp_data_dict['rl_offset_load_fl'] - self.resting_load_fl_N,
+            warp_data_dict['rl_offset_load_rr'] - self.resting_load_rr_N,
+            warp_data_dict['rl_offset_load_rl'] - self.resting_load_rl_N,
+        ])
+
+        simulated_results = np.array([
+            shaker_results_fr['tire_load_fr'][-1],
+            shaker_results_fr['tire_load_fl'][-1],
+            shaker_results_fr['tire_load_rr'][-1],
+            shaker_results_fr['tire_load_rl'][-1],
+
+            shaker_results_fl['tire_load_fr'][-1],
+            shaker_results_fl['tire_load_fl'][-1],
+            shaker_results_fl['tire_load_rr'][-1],
+            shaker_results_fl['tire_load_rl'][-1],
+            
+            shaker_results_rr['tire_load_fr'][-1],
+            shaker_results_rr['tire_load_fl'][-1],
+            shaker_results_rr['tire_load_rr'][-1],
+            shaker_results_rr['tire_load_rl'][-1],
+            
+            shaker_results_rl['tire_load_fr'][-1],
+            shaker_results_rl['tire_load_fl'][-1],
+            shaker_results_rl['tire_load_rr'][-1],
+            shaker_results_rl['tire_load_rl'][-1],
+        ])
+
+        simulated_delta_results = np.array([
+            shaker_results_fr['tire_load_fr'][-1] - self.resting_load_fr_N,
+            shaker_results_fr['tire_load_fl'][-1] - self.resting_load_fl_N,
+            shaker_results_fr['tire_load_rr'][-1] - self.resting_load_rr_N,
+            shaker_results_fr['tire_load_rl'][-1] - self.resting_load_rl_N,
+
+            shaker_results_fl['tire_load_fr'][-1] - self.resting_load_fr_N,
+            shaker_results_fl['tire_load_fl'][-1] - self.resting_load_fl_N,
+            shaker_results_fl['tire_load_rr'][-1] - self.resting_load_rr_N,
+            shaker_results_fl['tire_load_rl'][-1] - self.resting_load_rl_N,
+            
+            shaker_results_rr['tire_load_fr'][-1] - self.resting_load_fr_N,
+            shaker_results_rr['tire_load_fl'][-1] - self.resting_load_fl_N,
+            shaker_results_rr['tire_load_rr'][-1] - self.resting_load_rr_N,
+            shaker_results_rr['tire_load_rl'][-1] - self.resting_load_rl_N,
+            
+            shaker_results_rl['tire_load_fr'][-1] - self.resting_load_fr_N,
+            shaker_results_rl['tire_load_fl'][-1] - self.resting_load_fl_N,
+            shaker_results_rl['tire_load_rr'][-1] - self.resting_load_rr_N,
+            shaker_results_rl['tire_load_rl'][-1] - self.resting_load_rl_N,
+        ])
+
+        return recorded_results, recorded_delta_results, simulated_results, simulated_delta_results
 
 # Depricated functions for development and debugging only.
 

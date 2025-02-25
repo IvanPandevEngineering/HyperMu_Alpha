@@ -247,7 +247,127 @@ def damper_response_detail(force_function, shaker_results, scenario):
     fig.tight_layout()
     plt.show()
 
-def check_correlation_one_wheel_warp(recorded_results, simulated_results, scenario):
+def check_correlation_one_wheel_warp(
+        force_function,
+        recorded_warp_data_dict,
+        shaker_results_fr, shaker_results_fl, shaker_results_rr, shaker_results_rl,
+        recorded_results_forR2, recorded_delta_results_forR2, simulated_results_forR2, simulated_delta_results_forR2
+    ):
+    
+    print('Graphing...')
+
+    plt.style.use('ggplot')
+    mpl.rcParams['axes.labelsize'] = 10
+    mpl.rcParams['legend.fontsize'] = 8
+    mpl.rcParams['xtick.labelsize'] = 8
+    mpl.rcParams['ytick.labelsize'] = 8
+    fig, subplots = plt.subplots(2, 3, figsize=(14, 8))
+    fig.suptitle(f'One-Wheel Warp Load Distributions, Recorded v. Simulated', fontsize=14)
+    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+
+    #  Plotting FL Loads at different warp conditions.
+    subplots[0,0].plot(force_function['loggingTime(txt)'], shaker_results_fr['tire_load_fl'], label='Predicted, FR warp')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], shaker_results_fl['tire_load_fl'], label='Predicted, FL warp')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], shaker_results_rr['tire_load_fl'], label='Predicted, RR warp')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], shaker_results_rl['tire_load_fl'], label='Predicted, RL warp')
+    subplots[0,0].axhline(recorded_warp_data_dict['fr_offset_load_fl'], label='Recorded, FR Warp', color='black')
+    subplots[0,0].axhline(recorded_warp_data_dict['fl_offset_load_fl'], label='Recorded, FL Warp', color='black')
+    subplots[0,0].axhline(recorded_warp_data_dict['rr_offset_load_fl'], label='Recorded, RR Warp', color='black')
+    subplots[0,0].axhline(recorded_warp_data_dict['rl_offset_load_fl'], label='Recorded, RL Warp', color='black')
+    subplots[0,0].grid(True)
+    subplots[0,0].legend()
+    subplots[0,0].set_xlabel('Time (s)')
+    subplots[0,0].set_ylabel('Load on FL Tire (N)')
+
+    subplots[0,1].plot(force_function['loggingTime(txt)'], shaker_results_fr['tire_load_fr'], label='Predicted, FR warp')
+    subplots[0,1].plot(force_function['loggingTime(txt)'], shaker_results_fl['tire_load_fr'], label='Predicted, FL warp')
+    subplots[0,1].plot(force_function['loggingTime(txt)'], shaker_results_rr['tire_load_fr'], label='Predicted, RR warp')
+    subplots[0,1].plot(force_function['loggingTime(txt)'], shaker_results_rl['tire_load_fr'], label='Predicted, RL warp')
+    subplots[0,1].axhline(recorded_warp_data_dict['fr_offset_load_fr'], label='Recorded, FR Warp', color='black')
+    subplots[0,1].axhline(recorded_warp_data_dict['fl_offset_load_fr'], label='Recorded, FL Warp', color='black')
+    subplots[0,1].axhline(recorded_warp_data_dict['rr_offset_load_fr'], label='Recorded, RR Warp', color='black')
+    subplots[0,1].axhline(recorded_warp_data_dict['rl_offset_load_fr'], label='Recorded, RL Warp', color='black')
+    subplots[0,1].grid(True)
+    subplots[0,1].legend()
+    subplots[0,1].set_xlabel('Time (s)')
+    subplots[0,1].set_ylabel('Load on FR Tire (N)')
+
+    subplots[1,0].plot(force_function['loggingTime(txt)'], shaker_results_fr['tire_load_rl'], label='Predicted, FR warp')
+    subplots[1,0].plot(force_function['loggingTime(txt)'], shaker_results_fl['tire_load_rl'], label='Predicted, FL warp')
+    subplots[1,0].plot(force_function['loggingTime(txt)'], shaker_results_rr['tire_load_rl'], label='Predicted, RR warp')
+    subplots[1,0].plot(force_function['loggingTime(txt)'], shaker_results_rl['tire_load_rl'], label='Predicted, RL warp')
+    subplots[1,0].axhline(recorded_warp_data_dict['fr_offset_load_rl'], label='Recorded, FR Warp', color='black')
+    subplots[1,0].axhline(recorded_warp_data_dict['fl_offset_load_rl'], label='Recorded, FL Warp', color='black')
+    subplots[1,0].axhline(recorded_warp_data_dict['rr_offset_load_rl'], label='Recorded, RR Warp', color='black')
+    subplots[1,0].axhline(recorded_warp_data_dict['rl_offset_load_rl'], label='Recorded, RL Warp', color='black')
+    subplots[1,0].grid(True)
+    subplots[1,0].legend()
+    subplots[1,0].set_xlabel('Time (s)')
+    subplots[1,0].set_ylabel('Load on RR Tire (N)')
+
+    subplots[1,1].plot(force_function['loggingTime(txt)'], shaker_results_fr['tire_load_rr'], label='Predicted, FR warp')
+    subplots[1,1].plot(force_function['loggingTime(txt)'], shaker_results_fl['tire_load_rr'], label='Predicted, FL warp')
+    subplots[1,1].plot(force_function['loggingTime(txt)'], shaker_results_rr['tire_load_rr'], label='Predicted, RR warp')
+    subplots[1,1].plot(force_function['loggingTime(txt)'], shaker_results_rl['tire_load_rr'], label='Predicted, RL warp')
+    subplots[1,1].axhline(recorded_warp_data_dict['fr_offset_load_rr'], label='Recorded, FR Warp', color='black')
+    subplots[1,1].axhline(recorded_warp_data_dict['fl_offset_load_rr'], label='Recorded, FL Warp', color='black')
+    subplots[1,1].axhline(recorded_warp_data_dict['rr_offset_load_rr'], label='Recorded, RR Warp', color='black')
+    subplots[1,1].axhline(recorded_warp_data_dict['rl_offset_load_rr'], label='Recorded, RL Warp', color='black')
+    subplots[1,1].grid(True)
+    subplots[1,1].legend()
+    subplots[1,1].set_xlabel('Time (s)')
+    subplots[1,1].set_ylabel('Load on RR Tire (N)')
+
+    slope, intercept, r_value, p_value, std_err = stats.linregress(
+        recorded_results_forR2, simulated_results_forR2
+    )
+    r_squared = r_value ** 2
+
+    subplots[0,2].scatter(recorded_results_forR2, simulated_results_forR2, color='blue')
+    subplots[0,2].plot(
+        np.linspace(1800, 3700, 3),
+        slope*np.linspace(1800, 3700, 3)+intercept,
+        color='orange',
+        label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}'
+    )
+    subplots[0,2].plot(
+        [1800,3700],
+        [1800,3700],
+        color='green',
+        label='unity'
+    )
+    subplots[0,2].set_xlabel('Recorded Load, Absolute (N)')
+    subplots[0,2].set_ylabel('Simulated Load, Absolute (N)')
+    subplots[0,2].legend()
+    subplots[0,2].grid(True)
+
+    slope_delta, intercept_delta, r_value_delta, p_value, std_err = stats.linregress(
+        recorded_delta_results_forR2, simulated_delta_results_forR2
+    )
+    r_squared_delta = r_value_delta ** 2
+
+    subplots[1,2].scatter(recorded_delta_results_forR2, simulated_delta_results_forR2, color='blue')
+    subplots[1,2].plot(
+        np.linspace(-1000, 1000, 3),
+        slope_delta*np.linspace(-1000, 1000, 3)+intercept_delta,
+        color='orange',
+        label=f'Linear fit, R-sq: {r_squared_delta:.3f}, Slope: {slope_delta:.3f}'
+    )
+    subplots[1,2].plot(
+        [-1000,1000],
+        [-1000,1000],
+        color='green',
+        label='unity'
+    )
+    subplots[1,2].set_xlabel('Recorded Load, Change (N)')
+    subplots[1,2].set_ylabel('Simulated Load, Change (N)')
+    subplots[1,2].legend()
+    subplots[1,2].grid(True)
+
+    fig.tight_layout()
+    plt.show()
+
+def check_correlation_RSQ_one_wheel_warp(recorded_results, simulated_results, scenario):
 
     print('Graphing...')
 

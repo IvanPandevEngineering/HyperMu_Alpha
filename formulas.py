@@ -301,8 +301,12 @@ def get_inst_I_roll_properties(I_roll, tw):
 def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
 
-def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw):
-    return K_ch * ((a_fr - a_fl) - (a_rr - a_rl)) / (tw / 2)
+def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw_f, tw_r):
+    'Force added or subtracted to a single wheel bue to chassis twist. Return front and rear axle values.'
+    target_roll_angle_deg = 180 * np.arctan((a_fr-a_fl)/tw_f) / np.pi
+    other_roll_angle_deg = 180 * np.arctan((a_rr-a_rl)/tw_r) / np.pi
+
+    return K_ch * (target_roll_angle_deg - other_roll_angle_deg) / (tw_f / 2), K_ch * (target_roll_angle_deg - other_roll_angle_deg) / (tw_r / 2)
 
 def get_ride_spring_F(K_s, a, b):
     return max(K_s * (a - b), 0)
@@ -380,3 +384,7 @@ def get_hysteresis_coef(Hy, a_d, b_d):
 
 def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
     return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
+
+def static_loading_error_percent(recorded, simulated):
+    'Taken as a proportion of total tire load. 10N v. 20N (100% diff) doesnt matter when total load is 8000N.'
+    return 100 * (recorded - simulated) / recorded

@@ -136,8 +136,9 @@ def solve_chassis_model(
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
-    chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
-    chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
+    chassis_flex_LT_f,  chassis_flex_LT_r = f.get_chassis_flex_LT(
+        self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f, self.tw_r
+    )
 
     bump_stop_F_fr = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
     bump_stop_F_fl = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
