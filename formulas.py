@@ -384,7 +384,3 @@ def get_hysteresis_coef(Hy, a_d, b_d):
 
 def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
     return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
-
-def static_loading_error_percent(recorded, simulated):
-    'Taken as a proportion of total tire load. 10N v. 20N (100% diff) doesnt matter when total load is 8000N.'
-    return 100 * (recorded - simulated) / recorded
