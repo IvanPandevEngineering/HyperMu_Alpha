@@ -221,14 +221,14 @@ class HyperMuVehicle:
         self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
-        self.init_a_fr = f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
-        self.init_a_fl = f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
-        self.init_a_rr = f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
-        self.init_a_rl = f.get_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
-        self.init_b_fr = f.get_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
-        self.init_b_fl = f.get_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
-        self.init_b_rr = f.get_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
-        self.init_b_rl = f.get_init_b(self.sm_rl, self.usm_rl, self.K_t_r)  # initial b_rl
+        self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
+        self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
+        self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
+        self.init_a_rl = f.get_pre_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
+        self.init_b_fr = f.get_pre_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
+        self.init_b_fl = f.get_pre_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
+        self.init_b_rr = f.get_pre_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
+        self.init_b_rl = f.get_pre_init_b(self.sm_rl, self.usm_rl, self.K_t_r)  # initial b_rl
 
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))

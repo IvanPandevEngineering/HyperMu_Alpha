@@ -331,20 +331,20 @@ def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
     'Inputs are given at the wheel. Returns damper force at the damper.'
     return ride_damper_F_ideal / WD_motion_ratio**2
 
-def get_roll_angle_deg_per_axle(a_r, a_l):
-    # TODO: Needs review
-    return (a_r - a_l) * 180 / math.pi
+def get_roll_angle_deg_per_axle(a_r, a_l, tw):
+    # TODO: Needs review of small angle assumption.
+    return 180 * np.arctan((a_r-a_l)/tw) / np.pi
 
 def get_pitch_angle_deg(a_fr, a_fl, a_rr, a_rl):
-    # TODO: Needs review
+    # TODO: Needs review of small angle assumption.
     return (a_fr + a_fl)*180/(2*math.pi) - (a_rr + a_rl)*180/(2*math.pi)
 
 def get_roll_angle_rate_deg_per_axle(a_r_d, a_l_d):
-    # TODO: Needs review
+    # TODO: Needs review of small angle assumption.
     return (a_r_d - a_l_d) * 180 / math.pi
 
 def get_pitch_angle_rate_deg(a_fr_d, a_fl_d, a_rr_d, a_rl_d):
-    # TODO: Needs review
+    # TODO: Needs review of small angle assumption.
     return (a_fr_d + a_fl_d)*180/(2*math.pi) - (a_rr_d + a_rl_d)*180/(2*math.pi)
 
 def get_lateral_load_dist_axle(tire_load_r, tire_load_l):
@@ -364,13 +364,13 @@ def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
     else:
         return -1
 
-def get_init_b(sm, usm, K_t):
+def get_pre_init_b(sm, usm, K_t):
     'Returns at-rest tire-to-ground deflection, taken from the unloaded, free-spring position.'
     return (sm + usm) * 9.80655 / K_t
 
-def get_init_a(sm, usm, K_s, K_t):
+def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
-    return sm * 9.80655 / K_s + get_init_b(sm, usm, K_t)
+    return sm * 9.80655 / K_s + get_pre_init_b(sm, usm, K_t)
 
 def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'

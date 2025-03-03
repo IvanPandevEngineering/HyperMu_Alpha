@@ -179,6 +179,7 @@ def solve_chassis_model(
     '''
 
     #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
+    #TODO: small angle assumption for I is implemented incorrectly. Does not consider scaling with track width.
 
     A_mat = np.array([
         [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - Hy_fr,\
@@ -266,8 +267,8 @@ def solve_chassis_model(
         bump_stop_F_fl = bump_stop_F_fl,
         bump_stop_F_rr = bump_stop_F_rr,
         bump_stop_F_rl = bump_stop_F_rl,
-        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
-        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
+        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl, tw = self.tw_f),
+        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl, tw = self.tw_r),
         pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
         roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl),
         roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl),

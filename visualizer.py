@@ -261,7 +261,7 @@ def check_correlation_one_wheel_warp(
     mpl.rcParams['legend.fontsize'] = 8
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
-    fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
+    fig, subplots = plt.subplots(2, 2, figsize=(12, 8))
     fig.suptitle(f'One-Wheel Warp Load Distributions, Recorded v. Simulated', fontsize=14)
     fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
 
