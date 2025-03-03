@@ -1,0 +1,73 @@
+---
+name: Battle_Bimmer_17_Feb_2025
+date: 17 Feb 2025
+number: 199 XP
+class: SCCA Solo II XP-Class
+driver: Ivan Pandev
+driver_mass: 147 lbs
+parameters:
+  # FR wheel offset
+  fr_offset_magnitude:
+    - 1.450
+    - 'in'
+  fr_offset_load_fr:
+    - 740
+    - 'lbf'
+  fr_offset_load_fl:
+    - 546
+    - 'lbf'
+  fr_offset_load_rr:
+    - 455
+    - 'lbf'
+  fr_offset_load_rl:
+    - 691
+    - 'lbf'
+  # FL wheel offset
+  fl_offset_magnitude:
+    - 1.450
+    - 'in'
+  fl_offset_load_fr:
+    - 508
+    - 'lbf'
+  fl_offset_load_fl:
+    - 781
+    - 'lbf'
+  fl_offset_load_rr:
+    - 682
+    - 'lbf'
+  fl_offset_load_rl:
+    - 460
+    - 'lbf'
+  # RR wheel offset
+  rr_offset_magnitude:
+    - 1.450
+    - 'in'
+  rr_offset_load_fr:
+    - 513
+    - 'lbf'
+  rr_offset_load_fl:
+    - 775
+    - 'lbf'
+  rr_offset_load_rr:
+    - 681
+    - 'lbf'
+  rr_offset_load_rl:
+    - 462
+    - 'lbf'
+  # RL wheel offset
+  rl_offset_magnitude:
+    - 1.450
+    - 'in'
+  rl_offset_load_fr:
+    - 760
+    - 'lbf'
+  rl_offset_load_fl:
+    - 529
+    - 'lbf'
+  rl_offset_load_rr:
+    - 433
+    - 'lbf'
+  rl_offset_load_rl:
+    - 711
+    - 'lbf'
+...
