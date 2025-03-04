@@ -36,7 +36,9 @@ chassis_state = namedtuple('chassis_state',
 )
 
 state_for_plotting = namedtuple('variables_of_interest',
-    ['a_dd_rear_axle',
+    ['a_fr', 'a_fl', 'a_rr', 'a_rl',
+     'b_fr', 'b_fl', 'b_rr', 'b_rl',
+     'a_dd_rear_axle',
      'spring_disp_fr', 'spring_disp_fl', 'spring_disp_rl', 'spring_disp_rr',
      'damper_disp_fr', 'damper_disp_fl', 'damper_disp_rl', 'damper_disp_rr',
      'tire_load_fr', 'tire_load_fl', 'tire_load_rr', 'tire_load_rl',
@@ -47,6 +49,48 @@ state_for_plotting = namedtuple('variables_of_interest',
      'roll_angle_rate_f', 'roll_angle_rate_r', 'pitch_angle_rate',
      'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio']
 )
+
+def enforce_droop_limit(a, a_d, b, b_d, max_droop):
+    if a - b < - max_droop:
+        b = a + max_droop
+        b_d = a_d
+    return b, b_d
+
+def enforce_compression_limit():
+    return None
+
+def enforce_sidewall_compression_limit():
+    return None
+
+def enforce_total_body_compression_limit():
+    return None
+
+def enforce_dimensional_boundary_conditions(self, state):
+
+    '''
+    Enforce maximum droop condition.
+    Hard limits here will force appropriate changes in forces and accelerations downstream.
+    Max_droop values are distance between a, b taken from unloaded condition.
+    The function enforces b stays permissible distance from a.
+    '''
+
+    constrained_b_fr, constrained_b_d_fr = enforce_droop_limit(state.a_fr, state.a_d_fr, state.b_fr, state.b_d_fr, self.max_droop_f)
+    constrained_b_fl, constrained_b_d_fl = enforce_droop_limit(state.a_fl, state.a_d_fl, state.b_fl, state.b_d_fl, self.max_droop_f)
+    constrained_b_rr, constrained_b_d_rr = enforce_droop_limit(state.a_rr, state.a_d_rr, state.b_rr, state.b_d_rr, self.max_droop_r)
+    constrained_b_rl, constrained_b_d_rl = enforce_droop_limit(state.a_rl, state.a_d_rl, state.b_rl, state.b_d_rl, self.max_droop_r)
+
+    # TODO: Enforce compression and sidewall compression limits.
+
+    constrained_state = chassis_state(
+        a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl,
+        b_fr = constrained_b_fr, b_fl = constrained_b_fl, b_rr = constrained_b_rr, b_rl = constrained_b_rl,
+        c_fr = state.c_fr, c_fl = state.c_fl, c_rr = state.c_rr, c_rl = state.c_rl,
+        a_d_fr = state.a_d_fr, a_d_fl = state.a_d_fl, a_d_rr = state.a_d_rr, a_d_rl = state.a_d_rl,
+        b_d_fr = constrained_b_d_fr, b_d_fl = constrained_b_d_fl, b_d_rr = constrained_b_d_rr, b_d_rl = constrained_b_d_rl,
+        c_d_fr = state.c_d_fr, c_d_fl = state.c_d_fl, c_d_rr = state.c_d_rr, c_d_rl = state.c_d_rl,
+    )
+
+    return constrained_state
 
 def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
@@ -69,6 +113,8 @@ def solve_chassis_model(
     ]
     '''
 
+    state = enforce_dimensional_boundary_conditions(self, state)
+
     #  Get instantaneous body inertias
     I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, self.tw_f)
     I_roll_inst_r, I_roll_arm_inst_r = f.get_inst_I_roll_properties(self.I_roll/2, self.tw_r)
@@ -90,8 +136,9 @@ def solve_chassis_model(
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
-    chassis_flex_LT_f = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f)
-    chassis_flex_LT_r = f.get_chassis_flex_LT(self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_r)
+    chassis_flex_LT_f,  chassis_flex_LT_r = f.get_chassis_flex_LT(
+        self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f, self.tw_r
+    )
 
     bump_stop_F_fr = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
     bump_stop_F_fl = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
@@ -120,7 +167,7 @@ def solve_chassis_model(
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
-    Hy=50
+    Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
     Hy_fl = f.get_hysteresis_coef(Hy, a_d=state.a_d_fl, b_d=state.b_d_fl)
     Hy_rr = f.get_hysteresis_coef(Hy, a_d=state.a_d_rr, b_d=state.b_d_rr)
@@ -132,6 +179,7 @@ def solve_chassis_model(
     '''
 
     #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
+    #TODO: small angle assumption for I is implemented incorrectly. Does not consider scaling with track width.
 
     A_mat = np.array([
         [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - Hy_fr,\
@@ -164,7 +212,7 @@ def solve_chassis_model(
         [0, 0, 0, Hy_rl, 0, 0, 0, - self.usm_r - Hy_rl]  # unsprung x_dd-dependent forces, rear-left
     ])
 
-    #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct.
+    #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct. 
     B_mat = np.array([
         [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655],
         [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655],
@@ -181,6 +229,14 @@ def solve_chassis_model(
 
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
     state_for_plotting_return = state_for_plotting(
+        a_fr=state.a_fr,
+        a_fl=state.a_fl,
+        a_rr=state.a_rr,
+        a_rl=state.a_rl,
+        b_fr=state.b_fr,
+        b_fl=state.b_fl,
+        b_rr=state.b_rr,
+        b_rl=state.b_rl,
         a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
         # TODO: Spring forces calculated here need to have gas chamber, bump stop, and spring forces separated before motion ratios applied.
         spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),
@@ -211,8 +267,8 @@ def solve_chassis_model(
         bump_stop_F_fl = bump_stop_F_fl,
         bump_stop_F_rr = bump_stop_F_rr,
         bump_stop_F_rl = bump_stop_F_rl,
-        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl),
-        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl),
+        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl, tw = self.tw_f),
+        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl, tw = self.tw_r),
         pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
         roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl),
         roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl),

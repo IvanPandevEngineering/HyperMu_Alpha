@@ -4,9 +4,9 @@ import numpy as np
 from scipy.signal import bessel, butter, filtfilt
 
 # define standard dataframe format for multiple data generation functions
-columns_global=['loggingTime(txt)',
+COLUMNS_GLOBAL=['loggingTime(txt)',
                 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)',
-                'c_fr', 'c_rr',
+                'c_fr', 'c_fl', 'c_rr', 'c_rl',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
                 'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)']
@@ -102,7 +102,9 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in[~data_in.index.duplicated(keep='first')]
 
     data_in['c_fr_array'] = 0
+    data_in['c_fl_array'] = 0
     data_in['c_rr_array'] = 0
+    data_in['c_rl_array'] = 0
 
     #resampling to time resolution, interpolate linearly then drop all nans
     data_in = data_in.resample('1ms').interpolate(method='linear')
@@ -124,7 +126,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
 
     data_in = yaw_rate_correction(
         data = data_in,
-        installed_pitch_angle_deg = 5
+        pitch_installation_angle_deg = 5
     )
 
     #create new time and timestep columns
@@ -137,14 +139,16 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
                                  data_in['motionUserAccelerationY(G)'],
                                  data_in['motionUserAccelerationZ(G)'],
                                  data_in['c_fr_array'],
+                                 data_in['c_fl_array'],
                                  data_in['c_rr_array'],
+                                 data_in['c_rl_array'],
                                  data_in['timestep'],
                                  data_in['motionRotationRateY(rad/s)'],
                                  data_in['motionRotationRateX(rad/s)'],
                                  data_in['motionRotationRateZ(rad/s)'],
                                  data_in['motionRotationRateZ_diff(rad/s)'],
                                  data_in['gyroRotationX_corrected(rad/s)'])), \
-        columns=columns_global)
+        columns=COLUMNS_GLOBAL)
     
     return data.dropna(how='any').reset_index(drop=True)
 
@@ -182,7 +186,7 @@ def get_unit_test_Slalom_w_Curbs(
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
         c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
-        columns=columns_global)
+        columns=COLUMNS_GLOBAL)
 
     return data
 
@@ -219,7 +223,7 @@ def get_unit_test_Curbs(
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
         c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
-        columns=columns_global)
+        columns=COLUMNS_GLOBAL)
 
     return data
 
@@ -249,10 +253,70 @@ def get_unit_test_Roll_Harmonic_Sweep(
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
         c_fr_array, c_rr_array, dt_array, control_array_roll, control_array_pitch, control_array_yaw, control_array_pitch_corrected)),
-        columns=columns_global)
+        columns=COLUMNS_GLOBAL)
 
     return data
 
+def get_unit_test_warp(
+        warp_mag,
+        warp_corner
+    ):
+
+    #  Default time resolution is set to 100hz
+    warp_mag = -warp_mag
+    timespan = 7 # s
+    time_res = 1000  # hz
+
+    G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
+    G_long_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_fl_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rl_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    if warp_corner == 'FR':
+        c_fr_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_fr_array[3000:] = warp_mag
+        c_fr_array = custom_smooth(c_fr_array, 1000)
+        c_fr_array[4000:] = warp_mag
+    elif warp_corner == 'FL':
+        c_fl_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_fl_array[3000:] = warp_mag
+        c_fl_array = custom_smooth(c_fl_array, 1000)
+        c_fl_array[4000:] = warp_mag
+    elif warp_corner == 'RR':
+        c_rr_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_rr_array[3000:] = warp_mag
+        c_rr_array = custom_smooth(c_rr_array, 1000)
+        c_rr_array[4000:] = warp_mag
+    elif warp_corner == 'RL':
+        c_rl_array[1000:3000] = np.linspace(0, warp_mag, 2000)
+        c_rl_array[3000:] = warp_mag
+        c_rl_array = custom_smooth(c_rl_array, 1000)
+        c_rl_array[4000:] = warp_mag
+    else:
+        print('Specify single corner in format "FR".')
+        return None
+
+    time_array = [x/time_res for x in range(len(G_lat_array))]
+    dt_array = [1/time_res for all in range(len(G_lat_array))]
+
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_roll_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate_corrected = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_accel_corrected = np.array([0.0 for x in range(time_res * timespan)])
+
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_fl_array, c_rr_array, c_rl_array,
+        dt_array,
+        control_array_roll_rate, control_array_pitch_rate, control_array_yaw_rate,
+        control_array_pitch_rate_corrected, control_array_pitch_accel_corrected)),
+        columns=COLUMNS_GLOBAL)
+
+    return data
 
 '''
 Begin functions for dev purposes, exploring telemetry data.
@@ -306,7 +370,7 @@ def from_sensor_log_iOS_app_dev(path: str):
 
     #create dataframe and drop nans one more time
     data = pd.DataFrame(list(zip(data_in['time'], data_in['accelerometerAccelerationX(G)'], data_in['accelerometerAccelerationY(G)'], data_in['c_fr_array'], data_in['c_rr_array'], data_in['timestep'], data_in['gyroRotationY(rad/s)'], data_in['motionPitch(rad)'])), \
-        columns=columns_global)
+        columns=COLUMNS_GLOBAL)
     data = data.dropna(how='any')
     data = data.reset_index(drop=True)
 

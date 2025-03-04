@@ -51,6 +51,11 @@ def unpack_yml(path: str):
 
     return(dict)
 
+def error_percent(rec, sim, baseline):
+    rec = rec - baseline
+    sim = sim - baseline
+    return 100 * (sim - rec) / rec
+
 def get_force_function(**kwargs):
 
     if kwargs['replay_src'] == 'demo':
@@ -62,6 +67,12 @@ def get_force_function(**kwargs):
     elif kwargs['replay_src'] == 'roll_frequency_sweep':
         force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
         scenario = 'Unit Test: Lat Accel Freq Sweep'
+    elif kwargs['replay_src'] == 'one_wheel_warp':
+        force_function = cd.get_unit_test_warp(
+            warp_mag = kwargs['warp_mag'],
+            warp_corner = kwargs['warp_corner']
+        )
+        scenario = 'Unit Test: One-Wheel Warp Offset'
     else:
         force_function = cd.from_sensor_log_iOS_app_unbiased(kwargs['replay_src'], kwargs['smoothing_window_size_ms'])
         scenario = 'G-Replay from Telemetry'
@@ -81,21 +92,21 @@ def get_inputs_dt(i, row, force_function):
         G_vert_next = force_function['accelerometerAccelerationZ(G)'][i+1],
         G_vert_half_next = (row['accelerometerAccelerationZ(G)'] + force_function['accelerometerAccelerationZ(G)'][i+1])/2,
         c_fr = row['c_fr'],
-        c_fl = 0,
+        c_fl = row['c_fl'],
         c_rr = row['c_rr'],
-        c_rl = 0,
-        c_d_fr = (row['c_fr']+force_function['c_fr'][i+1]) / row['timestep'],
-        c_d_fl = 0,
-        c_d_rr = (row['c_rr']+force_function['c_rr'][i+1]) / row['timestep'],
-        c_d_rl = 0,
+        c_rl = row['c_rl'],
+        c_d_fr = (row['c_fr']-force_function['c_fr'][i+1]) / row['timestep'],
+        c_d_fl = (row['c_fl']-force_function['c_fl'][i+1]) / row['timestep'],
+        c_d_rr = (row['c_rr']-force_function['c_rr'][i+1]) / row['timestep'],
+        c_d_rl = (row['c_rl']-force_function['c_rl'][i+1]) / row['timestep'],
         c_fr_next = force_function['c_fr'][i+1],
-        c_fl_next = 0,
+        c_fl_next = force_function['c_fl'][i+1],
         c_rr_next = force_function['c_rr'][i+1],
-        c_rl_next = 0,
-        c_d_fr_next = (force_function['c_fr'][i+1]+force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
-        c_d_fl_next = 0,
-        c_d_rr_next = (force_function['c_rr'][i+1]+force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
-        c_d_rl_next = 0,
+        c_rl_next = force_function['c_rl'][i+1],
+        c_d_fr_next = (force_function['c_fr'][i+1]-force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
+        c_d_fl_next = (force_function['c_fl'][i+1]-force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
+        c_d_rr_next = (force_function['c_rr'][i+1]-force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
+        c_d_rl_next = (force_function['c_rl'][i+1]-force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
     )
 
     return inputs_dt
@@ -165,8 +176,8 @@ class HyperMuVehicle:
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
-        self.C_t_f = self.K_t_f / 1000
-        self.C_t_r = self.K_t_r / 1000
+        self.C_t_f = self.K_t_f / 100
+        self.C_t_r = self.K_t_r / 100
 
         self.cm_height = vpd['center_of_mass_height']
         self.rc_height_f = vpd['roll_center_height_front']
@@ -198,20 +209,26 @@ class HyperMuVehicle:
         self.m = vpd['corner_mass_fr'] + vpd['corner_mass_fl'] + vpd['corner_mass_rr'] + vpd['corner_mass_rl']
         self.m_f = (vpd['corner_mass_fr'] + vpd['corner_mass_fl']) / self.m
         self.m_r = (vpd['corner_mass_rr'] + vpd['corner_mass_rl']) / self.m
+        self.resting_load_fr_N = vpd['corner_mass_fr'] * 9.80665
+        self.resting_load_fl_N = vpd['corner_mass_fl'] * 9.80665
+        self.resting_load_rr_N = vpd['corner_mass_rr'] * 9.80665
+        self.resting_load_rl_N = vpd['corner_mass_rl'] * 9.80665
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
+        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheen originally.
+        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheen originally.
         self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
-        self.init_a_fr = f.get_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
-        self.init_a_fl = f.get_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
-        self.init_a_rr = f.get_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
-        self.init_a_rl = f.get_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
-        self.init_b_fr = f.get_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
-        self.init_b_fl = f.get_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
-        self.init_b_rr = f.get_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
-        self.init_b_rl = f.get_init_b(self.sm_rl, self.usm_rl, self.K_t_r)  # initial b_rl
+        self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
+        self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
+        self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
+        self.init_a_rl = f.get_pre_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
+        self.init_b_fr = f.get_pre_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
+        self.init_b_fl = f.get_pre_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
+        self.init_b_rr = f.get_pre_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
+        self.init_b_rl = f.get_pre_init_b(self.sm_rl, self.usm_rl, self.K_t_r)  # initial b_rl
 
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
@@ -324,10 +341,7 @@ class HyperMuVehicle:
                 self = self,
                 state = state,
                 inputs_dt = get_inputs_dt(i, row, force_function)
-                # z = new_z here? Should z be added as an inputs_dt??
             )
-
-            # z = new_z
 
             for var in state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
@@ -342,7 +356,6 @@ class HyperMuVehicle:
 
         return force_function, graphing_dict, scenario
     
-
     def plot_shaker_basics(self, **kwargs):
 
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
@@ -357,6 +370,37 @@ class HyperMuVehicle:
 
         shaker_results = self.Shaker(**kwargs)
         vis.check_correlation_rollRateRearZ(*shaker_results)
+
+    def static_correlation(self, **kwargs):
+
+        warp_data_dict = unpack_yml(kwargs['control_data_file_path'])['parameters']
+
+        force_function_fr, shaker_results_fr, scenario_fr = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['fr_offset_magnitude'], warp_corner = 'FR')
+        force_function_fl, shaker_results_fl, scenario_fl = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['fl_offset_magnitude'], warp_corner = 'FL')
+        force_function_rr, shaker_results_rr, scenario_rr = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['rr_offset_magnitude'], warp_corner = 'RR')
+        force_function_rl, shaker_results_rl, scenario_rl = self.Shaker(
+            **kwargs, warp_mag = warp_data_dict['rl_offset_magnitude'], warp_corner = 'RL')
+        
+        static_errors_dict = self.get_static_errors_dict(
+            recorded_warp_data_dict = warp_data_dict,
+            shaker_results_fr = shaker_results_fr,
+            shaker_results_fl = shaker_results_fl,
+            shaker_results_rr = shaker_results_rr,
+            shaker_results_rl = shaker_results_rl
+        )
+
+        vis.check_correlation_one_wheel_warp(
+            force_function = force_function_fr,
+            recorded_warp_data_dict = warp_data_dict,
+            shaker_results_fr = shaker_results_fr,
+            shaker_results_fl = shaker_results_fl,
+            shaker_results_rr = shaker_results_rr,
+            shaker_results_rl = shaker_results_rl,
+            static_errors = static_errors_dict
+        )
 
     def damper_response_detail(self, **kwargs):
 
@@ -374,6 +418,141 @@ class HyperMuVehicle:
         force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
         force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
         vis.load_transfer_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
+
+    def get_static_errors_dict(
+        self,
+        recorded_warp_data_dict,
+        shaker_results_fr,
+        shaker_results_fl,
+        shaker_results_rr,
+        shaker_results_rl
+    ):
+        
+        errors_dict={}
+
+        fr_error_magnitude_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_fr'], sim = shaker_results_fr['tire_load_fr'][-1], baseline = 0)
+        fr_error_magnitude_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_fr'], sim = shaker_results_fl['tire_load_fr'][-1], baseline = 0)
+        fr_error_magnitude_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_fr'], sim = shaker_results_rr['tire_load_fr'][-1], baseline = 0)
+        fr_error_magnitude_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_fr'], sim = shaker_results_rl['tire_load_fr'][-1], baseline = 0)
+        errors_dict['fr_error_magnitude'] = np.average([
+            fr_error_magnitude_fr_warp,
+            fr_error_magnitude_fl_warp,
+            fr_error_magnitude_rr_warp,
+            fr_error_magnitude_rl_warp
+        ])
+        
+        fl_error_magnitude_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_fl'], sim = shaker_results_fr['tire_load_fl'][-1], baseline = 0)
+        fl_error_magnitude_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_fl'], sim = shaker_results_fl['tire_load_fl'][-1], baseline = 0)
+        fl_error_magnitude_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_fl'], sim = shaker_results_rr['tire_load_fl'][-1], baseline = 0)
+        fl_error_magnitude_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_fl'], sim = shaker_results_rl['tire_load_fl'][-1], baseline = 0)
+        errors_dict['fl_error_magnitude'] = np.average([
+            fl_error_magnitude_fr_warp,
+            fl_error_magnitude_fl_warp,
+            fl_error_magnitude_rr_warp,
+            fl_error_magnitude_rl_warp
+        ])
+
+        rr_error_magnitude_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_rr'], sim = shaker_results_fr['tire_load_rr'][-1], baseline = 0)
+        rr_error_magnitude_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_rr'], sim = shaker_results_fl['tire_load_rr'][-1], baseline = 0)
+        rr_error_magnitude_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_rr'], sim = shaker_results_rr['tire_load_rr'][-1], baseline = 0)
+        rr_error_magnitude_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_rr'], sim = shaker_results_rl['tire_load_rr'][-1], baseline = 0)
+        errors_dict['rr_error_magnitude'] = np.average([
+            rr_error_magnitude_fr_warp,
+            rr_error_magnitude_fl_warp,
+            rr_error_magnitude_rr_warp,
+            rr_error_magnitude_rl_warp
+        ])
+        
+        rl_error_magnitude_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_rl'], sim = shaker_results_fr['tire_load_rl'][-1], baseline = 0)
+        rl_error_magnitude_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_rl'], sim = shaker_results_fl['tire_load_rl'][-1], baseline = 0)
+        rl_error_magnitude_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_rl'], sim = shaker_results_rr['tire_load_rl'][-1], baseline = 0)
+        rl_error_magnitude_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_rl'], sim = shaker_results_rl['tire_load_rl'][-1], baseline = 0)
+        errors_dict['rl_error_magnitude'] = np.average([
+            rl_error_magnitude_fr_warp,
+            rl_error_magnitude_fl_warp,
+            rl_error_magnitude_rr_warp,
+            rl_error_magnitude_rl_warp
+        ])
+
+        fr_error_delta_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_fr'], sim = shaker_results_fr['tire_load_fr'][-1], baseline = self.resting_load_fr_N)
+        fr_error_delta_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_fr'], sim = shaker_results_fl['tire_load_fr'][-1], baseline = self.resting_load_fr_N)
+        fr_error_delta_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_fr'], sim = shaker_results_rr['tire_load_fr'][-1], baseline = self.resting_load_fr_N)
+        fr_error_delta_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_fr'], sim = shaker_results_rl['tire_load_fr'][-1], baseline = self.resting_load_fr_N)
+        errors_dict['fr_error_delta'] = np.average([
+            fr_error_delta_fr_warp,
+            fr_error_delta_fl_warp,
+            fr_error_delta_rr_warp,
+            fr_error_delta_rl_warp
+        ])
+        
+        fl_error_delta_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_fl'], sim = shaker_results_fr['tire_load_fl'][-1], baseline = self.resting_load_fl_N)
+        fl_error_delta_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_fl'], sim = shaker_results_fl['tire_load_fl'][-1], baseline = self.resting_load_fl_N)
+        fl_error_delta_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_fl'], sim = shaker_results_rr['tire_load_fl'][-1], baseline = self.resting_load_fl_N)
+        fl_error_delta_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_fl'], sim = shaker_results_rl['tire_load_fl'][-1], baseline = self.resting_load_fl_N)
+        errors_dict['fl_error_delta'] = np.average([
+            fl_error_delta_fr_warp,
+            fl_error_delta_fl_warp,
+            fl_error_delta_rr_warp,
+            fl_error_delta_rl_warp
+        ])
+
+        rr_error_delta_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_rr'], sim = shaker_results_fr['tire_load_rr'][-1], baseline = self.resting_load_rr_N)
+        rr_error_delta_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_rr'], sim = shaker_results_fl['tire_load_rr'][-1], baseline = self.resting_load_rr_N)
+        rr_error_delta_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_rr'], sim = shaker_results_rr['tire_load_rr'][-1], baseline = self.resting_load_rr_N)
+        rr_error_delta_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_rr'], sim = shaker_results_rl['tire_load_rr'][-1], baseline = self.resting_load_rr_N)
+        errors_dict['rr_error_delta'] = np.average([
+            rr_error_delta_fr_warp,
+            rr_error_delta_fl_warp,
+            rr_error_delta_rr_warp,
+            rr_error_delta_rl_warp
+        ])
+        
+        rl_error_delta_fr_warp = error_percent(
+            rec = recorded_warp_data_dict['fr_offset_load_rl'], sim = shaker_results_fr['tire_load_rl'][-1], baseline = self.resting_load_rl_N)
+        rl_error_delta_fl_warp = error_percent(
+            rec = recorded_warp_data_dict['fl_offset_load_rl'], sim = shaker_results_fl['tire_load_rl'][-1], baseline = self.resting_load_rl_N)
+        rl_error_delta_rr_warp = error_percent(
+            rec = recorded_warp_data_dict['rr_offset_load_rl'], sim = shaker_results_rr['tire_load_rl'][-1], baseline = self.resting_load_rl_N)
+        rl_error_delta_rl_warp = error_percent(
+            rec = recorded_warp_data_dict['rl_offset_load_rl'], sim = shaker_results_rl['tire_load_rl'][-1], baseline = self.resting_load_rl_N)
+        errors_dict['rl_error_delta'] = np.average([
+            rl_error_delta_fr_warp,
+            rl_error_delta_fl_warp,
+            rl_error_delta_rr_warp,
+            rl_error_delta_rl_warp
+        ])
+
+        return errors_dict
+
+# Depricated functions for development and debugging only.
 
     def synth_data_for_ML(self, **kwargs):
         
@@ -428,8 +607,6 @@ class HyperMuVehicle:
             pickle.dump(synth_data, file)
 
         return synth_data
-
-# Depricated functions for development and debugging only.
 
     def G_replay_1Dtest(self, telemetry_path: str):
 
