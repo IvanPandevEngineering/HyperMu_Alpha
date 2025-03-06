@@ -1,10 +1,9 @@
 '''
-Copyright 2024 Ivan Pandev
+Copyright 2025 Ivan Pandev
 '''
 
-
-import numpy as np
 import math
+import numpy as np
 
 '''
 SECTION 1. Begin helper functions for analytical properties below:

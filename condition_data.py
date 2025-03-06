@@ -1,6 +1,6 @@
-import pandas as pd
 import math
 import numpy as np
+import pandas as pd
 from scipy.signal import bessel, butter, filtfilt
 
 # define standard dataframe format for multiple data generation functions

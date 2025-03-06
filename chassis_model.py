@@ -1,5 +1,5 @@
 '''
-Copyright 2024 Ivan Pandev
+Copyright 2025 Ivan Pandev
 
 This document defines the chassis model used in ChassisDyne, as a system of equations
 relating the wheel and body displacements over time to chassis parameters such as
@@ -22,9 +22,11 @@ Dimensional variables in HyperMu follow these conventions:
 A consequence of these conventions is that no suspension travel ratios will be used in solving the vehicle model.
 '''
 
-import numpy as np
-import formulas as f
 from collections import namedtuple
+import numpy as np
+
+import formulas as f
+
 
 chassis_state = namedtuple('chassis_state',
     ['a_fr', 'a_fl', 'a_rr', 'a_rl',
@@ -56,7 +58,7 @@ def enforce_droop_limit(a, a_d, b, b_d, max_droop):
         b_d = a_d
     return b, b_d
 
-def enforce_compression_limit():
+def enforce_suspension_compression_limit():
     return None
 
 def enforce_sidewall_compression_limit():

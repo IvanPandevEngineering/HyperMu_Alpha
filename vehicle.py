@@ -1,25 +1,24 @@
 '''
-Copyright 2024 Ivan Pandev
+Copyright 2025 Ivan Pandev
 '''
 
-import yaml
 import numpy as np
-import formulas as f
-import condition_data as cd
-from virtual_params import virtual_params
-from RK4_iterator import RK4_step, RK4_iterator_1Dtest, time_dependent_inputs
-import visualizer as vis
-import chassis_model as model
-from chassis_model import state_for_plotting
 import pickle
+import yaml
+
+import chassis_model as model
+import condition_data as cd
+import formulas as f
+import RK4_iterator as RK4
+import visualizer as vis
+import virtual_params as vparam
 
 
 def user_warning():
 
-    print('''
-_____ SAFETY WARNING: _____
-This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev. Do you understand, agree, and wish to continue? [Y]es/[N]o?
-        ''')
+    print('\n_____ SAFETY WARNING: _____\n')
+    print(f'{vis.DISCLAIMER}\n')
+    print('Do you agree, understand, and wish to continue? [Y]es/[N]o?\n')
 
     user_response = input()
 
@@ -81,7 +80,7 @@ def get_force_function(**kwargs):
 
 def get_inputs_dt(i, row, force_function):
 
-    inputs_dt = time_dependent_inputs(
+    inputs_dt = RK4.time_dependent_inputs(
         G_lat = row['accelerometerAccelerationX(G)'],
         G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
         G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
@@ -164,7 +163,7 @@ class HyperMuVehicle:
         self.C_hsc_f_v, self.C_hsc_r_v,\
         self.C_hsr_f_v, self.C_hsr_r_v  = \
             \
-        virtual_params(
+        vparam.virtual_params(
             self.tw_f, self.tw_r,
             self.K_s_f, self.K_s_r,
             self.K_arb_f, self.K_arb_r,
@@ -216,8 +215,8 @@ class HyperMuVehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
-        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheen originally.
-        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheen originally.
+        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheel originally.
+        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheel originally.
         self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
@@ -330,20 +329,20 @@ class HyperMuVehicle:
         )
 
         graphing_dict={}
-        for var in state_for_plotting._fields:
+        for var in model.state_for_plotting._fields:
             graphing_dict[f'{var}']=[]
 
         print('Starting RK4 solver for G-replay...')
         for i, row in force_function.iterrows():
 
-            state, graphing_vars = RK4_step(
+            state, graphing_vars = RK4.RK4_step(
                 dt = force_function['timestep'][i+1],
                 self = self,
                 state = state,
                 inputs_dt = get_inputs_dt(i, row, force_function)
             )
 
-            for var in state_for_plotting._fields:
+            for var in model.state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
 
             if i == len(force_function)-3:
@@ -630,10 +629,8 @@ class HyperMuVehicle:
             
             F_sm_half_next = (F_sm + F_sm_next) / 2
             F_usm_half_next = (F_usm + F_usm_next) / 2
-            
-            #C_s = get_damper_rate()
 
-            a, a_d, b, b_d = RK4_iterator_1Dtest(
+            a, a_d, b, b_d = RK4.RK4_iterator_1Dtest(
                 self, dt,
                 a, a_d, b, b_d, c, c_d,
                 F_sm, F_usm, F_sm_half_next, F_usm_half_next, F_sm_next, F_usm_next
@@ -662,7 +659,7 @@ class HyperMuVehicle:
             c = item
             c_d = item + c_array[i+1] / dt
 
-            a, a_d, b, b_d = RK4_iterator_1Dtest(
+            a, a_d, b, b_d = RK4.RK4_iterator_1Dtest(
                 self, dt,
                 a, a_d, b, b_d, c, c_d,
                 F_sm = 0, F_usm = 0, F_sm_half_next = 0, F_usm_half_next = 0, F_sm_next = 0, F_usm_next = 0

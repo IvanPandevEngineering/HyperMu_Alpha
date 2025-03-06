@@ -1,7 +1,14 @@
+'''
+Copyright 2025 Ivan Pandev
+'''
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
+
+
+DISCLAIMER = str("This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user's own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2025 Ivan Pandev.")
 
 def fft_convert(series):
     'return frequencies, normalized magnitudes of a time series from the shaker. Currently fixed at 1000hz'
@@ -41,7 +48,7 @@ def plot_basics(force_function, results, scenario):
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(4, 2, figsize=(14, 9))
     fig.suptitle(f'General Performance Overview, {scenario}', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
@@ -126,7 +133,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle(f'Correlation on Roll/Pitch Rate, {scenario}', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14), label='Recorded roll angle rate (deg/s)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
@@ -186,7 +193,7 @@ roll_angle_rate_f, roll_angle_rate_r, pitch_angle_rate):
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle('Correlation of Race Telemetry on Battle_Bimmer_30_Sept_2023_w_Pass (Left-Smoothing Window = 750ms)', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationY(rad/s)']/3.14)-.2, label='Recorded roll angle rate (deg/s)')
     subplots[0][0].plot(force_function['loggingTime(txt)'], roll_angle_rate_f, label='predicted roll angle rate (deg/s, f)')
@@ -256,14 +263,14 @@ def check_correlation_one_wheel_warp(
     
     print('Graphing...')
 
-    plt.style.use('ggplot')
+    plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
     mpl.rcParams['legend.fontsize'] = 8
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 2, figsize=(12, 8))
     fig.suptitle(f'One-Wheel Warp Load Distributions, Recorded v. Simulated', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     #  Plotting FL Loads at different warp conditions.
     subplots[0,0].plot(force_function['loggingTime(txt)'], shaker_results_fr['tire_load_fl'], label='Predicted, FR warp')
@@ -276,7 +283,7 @@ def check_correlation_one_wheel_warp(
     subplots[0,0].axhline(recorded_warp_data_dict['rl_offset_load_fl'], label='Recorded, RL Warp', color='black')
     subplots[0,0].grid(True)
     subplots[0,0].legend()
-    subplots[0,0].set_xlabel(f'Time (s)\n Magnitude Error: {static_errors["fl_error_magnitude"]:.3f} %\n Delta Error: {static_errors["fl_error_delta"]:.3f} %')
+    subplots[0,0].set_xlabel(f'Time (s)\n Weight Transfer Error: {static_errors["fl_error_delta"]:.3f} %')
     subplots[0,0].set_ylabel('Load on FL Tire (N)')
 
     #  Plotting FR Loads at different warp conditions.
@@ -290,7 +297,7 @@ def check_correlation_one_wheel_warp(
     subplots[0,1].axhline(recorded_warp_data_dict['rl_offset_load_fr'], label='Recorded, RL Warp', color='black')
     subplots[0,1].grid(True)
     subplots[0,1].legend()
-    subplots[0,1].set_xlabel(f'Time (s)\n Magnitude Error: {static_errors["fr_error_magnitude"]:.3f} %\n Delta Error: {static_errors["fr_error_delta"]:.3f} %')
+    subplots[0,1].set_xlabel(f'Time (s)\n Weight Transfer Error: {static_errors["fr_error_delta"]:.3f} %')
     subplots[0,1].set_ylabel('Load on FR Tire (N)')
 
     #  Plotting RL Loads at different warp conditions.
@@ -304,7 +311,7 @@ def check_correlation_one_wheel_warp(
     subplots[1,0].axhline(recorded_warp_data_dict['rl_offset_load_rl'], label='Recorded, RL Warp', color='black')
     subplots[1,0].grid(True)
     subplots[1,0].legend()
-    subplots[1,0].set_xlabel(f'Time (s)\n Magnitude Error: {static_errors["rr_error_magnitude"]:.3f} %\n Delta Error: {static_errors["rl_error_delta"]:.3f} %')
+    subplots[1,0].set_xlabel(f'Time (s)\n Weight Transfer Error: {static_errors["rl_error_delta"]:.3f} %')
     subplots[1,0].set_ylabel('Load on RR Tire (N)')
 
     #  Plotting RR Loads at different warp conditions.
@@ -318,7 +325,7 @@ def check_correlation_one_wheel_warp(
     subplots[1,1].axhline(recorded_warp_data_dict['rl_offset_load_rr'], label='Recorded, RL Warp', color='black')
     subplots[1,1].grid(True)
     subplots[1,1].legend()
-    subplots[1,1].set_xlabel(f'Time (s)\n Magnitude Error: {static_errors["rl_error_magnitude"]:.3f} %\n Delta Error: {static_errors["rr_error_delta"]:.3f} %')
+    subplots[1,1].set_xlabel(f'Time (s)\n Weight Transfer Error: {static_errors["rr_error_delta"]:.3f} %')
     subplots[1,1].set_ylabel('Load on RR Tire (N)')
 
     fig.tight_layout()
@@ -335,7 +342,7 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 4, figsize=(14, 8))
     fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Self (fl)')
     subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Other (fl)')
@@ -421,7 +428,7 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
     fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
-    fig.text(0.005, 0.005, 'SAFETY DISCLAIMER: This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2024 Ivan Pandev.', fontsize=8)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Self')
     subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Other')
