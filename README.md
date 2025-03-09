@@ -90,21 +90,19 @@ Cross-Wise Mass Distribution (FL/RR): 48.911 %
 ```
 
 ## Real-World Correlation
-Maximizing correlation against real-world telemetry will drive and validate HyperMu development. While some HyperMu outputs like instantaneous tire load are extremely difficult to measure directly and capture in telemetry, HyperMu also predicts measurable responses to g-force, such as roll and pitch angle rates. As a cursory validation of HyperMu outputs' correlation to real-world vehicle's behavior, its simulated roll angle rate outputs are compared to the corresponding data from telemetry. The correlation is optimized around the 750ms smoothing window.
+Maximizing correlation against real-world telemetry will drive and validate HyperMu development. While some HyperMu outputs like instantaneous tire load are extremely difficult to measure directly and capture in telemetry, HyperMu also predicts measurable responses to g-force, such as roll and pitch angle rates. As a cursory validation of HyperMu outputs' correlation to the real-world vehicle's dynamic behavior, its simulated roll angle rate outputs are compared to the corresponding data from telemetry. The correlation is optimized around the 750ms smoothing window. The choice to check correlation using roll angle rate was driven by it being the only available, reliable trace at the time. Roll and pitch angle traces were found to drift, and the sensor mount itself was likely flexing a small amount. Improvements to the sensor mount and trace selection will follow with future data collection runs.
 
 ![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/images/corr3.png)
 
-The choice to check correlation using roll angle rate was driven by it being the only available, reliable trace at the time. Roll and pitch angle traces were found to drift, and the sensor mount itself could be more rigid. Improvements to the sensor mount and trace selection will follow with future data collection runs.
+In addition to dynamic correlation, static correlaton is also evaluated, isolating the effects of kinematics, compliance, and spring stiffnesses from sources of error in damping, inertia, and hystersis. The weight transfers below are measured by applying a ~38mm deflection to one wheel at a time, which is replicated in HyperMu and the results allowed to settle. Better modelling of non-linearities in HyperMu's tire model and kinematics are expected to improve static correlation especially.
 
-## ML Training Data Synthesis
-HyperMu can iterate through a range of values of a vehicle property and simulate the chassis response of a vehicle with those properties, all for a given acceleration input. The graphic below shows a range of center of mass heights and their related impact on roll angle rate. These series can be combined with the real-world chassis response of that acceleration input, and packaged as a dataset for machine learning projects. See the method `data_synth_for_ML()` in `vehicle.py` for more detail.
-
-![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/images/mlTrainDemo.png)
+![alt text](https://github.com/IvanPandevEngineering/ChassisDyne_Alpha/blob/main/images/static_corr_1.png)
 
 ## Ongoing Development
-HyperMu's core functionality is practically complete, but much work remains on capturing increasingly-granular details of vehicle response. This includes but is not limited to:
-- Improved pitch response to engine torque
-- Frequency-domain analysis
-- Damper hysteresis
+HyperMu's core functionality (a multi-body vehicle model and solvers for its dynamic response to road and acceleration conditions) is practically complete, but much work remains on capturing increasingly-granular details of vehicle response, creating new visualization tools, and maximizing real-world correlation. This includes but is not limited to:
+- Non-linearity in the tire spring/damper model
+- Hysteresis modelling in dampers and tires
+- Better yaw-correction for pitch telemetry
+- Signal processing tools for input telemetry
 
-Looking far ahead, HyperMu can also benefit from quality-of-life/ productization improvements such as a primitive GUI, synthetic input generator, and more generalized telemetry ingestion and reformatting.
+I greatly look forward to delivering as many of these as possible!
