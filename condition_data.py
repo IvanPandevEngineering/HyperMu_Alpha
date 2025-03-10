@@ -318,6 +318,38 @@ def get_unit_test_warp(
 
     return data
 
+def get_init_empty():
+
+    timespan = 5 # s
+    time_res = 1000  # hz
+
+    G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
+    G_long_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_fl_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
+    c_rl_array = np.array([0.0 for x in range(time_res * timespan)])
+
+    time_array = [x/time_res for x in range(len(G_lat_array))]
+    dt_array = [1/time_res for all in range(len(G_lat_array))]
+
+    control_array_Gz = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_roll_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_yaw_rate = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_rate_corrected = np.array([0.0 for x in range(time_res * timespan)])
+    control_array_pitch_accel_corrected = np.array([0.0 for x in range(time_res * timespan)])
+
+    data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        c_fr_array, c_fl_array, c_rr_array, c_rl_array,
+        dt_array,
+        control_array_roll_rate, control_array_pitch_rate, control_array_yaw_rate,
+        control_array_pitch_rate_corrected, control_array_pitch_accel_corrected)),
+        columns=COLUMNS_GLOBAL)
+
+    return data
+
 '''
 Begin functions for dev purposes, exploring telemetry data.
 '''

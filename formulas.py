@@ -302,10 +302,10 @@ def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
 
 def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw_f, tw_r):
     'Force added or subtracted to a single wheel bue to chassis twist. Return front and rear axle values.'
-    target_roll_angle_deg = 180 * np.arctan((a_fr-a_fl)/tw_f) / np.pi
-    other_roll_angle_deg = 180 * np.arctan((a_rr-a_rl)/tw_r) / np.pi
+    roll_angle_f_deg = 180 * np.arctan((a_fr-a_fl)/tw_f) / np.pi
+    roll_angle_r_deg = 180 * np.arctan((a_rr-a_rl)/tw_r) / np.pi
 
-    return K_ch * (target_roll_angle_deg - other_roll_angle_deg) / (tw_f / 2), K_ch * (target_roll_angle_deg - other_roll_angle_deg) / (tw_r / 2)
+    return K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_f / 2), K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_r / 2)
 
 def get_ride_spring_F(K_s, a, b):
     return max(K_s * (a - b), 0)

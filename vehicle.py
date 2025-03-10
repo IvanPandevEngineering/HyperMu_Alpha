@@ -66,6 +66,9 @@ def get_force_function(**kwargs):
     elif kwargs['replay_src'] == 'roll_frequency_sweep':
         force_function = cd.get_unit_test_Roll_Harmonic_Sweep()
         scenario = 'Unit Test: Lat Accel Freq Sweep'
+    elif kwargs['replay_src'] == 'init':
+        force_function = cd.get_init_empty()
+        scenario = 'Init Empty'
     elif kwargs['replay_src'] == 'one_wheel_warp':
         force_function = cd.get_unit_test_warp(
             warp_mag = kwargs['warp_mag'],
@@ -233,7 +236,9 @@ class HyperMuVehicle:
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
         self.I_pitch_at_cg = vpd['moment_of_inertia_about_cg_pitch']
         self.I_pitch = f.parallel_axis_theorem(self.I_pitch_at_cg, self.sm, f.get_I_pitch_offset(self.cm_height, self.pc_height_ic2cp, self.sm_f, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r))
- 
+
+        self.set_init_state(replay_src='init')
+
         self.LatLT_properties = f.roll_LatLD_per_g((self.usm_fr+self.usm_fl), (self.usm_rr + self.usm_rl), (self.sm_fr + self.sm_fl), (self.sm_rr + self.sm_rl), self.tw_v, self.tw_f, self.tw_r, self.tire_diam_f, self.tire_diam_r, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.df_f, self.df_r)
         self.roll_tip_G = f.get_roll_tip_G(self.tw_f, self.tw_r, self.m_f, self.cm_height, self.m, self.df_f, self.df_r)
         self.aero_response = f.aero_platform_response(self.df_f, self.df_r, self.m_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
@@ -316,6 +321,22 @@ class HyperMuVehicle:
         print(f'Cross-Wise Mass Distribution (FL/RR): {(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m:.3%}')
         print('\n')
 
+    def set_init_state(self, **kwargs):
+
+        force_function, shaker_results, scenario = self.Shaker(**kwargs)
+        self.init_a_fr = shaker_results['a_fr'][-1]
+        self.init_a_fl = shaker_results['a_fl'][-1]
+        self.init_a_rr = shaker_results['a_rr'][-1]
+        self.init_a_rl = shaker_results['a_rl'][-1]
+        self.init_b_fr = shaker_results['b_fr'][-1]
+        self.init_b_fl = shaker_results['b_fl'][-1]
+        self.init_b_rr = shaker_results['b_rr'][-1]
+        self.init_b_rl = shaker_results['b_rl'][-1]
+
+        print('Vehicle initial state resolved.')
+
+        return True
+
     def Shaker(self, **kwargs):
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
@@ -324,7 +345,7 @@ class HyperMuVehicle:
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
             self.init_a_fr, self.init_a_fl, self.init_a_rr, self.init_a_rl,
-            self.init_b_fr, self.init_b_fl, self.init_b_rr, self.init_b_rr,
+            self.init_b_fr, self.init_b_fl, self.init_b_rr, self.init_b_rl,
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         )
 
