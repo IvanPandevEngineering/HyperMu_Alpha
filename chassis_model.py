@@ -125,16 +125,28 @@ def solve_chassis_model(
     #  Load transfers from lat- and long- acceleration
     lat_sm_elastic_LT_f = G_lat * f.LatLT_sm_elastic_1g_axle(self.sm_f*self.sm, self.rc_height_f, self.cm_height, self.tw_f) #TODO: please clean up this notation sm_f*sm
     lat_sm_geo_LT_f = G_lat * f.LatLT_sm_geometric_1g_axle(self.sm_f*self.sm, self.rc_height_f, self.tw_f)
-    lat_usm_geo_LT_f = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_f, self.tire_diam_f, self.tw_f)
+    lat_usm_geo_LT_f = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_f, self.tire_diam_f, self.tw_f,
+                                                             state.b_fr, state.b_fl)
 
     lat_sm_elastic_LT_r = G_lat * f.LatLT_sm_elastic_1g_axle(self.sm_r*self.sm, self.rc_height_r, self.cm_height, self.tw_r)
     lat_sm_geo_LT_r = G_lat * f.LatLT_sm_geometric_1g_axle(self.sm_r*self.sm, self.rc_height_r, self.tw_r)
-    lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r)
+    lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r,
+                                                             state.b_rr, state.b_rl)
 
     # TODO: Need review, top priprity
     long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
     long_sm_geo_LT = G_long * f.LongLT_sm_geometric_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
-    long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f)
+    long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f,
+                                                         state.b_fr, state.b_fl, state.b_rr, state.b_rl)
+
+    '''
+    trqRct_LT_lat = 
+    trqRct_LT_long = 
+    trqRct_LT_fr = 
+    trqRct_LT_fl = 
+    trqRct_LT_rr = 
+    trqRct_LT_rl = 
+    '''
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.
@@ -271,10 +283,10 @@ def solve_chassis_model(
         bump_stop_F_rl = bump_stop_F_rl,
         roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl, tw = self.tw_f),
         roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl, tw = self.tw_r),
-        pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl),
-        roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl),
-        roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl),
-        pitch_angle_rate = f.get_pitch_angle_rate_deg(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl),
+        pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl, wb=self.wheel_base),
+        roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl, tw = self.tw_f),
+        roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl, tw = self.tw_r),
+        pitch_angle_rate = f.get_pitch_angle_rate_deg(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl, wb=self.wheel_base),
         lateral_load_dist_f = 100 * f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr), 
                                                            tire_load_l = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)),
         lateral_load_dist_r = 100 * f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),

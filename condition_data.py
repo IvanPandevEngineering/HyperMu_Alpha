@@ -6,6 +6,7 @@ from scipy.signal import bessel, butter, filtfilt
 # define standard dataframe format for multiple data generation functions
 COLUMNS_GLOBAL=['loggingTime(txt)',
                 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)',
+                'motionPitch(rad)',
                 'c_fr', 'c_fl', 'c_rr', 'c_rl',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
@@ -55,8 +56,9 @@ def apply_filter(data, filter_type, smoothing_window_size):
 
 def yaw_rate_correction(data, pitch_installation_angle_deg):
 
-    installed_pitch_angle = pitch_installation_angle_deg*math.pi/180  # Convert pitch installation angle to rad
-    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + 2*np.sin(installed_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
+    live_pitch_angle = 10*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
+
+    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
     
     return data
 
@@ -81,6 +83,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
                                                    'motionUserAccelerationX(G)',
                                                    'motionUserAccelerationY(G)',
                                                    'motionUserAccelerationZ(G)',
+                                                   'motionPitch(rad)',
                                                    'motionRotationRateY(rad/s)',
                                                    'motionRotationRateX(rad/s)',
                                                    'motionRotationRateZ(rad/s)']]
@@ -138,6 +141,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
                                  data_in['motionUserAccelerationX(G)'],
                                  data_in['motionUserAccelerationY(G)'],
                                  data_in['motionUserAccelerationZ(G)'],
+                                 data_in['motionPitch(rad)'],
                                  data_in['c_fr_array'],
                                  data_in['c_fl_array'],
                                  data_in['c_rr_array'],
@@ -326,6 +330,8 @@ def get_init_empty():
     G_lat_array = np.array([0.0 for x in range(time_res * timespan)])
     G_long_array = np.array([0.0 for x in range(time_res * timespan)])
 
+    pitch_array = np.array([0.0 for x in range(time_res * timespan)])
+
     c_fr_array = np.array([0.0 for x in range(time_res * timespan)])
     c_fl_array = np.array([0.0 for x in range(time_res * timespan)])
     c_rr_array = np.array([0.0 for x in range(time_res * timespan)])
@@ -342,6 +348,7 @@ def get_init_empty():
     control_array_pitch_accel_corrected = np.array([0.0 for x in range(time_res * timespan)])
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
+        pitch_array,
         c_fr_array, c_fl_array, c_rr_array, c_rl_array,
         dt_array,
         control_array_roll_rate, control_array_pitch_rate, control_array_yaw_rate,

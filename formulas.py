@@ -250,14 +250,19 @@ def LatLT_sm_geometric_1g_axle(sm, rc_height, tw):  # N, transferred to outside 
     
     return 9.80665 * sm * rc_height / tw
 
-def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw):  # N, transferred to outside OR lifted from inside tire
+def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw, b_r, b_l):  # N, transferred to outside OR lifted from inside tire
     
-    return 9.80665 * usm * (tire_diameter/2) / tw
+    effective_tire_radius = tire_diameter/2 - (b_r + b_l)/2
+
+    return 9.80665 * usm * effective_tire_radius / tw
 
 #TODO: Finalize and draw out the below equations. Not done yet.
-def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end):  # N, transferred to outside OR lifted from One end tire
+def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end, b_fr, b_fl, b_rr, b_rl):  # N, transferred to outside OR lifted from One end tire
     
-    return 9.80665 * ((usm_f * tire_diameter_f/2 + usm_r * tire_diameter_r/2)/2) / wb_end
+    effective_tire_radius_f = tire_diameter_f/2 - (b_fr + b_fl)/2
+    effective_tire_radius_r = tire_diameter_r/2 - (b_rr + b_rl)/2
+
+    return 9.80665 * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
 
 def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > 0.0:  # Braking Condition
@@ -334,17 +339,21 @@ def get_roll_angle_deg_per_axle(a_r, a_l, tw):
     # TODO: Needs review of small angle assumption.
     return 180 * np.arctan((a_r-a_l)/tw) / np.pi
 
-def get_pitch_angle_deg(a_fr, a_fl, a_rr, a_rl):
+def get_pitch_angle_deg(a_fr, a_fl, a_rr, a_rl, wb):
     # TODO: Needs review of small angle assumption.
-    return (a_fr + a_fl)*180/(2*math.pi) - (a_rr + a_rl)*180/(2*math.pi)
+    disp_f = (a_fr + a_fl)/2
+    disp_r = (a_rr + a_rl)/2
+    return 180 * np.arctan((disp_f - disp_r)/wb) / np.pi
 
-def get_roll_angle_rate_deg_per_axle(a_r_d, a_l_d):
+def get_roll_angle_rate_deg_per_axle(a_r_d, a_l_d, tw):
     # TODO: Needs review of small angle assumption.
-    return (a_r_d - a_l_d) * 180 / math.pi
+    return 180 * np.arctan((a_r_d-a_l_d)/tw) / np.pi
 
-def get_pitch_angle_rate_deg(a_fr_d, a_fl_d, a_rr_d, a_rl_d):
+def get_pitch_angle_rate_deg(a_fr_d, a_fl_d, a_rr_d, a_rl_d, wb):
     # TODO: Needs review of small angle assumption.
-    return (a_fr_d + a_fl_d)*180/(2*math.pi) - (a_rr_d + a_rl_d)*180/(2*math.pi)
+    vel_f = (a_fr_d + a_fl_d)/2
+    vel_r = (a_rr_d + a_rl_d)/2
+    return 180 * np.arctan((vel_f - vel_r)/wb) / np.pi
 
 def get_lateral_load_dist_axle(tire_load_r, tire_load_l):
     if (tire_load_r + tire_load_l) > 0:
