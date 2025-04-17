@@ -256,25 +256,28 @@ def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw, b_r, b_l):  # N, transfe
 
     return 9.80665 * usm * effective_tire_radius / tw
 
+def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base,
+                            pc_height_braking=0.1, pc_height_accel=0.4, drive_wheel_diam=0.66):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > 0:  # Braking Condition
+        return 9.80665 * sm/4 * (cm_height - pc_height_braking) / (wheel_base/2)
+    else:  # Accel Condition
+        return 9.80665 * sm/4 * (cm_height - pc_height_accel) / (wheel_base/2)
+
+def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base,
+                              pc_height_braking=0.1, pc_height_accel=0.4, drive_wheel_diam=0.66):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > 0:  # Braking Condition
+        return 9.80665 * sm/4 * (pc_height_braking) / (wheel_base/2)
+    else:  # Accel Condition
+        return 9.80665 * sm/4 * (pc_height_accel - drive_wheel_diam/2) / (wheel_base/2)
+
 #TODO: Finalize and draw out the below equations. Not done yet.
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end, b_fr, b_fl, b_rr, b_rl):  # N, transferred to outside OR lifted from One end tire
     
+    # Prototype formula dynamically affecting tire radii. Should be applied everywhere.
     effective_tire_radius_f = tire_diameter_f/2 - (b_fr + b_fl)/2
     effective_tire_radius_r = tire_diameter_r/2 - (b_rr + b_rl)/2
 
     return 9.80665 * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
-
-def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0.0:  # Braking Condition
-        return 9.80665 * sm/4 * (cm_height * (1-anti_dive)) / (wheel_base/2)
-    else:  # Accel Condition
-        return 9.80665 * sm/4 * (cm_height * (1-anti_squat)) / (wheel_base/2)
-
-def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base, drive_wheel_diam):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0.0:  # Braking Condition
-        return 9.80665 * sm/4 * (cm_height * (anti_dive)) / (wheel_base/2)
-    else:  # Accel Condition
-        return 9.80665 * sm/4 * (cm_height * (anti_squat)) / (wheel_base/2)
 
 def get_spring_disp(a, b, WS_motion_ratio):
     'Convert wheel-to-body displacement to spring displacement'
