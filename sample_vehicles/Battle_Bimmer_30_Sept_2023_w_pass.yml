@@ -40,13 +40,13 @@ parameters:
     - 90
     - 'lb'
   center_of_mass_height:
-    - 20
+    - 24
     - 'in'
   moment_of_inertia_about_cg_roll:
-    - 890000
+    - 890000  # From SW estimates 2020
     - 'lbs-in^2'
   moment_of_inertia_about_cg_pitch:
-    - 1600000
+    - 1600000  # From SW estimates 2020
     - 'lbs-in^2'
   roll_center_height_front:
     - 4.5
@@ -79,7 +79,7 @@ parameters:
     - 0.20
     - '-/-'
   anti-squat:
-    - 0.80
+    - 0.20
     - '-/-'
   tire_diameter_front:
     - 25.3
@@ -88,10 +88,10 @@ parameters:
     - 25.3
     - 'in'
   track_width_front:
-    - 64
+    - 63.5
     - 'in'
   track_width_rear:
-    - 63
+    - 61.5
     - 'in'
   wheel_base:
     - 107.3
@@ -103,7 +103,7 @@ parameters:
     - 450
     - 'lbf/in'
   spring_rate_r:
-    - 700
+    - 750
     - 'lbf/in'
   bump_stop_spring_rate_f:
     - 2000
@@ -112,17 +112,17 @@ parameters:
     - 2000
     - 'lbf/in'
   arb_rate_f:
-    - 225
+    - 160
     - 'lbf/in' #opposite wheel held static
   arb_rate_r:
     - 70
     - 'lbf/in' #opposite wheel held static
   tire_rate_f:
-    - 300000
-    - 'N/m'
+    - 1100
+    - 'lbf/in'
   tire_rate_r:
-    - 300000
-    - 'N/m'
+    - 1200
+    - 'lbf/in'
   slow_compression_damper_rate_f:
     - 3846 #500N @ 0.13m/s
     - 'N/(m/s)'
@@ -160,9 +160,15 @@ parameters:
     - 3485 #1150N @ 0.33m/s
     - 'N/(m/s)'
   max_suspension_compression_front:
-    - 0.75  # Must be taken FROM REST on level ground
+    - 0.75  # Must be taken FROM REST on level ground, taken at spring or damper
     - 'in'
   max_suspension_compression_rear:
-    - 2.5  # Must be taken FROM REST on level ground
+    - 1.5  # Must be taken FROM REST on level ground, taken at spring or damper
+    - 'in'
+  max_droop_front:
+    - 2
+    - 'in'
+  max_droop_rear:
+    - 4
     - 'in'
 ...
