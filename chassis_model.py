@@ -134,19 +134,15 @@ def solve_chassis_model(
                                                              state.b_rr, state.b_rl)
 
     # TODO: Need review, top priprity
-    long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
-    long_sm_geo_LT = G_long * f.LongLT_sm_geometric_1g_v2(G_long, self.sm, self.anti_dive, self.anti_squat, self.cm_height, self.wheel_base, self.tire_diam_r)
+    long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v3(G_long, self.sm, self.cm_height, self.wheel_base, self.nominal_engine_brake_G,
+                                                            self.pitch_center_height_braking, self.pitch_center_height_accel)
+    long_sm_geo_LT = G_long * f.LongLT_sm_geometric_1g_v3(G_long, self.sm, self.wheel_base, self.nominal_engine_brake_G,
+                                                          self.pitch_center_height_braking, self.pitch_center_height_accel, self.tire_diam_r)
     long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f,
                                                          state.b_fr, state.b_fl, state.b_rr, state.b_rl)
-
-    '''
-    trqRct_LT_lat = 
-    trqRct_LT_long = 
-    trqRct_LT_fr = 
-    trqRct_LT_fl = 
-    trqRct_LT_rr = 
-    trqRct_LT_rl = 
-    '''
+    long_LT_diff_trq = f.get_long_LT_diff_trq(G_Long=G_long, m=self.m, drive_wheel_diam=self.tire_diam_r,
+                                              wheel_base=self.wheel_base, nominal_engine_brake_G=self.nominal_engine_brake_G)
+    long_sm_elastic_LT += long_LT_diff_trq
 
     #  Load transfers from springs and dampers
     #TODO: Check K_ch implementation.

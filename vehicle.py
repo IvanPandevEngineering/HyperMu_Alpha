@@ -184,9 +184,9 @@ class HyperMuVehicle:
         self.cm_height = vpd['center_of_mass_height']
         self.rc_height_f = vpd['roll_center_height_front']
         self.rc_height_r = vpd['roll_center_height_rear']
-        self.pc_height_accel = vpd['pitch_center_height_accel']
-        self.pc_height_decel = vpd['pitch_center_height_decel']
-        self.pc_height_ic2cp = vpd['pitch_center_height_ic2cp']
+        self.pitch_center_height_accel = vpd['pitch_center_height_accel']
+        self.pitch_center_height_braking = vpd['pitch_center_height_braking']
+        self.pc_height_ic2cp = vpd['pitch_center_height_ic2cp']  # Still used for parallel axis theorem calcs, consider moving.
         self.anti_dive = vpd['anti-dive']
         self.anti_squat = vpd['anti-squat']
 
@@ -223,6 +223,8 @@ class HyperMuVehicle:
         self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
+        self.nominal_engine_brake_G = vpd['nominal_engine_brake_G']
+
         self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
         self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
         self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
@@ -243,8 +245,8 @@ class HyperMuVehicle:
         self.roll_tip_G = f.get_roll_tip_G(self.tw_f, self.tw_r, self.m_f, self.cm_height, self.m, self.df_f, self.df_r)
         self.aero_response = f.aero_platform_response(self.df_f, self.df_r, self.m_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
         self.LongLD_per_g = f.pitch_LongLD_per_g(self.cm_height, self.wheel_base, self.m, self.df_f, self.df_r)
-        self.pitch_gradient_accel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pc_height_accel, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.pitch_gradient_decel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pc_height_decel, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
+        self.pitch_gradient_accel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_accel, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
+        self.pitch_gradient_decel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_braking, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
         self.pitch_frequency = f.pitch_frquency(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
         self.pitch_damping_slow = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v)
         self.pitch_damping_fast = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v)

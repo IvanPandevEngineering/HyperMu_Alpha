@@ -2,8 +2,8 @@
 Copyright 2025 Ivan Pandev
 '''
 
-import math
 import numpy as np
+
 
 '''
 SECTION 1. Begin helper functions for analytical properties below:
@@ -256,19 +256,19 @@ def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw, b_r, b_l):  # N, transfe
 
     return 9.80665 * usm * effective_tire_radius / tw
 
-def LongLT_sm_elastic_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base,
-                            pc_height_braking=0.1, pc_height_accel=0.4, drive_wheel_diam=0.66):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0:  # Braking Condition
+def LongLT_sm_elastic_1g_v3(LongG, sm, cm_height, wheel_base, nominal_engine_brake_G,
+                            pc_height_braking, pc_height_accel):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > nominal_engine_brake_G:  # Braking Condition
         return 9.80665 * sm/4 * (cm_height - pc_height_braking) / (wheel_base/2)
     else:  # Accel Condition
         return 9.80665 * sm/4 * (cm_height - pc_height_accel) / (wheel_base/2)
 
-def LongLT_sm_geometric_1g_v2(LongG, sm, anti_dive, anti_squat, cm_height, wheel_base,
-                              pc_height_braking=0.1, pc_height_accel=0.4, drive_wheel_diam=0.66):  # N, transferred to outside OR lifted from ONE end tire
-    if LongG > 0:  # Braking Condition
+def LongLT_sm_geometric_1g_v3(LongG, sm, wheel_base, nominal_engine_brake_G,
+                              pc_height_braking, pc_height_accel, drive_tire_diam):  # N, transferred to outside OR lifted from ONE end tire
+    if LongG > nominal_engine_brake_G:  # Braking Condition
         return 9.80665 * sm/4 * (pc_height_braking) / (wheel_base/2)
     else:  # Accel Condition
-        return 9.80665 * sm/4 * (pc_height_accel - drive_wheel_diam/2) / (wheel_base/2)
+        return 9.80665 * sm/4 * (pc_height_accel - drive_tire_diam/2) / (wheel_base/2)
 
 #TODO: Finalize and draw out the below equations. Not done yet.
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end, b_fr, b_fl, b_rr, b_rl):  # N, transferred to outside OR lifted from One end tire
@@ -278,6 +278,12 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
     effective_tire_radius_r = tire_diameter_r/2 - (b_rr + b_rl)/2
 
     return 9.80665 * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
+
+def get_long_LT_diff_trq(G_Long, m, drive_wheel_diam, wheel_base, nominal_engine_brake_G):
+    '''Effects of engine torque, including engine braking, reacting through the differential, per ONE wheel.'''
+    G_Long = min(G_Long, nominal_engine_brake_G)  # Engine braking through differential
+    trq = G_Long*m*9.80655*drive_wheel_diam/2
+    return trq/(wheel_base*2)
 
 def get_spring_disp(a, b, WS_motion_ratio):
     'Convert wheel-to-body displacement to spring displacement'
@@ -395,3 +401,34 @@ def get_hysteresis_coef(Hy, a_d, b_d):
 
 def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
     return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
+
+'''
+SECTION 3. General helper functions.
+'''
+
+def fft_convert(series):
+    'return frequencies, normalized magnitudes of a time series from the shaker. Currently fixed at 1000hz'
+
+    #  Remove mean from series to prevent DC component 
+    series = series - np.mean(series)
+
+    #  Perform FFT transform
+    freqs = np.fft.fftfreq(len(series), 1 / 1000)
+    mags = np.abs(np.fft.fft(series))
+
+    #  Normalize to preserve comparability to time-domain values
+    #  Normalization by sqrt(len(N)) preserves amplitude, but not energy
+    mags_norm = mags / np.sqrt(len(series))
+
+    #  Apply fftshift to remove horizontal line when plotting
+    return  np.fft.fftshift(freqs), np.fft.fftshift(mags_norm)
+
+def get_RMS(series):
+    'return RMS of a time series from the shaker. Energy is a metric describing load variation.'
+
+    mags = np.fft.fft(series)
+
+    #  Normalized signal energy is useful for "work" calculations given other factors like displacement, etc...
+    signal_energy = np.sum(np.abs(mags)**2) / len(series)
+
+    return np.sqrt(signal_energy)

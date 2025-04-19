@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy.signal import bessel, butter, filtfilt
 
+import formulas as f
+
 # define standard dataframe format for multiple data generation functions
 COLUMNS_GLOBAL=['loggingTime(txt)',
                 'accelerometerAccelerationX(G)', 'accelerometerAccelerationY(G)', 'accelerometerAccelerationZ(G)',
@@ -56,8 +58,9 @@ def apply_filter(data, filter_type, smoothing_window_size):
 
 def yaw_rate_correction(data, pitch_installation_angle_deg):
 
-    live_pitch_angle = 10*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
+    live_pitch_angle = 2 * pitch_installation_angle_deg*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
 
+    # The one remaining thing to do here is to inject the simulated pitch angle for roll angle correction. What would that look like?
     data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
     
     return data
@@ -98,7 +101,8 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in.drop(columns='loggingTime(txt)')
 
     #select interesting time range
-    data_in = data_in[2400:4200]
+    data_in = data_in[2400:4200]  # Racing
+    # data_in = data_in[4200:6800]  # Control
 
     #set index to be picked up by interpolation function, drop duplicated time stamps
     data_in = data_in.set_index('datetime')
@@ -135,6 +139,9 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     #create new time and timestep columns
     data_in['time'] = data_in.index
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
+
+    print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
+    print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
 
     #create dataframe and drop nans one more time
     data = pd.DataFrame(list(zip(data_in['time'],
@@ -356,6 +363,9 @@ def get_init_empty():
         columns=COLUMNS_GLOBAL)
 
     return data
+
+def compare_force_functions(self, other):
+    return
 
 '''
 Begin functions for dev purposes, exploring telemetry data.
