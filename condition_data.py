@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.signal import bessel, butter, filtfilt
 
 import formulas as f
+import visualizer as vis
 
 # define standard dataframe format for multiple data generation functions
 COLUMNS_GLOBAL=['loggingTime(txt)',
@@ -51,8 +52,7 @@ def apply_filter(data, filter_type, smoothing_window_size):
         print('Applying lowpass filter (pandas rolling)...')
 
     else:
-        print('filter_type not recognized.')
-        return
+        print('filter_type argument not recognized. Returning unfiltered input.')
 
     return data.dropna(how='any')
 
@@ -364,13 +364,22 @@ def get_init_empty():
 
     return data
 
-def compare_force_functions(self, other):
+def SNR_analysis(signal_path, control_path, filter_type, scenario):
     '''
     Process signal.
     Process control.
+    Send to vis.
     Plot: 1. time-series with SNR, histograms with std-dev values, FFT plots with relative RMS
     Need: 1. start/end index in from-app function 2. plotting here
     '''
+
+    signal = from_sensor_log_iOS_app_unbiased(path=signal_path, filter_type=filter_type,
+            smoothing_window_size_ms=0, start_index=2400, end_index=4200)
+    control = from_sensor_log_iOS_app_unbiased(path=control_path, filter_type=filter_type,
+            smoothing_window_size_ms=0, start_index=4200, end_index=5000)
+
+    vis.SNR_analysis(signal=signal, control=control, scenario=scenario)
+
     return
 
 '''

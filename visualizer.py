@@ -7,35 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
+import formulas as f
+
 
 DISCLAIMER = str("This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user's own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2025 Ivan Pandev.")
-
-def fft_convert(series):
-    'return frequencies, normalized magnitudes of a time series from the shaker. Currently fixed at 1000hz'
-
-    #  Remove mean from series to prevent DC component 
-    series = series - np.mean(series)
-
-    #  Perform FFT transform
-    freqs = np.fft.fftfreq(len(series), 1 / 1000)
-    mags = np.abs(np.fft.fft(series))
-
-    #  Normalize to preserve comparability to time-domain values
-    #  Normalization by sqrt(len(N)) preserves amplitude, but not energy
-    mags_norm = mags / np.sqrt(len(series))
-
-    #  Apply fftshift to remove horizontal line when plotting
-    return  np.fft.fftshift(freqs), np.fft.fftshift(mags_norm)
-
-def get_RMS(series):
-    'return RMS of a time series from the shaker. Energy is a metric describing load variation.'
-
-    mags = np.fft.fft(series)
-
-    #  Normalized signal energy is useful for "work" calculations given other factors like displacement, etc...
-    signal_energy = np.sum(np.abs(mags)**2) / len(series)
-
-    return np.sqrt(signal_energy)
 
 def plot_basics(force_function, results, scenario):
 
@@ -52,10 +27,10 @@ def plot_basics(force_function, results, scenario):
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['motionPitch(rad)']*56, label='pitch (deg)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
+    #subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
+    #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['motionPitch(rad)']*56, label='pitch (deg)')
+    #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
+    #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
     subplots[0,0].set_ylabel('Function inputs (G, cm)')
     subplots[0,0].legend()
     subplots[0,0].grid(True)
@@ -63,14 +38,14 @@ def plot_basics(force_function, results, scenario):
     subplots[0,1].plot(force_function['loggingTime(txt)'], results['roll_angle_f'], label='roll angle front (deg)')
     subplots[0,1].plot(force_function['loggingTime(txt)'], results['roll_angle_r'], label='roll angle rear (deg)')
     subplots[0,1].plot(force_function['loggingTime(txt)'], results['pitch_angle'], label='pitch angle (deg)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_fr'], label='a_fr (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_fl'], label='a_fl (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_rr'], label='a_rr (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_rl'], label='a_rl (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_fr'], label='b_fr (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_fl'], label='b_fl (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_rr'], label='b_rr (m)')
-    subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_rl'], label='b_rl (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_fr'], label='a_fr (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_fl'], label='a_fl (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_rr'], label='a_rr (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['a_rl'], label='a_rl (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_fr'], label='b_fr (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_fl'], label='b_fl (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_rr'], label='b_rr (m)')
+    #subplots[0,1].plot(force_function['loggingTime(txt)'], results['b_rl'], label='b_rl (m)')
     subplots[0,1].set_ylabel('Chassis Attitude (deg)')
     subplots[0,1].legend()
     subplots[0,1].grid(True)
@@ -158,8 +133,8 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     subplots[0][1].grid(True)
 
     subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='Corrected pitch angle rate (deg/s)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['motionPitch(rad)']/3.14), label='pitch (deg)')
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationZ(rad/s)']/3.14)+.2, label='Yaw angle rate (deg/s)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], (force_function['motionPitch(rad)']), label='pitch (deg)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], (0.01*180*force_function['gyroRotationZ(rad/s)']/3.14), label='Yaw angle rate (deg/s)')
     #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded raw pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], -np.array(results['pitch_angle_rate']), label='predicted pitch angle rate (deg/s, f)')
     subplots[1][0].set_xlabel('Time')
@@ -377,37 +352,37 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')
 
-    subplots[0,2].plot(fft_convert(self['tire_load_fl'])[0], fft_convert(self['tire_load_fl'])[1], label='Self (fl)')
-    subplots[0,2].plot(fft_convert(other['tire_load_fl'])[0], fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='Other (fl)')
+    subplots[0,2].plot(f.fft_convert(self['tire_load_fl'])[0], f.fft_convert(self['tire_load_fl'])[1], label='Self (fl)')
+    subplots[0,2].plot(f.fft_convert(other['tire_load_fl'])[0], f.fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='Other (fl)')
     subplots[0,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_fl']):.3}\n Other RMS (N): {get_RMS(other['tire_load_fl']):.3}")
+    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_fl']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_fl']):.3}")
     subplots[0,2].legend()
     subplots[0,2].grid(True)
     subplots[0,2].set_xscale('log')
     subplots[0,2].set_xlim(left = None, right = 100)
 
-    subplots[0,3].plot(fft_convert(self['tire_load_fr'])[0], fft_convert(self['tire_load_fr'])[1], label='Self (fr)')
-    subplots[0,3].plot(fft_convert(other['tire_load_fr'])[0], fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='Other (fr)')
+    subplots[0,3].plot(f.fft_convert(self['tire_load_fr'])[0], f.fft_convert(self['tire_load_fr'])[1], label='Self (fr)')
+    subplots[0,3].plot(f.fft_convert(other['tire_load_fr'])[0], f.fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='Other (fr)')
     subplots[0,3].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_fr']):.3}\n Other RMS (N): {get_RMS(other['tire_load_fr']):.3}")
+    subplots[0,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_fr']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_fr']):.3}")
     subplots[0,3].legend()
     subplots[0,3].grid(True)
     subplots[0,3].set_xscale('log')
     subplots[0,3].set_xlim(left = None, right = 100)
 
-    subplots[1,2].plot(fft_convert(self['tire_load_rl'])[0], fft_convert(self['tire_load_rl'])[1], label='Self (rl)')
-    subplots[1,2].plot(fft_convert(other['tire_load_rl'])[0], fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='Other (rl)')
+    subplots[1,2].plot(f.fft_convert(self['tire_load_rl'])[0], f.fft_convert(self['tire_load_rl'])[1], label='Self (rl)')
+    subplots[1,2].plot(f.fft_convert(other['tire_load_rl'])[0], f.fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='Other (rl)')
     subplots[1,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_rl']):.3}\n Other RMS (N): {get_RMS(other['tire_load_rl']):.3}")
+    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_rl']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_rl']):.3}")
     subplots[1,2].legend()
     subplots[1,2].grid(True)
     subplots[1,2].set_xscale('log')
     subplots[1,2].set_xlim(left = None, right = 100)
 
-    subplots[1,3].plot(fft_convert(self['tire_load_rr'])[0], fft_convert(self['tire_load_rr'])[1], label='Self (rr)')
-    subplots[1,3].plot(fft_convert(other['tire_load_rr'])[0], fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='Other (rr)')
+    subplots[1,3].plot(f.fft_convert(self['tire_load_rr'])[0], f.fft_convert(self['tire_load_rr'])[1], label='Self (rr)')
+    subplots[1,3].plot(f.fft_convert(other['tire_load_rr'])[0], f.fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='Other (rr)')
     subplots[1,3].set_ylabel('Normalized Amplitude (N)')
-    subplots[1,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['tire_load_rr']):.3}\n Other RMS (N): {get_RMS(other['tire_load_rr']):.3}")
+    subplots[1,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_rr']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_rr']):.3}")
     subplots[1,3].legend()
     subplots[1,3].grid(True)
     subplots[1,3].set_xscale('log')
@@ -455,32 +430,90 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     subplots[2,0].grid(True)
     subplots[2,0].set_yscale('log')
 
-    subplots[0,1].plot(fft_convert(self['lateral_load_dist_f'])[0], fft_convert(self['lateral_load_dist_f'])[1], label='Self')
-    subplots[0,1].plot(fft_convert(other['lateral_load_dist_f'])[0], fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Other')
+    subplots[0,1].plot(f.fft_convert(self['lateral_load_dist_f'])[0], f.fft_convert(self['lateral_load_dist_f'])[1], label='Self')
+    subplots[0,1].plot(f.fft_convert(other['lateral_load_dist_f'])[0], f.fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Other')
     subplots[0,1].set_ylabel('Norm. Lat. Load % Amp (Front)')
-    subplots[0,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_f']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_f']):.3}")
+    subplots[0,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_f']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_f']):.3}")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_xscale('log')
     subplots[0,1].set_xlim(left = None, right = 100)
 
-    subplots[1,1].plot(fft_convert(self['lateral_load_dist_r'])[0], fft_convert(self['lateral_load_dist_r'])[1], label='Self')
-    subplots[1,1].plot(fft_convert(other['lateral_load_dist_r'])[0], fft_convert(other['lateral_load_dist_r'])[1], alpha = 0.7, label='Other')
+    subplots[1,1].plot(f.fft_convert(self['lateral_load_dist_r'])[0], f.fft_convert(self['lateral_load_dist_r'])[1], label='Self')
+    subplots[1,1].plot(f.fft_convert(other['lateral_load_dist_r'])[0], f.fft_convert(other['lateral_load_dist_r'])[1], alpha = 0.7, label='Other')
     subplots[1,1].set_ylabel('Norm. Lat. Load % Amp (Rear)')
-    subplots[1,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_r']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_r']):.3}")
+    subplots[1,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_r']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_r']):.3}")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_xscale('log')
     subplots[1,1].set_xlim(left = None, right = 100)
 
-    subplots[2,1].plot(fft_convert(self['lateral_load_dist_ratio'])[0], fft_convert(self['lateral_load_dist_ratio'])[1], label='Self')
-    subplots[2,1].plot(fft_convert(other['lateral_load_dist_ratio'])[0], fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Other')
+    subplots[2,1].plot(f.fft_convert(self['lateral_load_dist_ratio'])[0], f.fft_convert(self['lateral_load_dist_ratio'])[1], label='Self')
+    subplots[2,1].plot(f.fft_convert(other['lateral_load_dist_ratio'])[0], f.fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Other')
     subplots[2,1].set_ylabel('Norm. Lat. Load Ratio % Amp (Front)')
-    subplots[2,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {get_RMS(self['lateral_load_dist_ratio']):.3}\n Other RMS (N): {get_RMS(other['lateral_load_dist_ratio']):.3}")
+    subplots[2,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_ratio']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_ratio']):.3}")
     subplots[2,1].legend()
     subplots[2,1].grid(True)
     subplots[2,1].set_xscale('log')
     subplots[2,1].set_xlim(left = None, right = 100)
+
+    fig.tight_layout()
+    plt.show()
+
+    return
+
+def SNR_analysis(signal, control, scenario):
+
+    print('Graphing...')
+
+    plt.style.use('ggplot')
+    mpl.rcParams['axes.labelsize'] = 10
+    mpl.rcParams['legend.fontsize'] = 8
+    mpl.rcParams['xtick.labelsize'] = 8
+    mpl.rcParams['ytick.labelsize'] = 8
+    fig, subplots = plt.subplots(2, 3, figsize=(14, 8))
+    fig.suptitle(f'Signal-to-Noise Ratio Analysis, {scenario}', fontsize=14)
+    fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
+
+    subplots[0,0].plot(signal['gyroRotationY(rad/s)'], label='Signal (rad/s)')
+    subplots[0,0].plot(control['gyroRotationY(rad/s)'], label='Control (rad/s)')
+
+    subplots[0,1].hist(signal['gyroRotationY(rad/s)'], bins=50, label='Self')
+    subplots[0,1].hist(control['gyroRotationY(rad/s)'], bins=50, alpha = 0.8, label='Other')
+    subplots[0,1].set_ylabel('Count')
+    subplots[0,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(signal['gyroRotationY(rad/s)']):.4}\n Other Std Dev: {np.std(control['gyroRotationY(rad/s)']):.4}")
+    subplots[0,1].legend()
+    subplots[0,1].grid(True)
+    subplots[0,1].set_yscale('log')
+
+    subplots[0,2].plot(f.fft_convert(signal['gyroRotationY(rad/s)'])[0], f.fft_convert(signal['gyroRotationY(rad/s)'])[1], label='Self')
+    subplots[0,2].plot(f.fft_convert(control['gyroRotationY(rad/s)'])[0], f.fft_convert(control['gyroRotationY(rad/s)'])[1], alpha = 0.7, label='Other')
+    subplots[0,2].set_ylabel('Norm. Lat. Load % Amp (Front)')
+    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(signal['gyroRotationY(rad/s)']):.3}\n Other RMS (N): {f.get_RMS(control['gyroRotationY(rad/s)']):.3}")
+    subplots[0,2].legend()
+    subplots[0,2].grid(True)
+    subplots[0,2].set_xscale('log')
+    subplots[0,2].set_xlim(left = None, right = 100)
+    
+    subplots[1,0].plot(signal['gyroRotationX(rad/s)'], label='Signal (rad/s)')
+    subplots[1,0].plot(control['gyroRotationX(rad/s)'], label='Control (rad/s)')
+
+    subplots[1,1].hist(signal['gyroRotationX(rad/s)'], bins=50, label='Self')
+    subplots[1,1].hist(control['gyroRotationX(rad/s)'], bins=50, alpha = 0.8, label='Other')
+    subplots[1,1].set_ylabel('Count')
+    subplots[1,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(signal['gyroRotationX(rad/s)']):.4}\n Other Std Dev: {np.std(control['gyroRotationX(rad/s)']):.4}")
+    subplots[1,1].legend()
+    subplots[1,1].grid(True)
+    subplots[1,1].set_yscale('log')
+
+    subplots[1,2].plot(f.fft_convert(signal['gyroRotationX(rad/s)'])[0], f.fft_convert(signal['gyroRotationX(rad/s)'])[1], label='Self')
+    subplots[1,2].plot(f.fft_convert(control['gyroRotationX(rad/s)'])[0], f.fft_convert(control['gyroRotationX(rad/s)'])[1], alpha = 0.7, label='Other')
+    subplots[1,2].set_ylabel('Norm. Lat. Load % Amp (Front)')
+    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(signal['gyroRotationX(rad/s)']):.3}\n Other RMS (N): {f.get_RMS(control['gyroRotationX(rad/s)']):.3}")
+    subplots[1,2].legend()
+    subplots[1,2].grid(True)
+    subplots[1,2].set_xscale('log')
+    subplots[1,2].set_xlim(left = None, right = 100)
 
     fig.tight_layout()
     plt.show()
