@@ -76,7 +76,13 @@ def get_force_function(**kwargs):
         )
         scenario = 'Unit Test: One-Wheel Warp Offset'
     else:
-        force_function = cd.from_sensor_log_iOS_app_unbiased(kwargs['replay_src'], kwargs['smoothing_window_size_ms'])
+        force_function = cd.from_sensor_log_iOS_app_unbiased(
+            kwargs['replay_src'],
+            kwargs['filter_type'],
+            kwargs['smoothing_window_size_ms'],
+            kwargs['start_index'],
+            kwargs['end_index'],
+        )
         scenario = 'G-Replay from Telemetry'
 
     return force_function, scenario

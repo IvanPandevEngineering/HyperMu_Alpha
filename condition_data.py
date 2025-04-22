@@ -72,14 +72,14 @@ def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, samp
 
     return filtfilt(b, a, signal)
 
-def bidirectional_bessel_lowpass(signal, order = 4, cutoff_freq = 0.7, sampling_freq = 1000):
+def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 0.7, sampling_freq = 1000):
 
     nyquist = sampling_freq / 2
     b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
 
     return filtfilt(b, a, signal)
 
-def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
+def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window_size_ms:int, start_index:int, end_index:int):
 
     print('Converting file to dataframe...')
     data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)',
@@ -101,7 +101,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
     data_in = data_in.drop(columns='loggingTime(txt)')
 
     #select interesting time range
-    data_in = data_in[2400:4200]  # Racing
+    data_in = data_in[start_index:end_index]  # Racing
     # data_in = data_in[4200:6800]  # Control
 
     #set index to be picked up by interpolation function, drop duplicated time stamps
@@ -123,7 +123,7 @@ def from_sensor_log_iOS_app_unbiased(path: str, smoothing_window_size_ms:int):
 
     data_in = apply_filter(
         data = data_in,
-        filter_type = 'bidirectional_bessel',
+        filter_type = filter_type,
         smoothing_window_size = smoothing_window_size_ms
     )
 
@@ -365,6 +365,12 @@ def get_init_empty():
     return data
 
 def compare_force_functions(self, other):
+    '''
+    Process signal.
+    Process control.
+    Plot: 1. time-series with SNR, histograms with std-dev values, FFT plots with relative RMS
+    Need: 1. start/end index in from-app function 2. plotting here
+    '''
     return
 
 '''
