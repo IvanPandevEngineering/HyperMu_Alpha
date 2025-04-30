@@ -26,11 +26,11 @@ def plot_basics(force_function, results, scenario):
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
     #subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['motionPitch(rad)']*56, label='pitch (deg)')
-    #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
-    #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_rr']*-100, label='road surface height (cm, rr)')
     subplots[0,0].set_ylabel('Function inputs (G, cm)')
     subplots[0,0].legend()
     subplots[0,0].grid(True)
@@ -125,18 +125,18 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     r_squared = r_value ** 2
 
     subplots[0][1].scatter(roll_angle_rate_avg, (180*force_function['gyroRotationY(rad/s)']/3.14), label='(deg/s)', s=10)
-    subplots[0][1].plot(np.linspace(-10, 10, 3), slope*np.linspace(-8, 8, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
-    subplots[0][1].plot([-10,10], [-10,10], color='green', label='unity')
+    subplots[0][1].plot(np.linspace(-6, 6, 3), slope*np.linspace(-6, 6, 3)+intercept, color='orange', label=f'Linear fit, R-sq: {r_squared:.3f}, Slope: {slope:.3f}')
+    subplots[0][1].plot([-6,6], [-6,6], color='green', label='unity')
     subplots[0][1].legend()
     subplots[0][1].set_xlabel('Predicted Roll Rate (deg/s)')
     subplots[0][1].set_ylabel('Recorded Roll Rate (deg/s)')
     subplots[0][1].grid(True)
 
     subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='Corrected pitch angle rate (deg/s)')
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], (force_function['motionPitch(rad)']), label='pitch (deg)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14), label='Recorded pitch rate (deg/s)')
     subplots[1][0].plot(force_function['loggingTime(txt)'], (0.01*180*force_function['gyroRotationZ(rad/s)']/3.14), label='Yaw angle rate (deg/s)')
-    #subplots[1][0].plot(force_function['loggingTime(txt)'], (180*force_function['gyroRotationX(rad/s)']/3.14)+.2, label='Recorded raw pitch angle rate (deg/s)')
-    subplots[1][0].plot(force_function['loggingTime(txt)'], -np.array(results['pitch_angle_rate']), label='predicted pitch angle rate (deg/s, f)')
+    #subplots[1][0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationY(G)'], label='Long Accel (G)')
+    subplots[1][0].plot(force_function['loggingTime(txt)'], -np.array(results['pitch_angle_rate']), label='predicted pitch angle rate (deg/s)')
     subplots[1][0].set_xlabel('Time')
     subplots[1][0].set_ylabel('Pitch Rate (deg/s)')
     subplots[1][0].legend()
@@ -146,8 +146,8 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     r_squared_p = r_value_p ** 2
 
     subplots[1][1].scatter(-np.array(results['pitch_angle_rate']), (180*force_function['gyroRotationX_corrected(rad/s)']/3.14), label='(deg/s)', s=10)
-    subplots[1][1].plot(np.linspace(-10, 10, 3), slope_p*np.linspace(-8, 8, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
-    subplots[1][1].plot([-10,10], [-10,10], color='green', label='unity')
+    subplots[1][1].plot(np.linspace(-6, 6, 3), slope_p*np.linspace(-6, 6, 3)+intercept_p, color='orange', label=f'Linear fit, R-sq: {r_squared_p:.3f}, Slope: {slope_p:.3f}')
+    subplots[1][1].plot([-6,6], [-6,6], color='green', label='unity')
     subplots[1][1].legend()
     subplots[1][1].set_xlabel('Predicted Pitch Rate (deg/s)')
     subplots[1][1].set_ylabel('Recorded Pitch Rate (deg/s)')
@@ -477,6 +477,7 @@ def SNR_analysis(signal, control, scenario):
 
     subplots[0,0].plot(signal['gyroRotationY(rad/s)'], label='Signal (rad/s)')
     subplots[0,0].plot(control['gyroRotationY(rad/s)'], label='Control (rad/s)')
+    subplots[0,0].plot(control['accelerometerAccelerationX(G)'], label='Control Lateral (G)')
 
     subplots[0,1].hist(signal['gyroRotationY(rad/s)'], bins=50, label='Self')
     subplots[0,1].hist(control['gyroRotationY(rad/s)'], bins=50, alpha = 0.8, label='Other')
@@ -497,6 +498,7 @@ def SNR_analysis(signal, control, scenario):
     
     subplots[1,0].plot(signal['gyroRotationX(rad/s)'], label='Signal (rad/s)')
     subplots[1,0].plot(control['gyroRotationX(rad/s)'], label='Control (rad/s)')
+    subplots[1,0].plot(control['accelerometerAccelerationY(G)'], label='Control Lateral (G)')
 
     subplots[1,1].hist(signal['gyroRotationX(rad/s)'], bins=50, label='Self')
     subplots[1,1].hist(control['gyroRotationX(rad/s)'], bins=50, alpha = 0.8, label='Other')
