@@ -53,7 +53,6 @@ def plot_basics(force_function, results, scenario):
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_fr'], label='spring displacement (m, fr)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_fl'], label='spring displacement (m, fl)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rr'], label='spring displacement (m, rr)')
-    subplots[1,0].plot(force_function['loggingTime(txt)'], results['damper_disp_rr'], label='damper displacement (m, rr)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rl'], label='spring displacement (m, rl)')
     subplots[1,0].set_ylabel('Suspesion Displacements (m)')
     subplots[1,0].legend()
@@ -323,7 +322,9 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Self (fl)')
     subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Other (fl)')
     subplots[0,0].set_ylabel('Count')
-    subplots[0,0].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_fl']):.4}\n Other Std Dev: {np.std(other['tire_load_fl']):.4}")
+    subplots[0,0].set_xlabel(f"""Tire Load (N)
+Self: x\u0304:{np.mean(self['tire_load_fl']):.0f}, \u03C3:{np.std(self['tire_load_fl']):.0f}
+Other: x\u0304:{np.mean(other['tire_load_fl']):.0f}, \u03C3:{np.std(other['tire_load_fl']):.0f}""")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
@@ -331,7 +332,9 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     subplots[0,1].hist(self['tire_load_fr'], bins=50, label='Self (fr)')
     subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='Other (fr)')
     subplots[0,1].set_ylabel('Count')
-    subplots[0,1].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_fr']):.4}\n Other Std Dev: {np.std(other['tire_load_fr']):.4}")
+    subplots[0,1].set_xlabel(f"""Tire Load (N)
+Self: x\u0304:{np.mean(self['tire_load_fr']):.0f}, \u03C3:{np.std(self['tire_load_fr']):.0f}
+Other: x\u0304:{np.mean(other['tire_load_fr']):.0f}, \u03C3:{np.std(other['tire_load_fr']):.0f}""")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_yscale('log')
@@ -339,7 +342,9 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     subplots[1,0].hist(self['tire_load_rl'], bins=50, label='Self (rl)')
     subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='Other (rl)')
     subplots[1,0].set_ylabel('Count')
-    subplots[1,0].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_rl']):.4}\n Other Std Dev: {np.std(other['tire_load_rl']):.4}")
+    subplots[1,0].set_xlabel(f"""Tire Load (N)
+Self: x\u0304:{np.mean(self['tire_load_rl']):.0f}, \u03C3:{np.std(self['tire_load_rl']):.0f}
+Self: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_load_rl']):.0f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
@@ -347,7 +352,9 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     subplots[1,1].hist(self['tire_load_rr'], bins=50, label='Self (rr)')
     subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='Other (rr)')
     subplots[1,1].set_ylabel('Count')
-    subplots[1,1].set_xlabel(f"Tire Load (N)\n Self Std Dev: {np.std(self['tire_load_rr']):.4}\n Other Std Dev: {np.std(other['tire_load_rr']):.4}")
+    subplots[1,1].set_xlabel(f"""Tire Load (N)
+Self: x\u0304:{np.mean(self['tire_load_rr']):.0f}, \u03C3:{np.std(self['tire_load_rr']):.0f}
+Self: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_load_rr']):.0f}""")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')
@@ -402,14 +409,16 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     mpl.rcParams['legend.fontsize'] = 8
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
-    fig, subplots = plt.subplots(3, 2, figsize=(14, 8))
+    fig, subplots = plt.subplots(3, 2, figsize=(12, 8))
     fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Self')
     subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Other')
     subplots[0,0].set_ylabel('Count')
-    subplots[0,0].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(self['lateral_load_dist_f']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_f']):.4}")
+    subplots[0,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Front)
+Self: x\u0304:{np.mean(self['lateral_load_dist_f']):.2f}, \u03C3:{np.std(self['lateral_load_dist_f']):.2f}
+Self: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other['lateral_load_dist_f']):.2f}""")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
@@ -417,7 +426,9 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     subplots[1,0].hist(self['lateral_load_dist_r'], bins=50, label='Self')
     subplots[1,0].hist(other['lateral_load_dist_r'], bins=50, alpha = 0.7, label='Other')
     subplots[1,0].set_ylabel('Count')
-    subplots[1,0].set_xlabel(f"Lateral Load Distribution (Outer %, Rear)\n Self Std Dev: {np.std(self['lateral_load_dist_r']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_r']):.4}")
+    subplots[1,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Rear)
+Self: x\u0304:{np.mean(self['lateral_load_dist_r']):.2f}, \u03C3:{np.std(self['lateral_load_dist_r']):.2f}
+Self: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other['lateral_load_dist_r']):.2f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
@@ -425,7 +436,9 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     subplots[2,0].hist(self['lateral_load_dist_ratio'], bins=50, label='Self')
     subplots[2,0].hist(other['lateral_load_dist_ratio'], bins=50, alpha = 0.7, label='Other')
     subplots[2,0].set_ylabel('Count')
-    subplots[2,0].set_xlabel(f"Lateral Load Distribution Ratio (% Front)\n Self Std Dev: {np.std(self['lateral_load_dist_ratio']):.4}\n Other Std Dev: {np.std(other['lateral_load_dist_ratio']):.4}")
+    subplots[2,0].set_xlabel(f"""Lateral Load Distribution Ratio (% Front)
+Self: x\u0304:{np.mean(self['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(self['lateral_load_dist_ratio']):.2f}
+Self: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(other['lateral_load_dist_ratio']):.2f}""")
     subplots[2,0].legend()
     subplots[2,0].grid(True)
     subplots[2,0].set_yscale('log')
