@@ -230,6 +230,7 @@ class HyperMuVehicle:
         self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
         self.nominal_engine_brake_G = vpd['nominal_engine_brake_G']
+        self.differential_ratio = vpd['differential_ratio']
 
         self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
         self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
@@ -243,6 +244,7 @@ class HyperMuVehicle:
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
         self.I_pitch_at_cg = vpd['moment_of_inertia_about_cg_pitch']
+        #TODO: Review
         self.I_pitch = f.parallel_axis_theorem(self.I_pitch_at_cg, self.sm, f.get_I_pitch_offset(self.cm_height, self.pc_height_ic2cp, self.sm_f, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r))
 
         self.set_init_state(replay_src='init')
@@ -331,6 +333,8 @@ class HyperMuVehicle:
 
     def set_init_state(self, **kwargs):
 
+        print('Solving vehicle model initial state.')
+
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
         self.init_a_fr = shaker_results['a_fr'][-1]
         self.init_a_fl = shaker_results['a_fl'][-1]
@@ -361,7 +365,7 @@ class HyperMuVehicle:
         for var in model.state_for_plotting._fields:
             graphing_dict[f'{var}']=[]
 
-        print('Starting RK4 solver for G-replay...')
+        print('Starting RK4 solver...')
         for i, row in force_function.iterrows():
 
             state, graphing_vars = RK4.RK4_step(

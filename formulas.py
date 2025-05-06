@@ -280,10 +280,17 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
     return 9.80665 * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
 
 def get_long_LT_diff_trq(G_Long, m, drive_wheel_diam, wheel_base, nominal_engine_brake_G):
-    '''Effects of engine torque, including engine braking, reacting through the differential, per ONE wheel.'''
-    G_Long = min(G_Long, nominal_engine_brake_G)  # Engine braking through differential
-    trq = G_Long*m*9.80655*drive_wheel_diam/2
-    return trq/(wheel_base*2)
+    '''Effects of engine torque, including engine braking, reacting through the differential mounts longitudinally, per ONE wheel.'''
+    G_Long = min(G_Long, nominal_engine_brake_G)  # Accel Gs are recorded negative. Engine braking is slightly positive.
+    trq_half_shafts = G_Long*m*9.80655*drive_wheel_diam/2
+    return trq_half_shafts/(wheel_base*2)
+
+def get_lat_LT_diff_trq(G_Long, m, drive_wheel_diam, tw, nominal_engine_brake_G, diff_ratio):
+    '''Effects of engine torque, including engine braking, reacting through the engine mounts laterally, per ONE wheel.'''
+    G_Long = min(G_Long, nominal_engine_brake_G)  # Accel Gs are recorded negative. Engine braking is slightly positive.
+    trq_half_shafts = G_Long*m*9.80655*drive_wheel_diam/2
+    trq_driveshaft = trq_half_shafts/diff_ratio
+    return trq_driveshaft/(tw*2)
 
 def get_spring_disp(a, b, WS_motion_ratio):
     'Convert wheel-to-body displacement to spring displacement'

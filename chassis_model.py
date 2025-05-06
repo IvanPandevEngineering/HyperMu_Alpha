@@ -133,19 +133,26 @@ def solve_chassis_model(
     lat_usm_geo_LT_r = G_lat * f.LatLT_usm_geometric_1g_axle(self.usm_r, self.tire_diam_r, self.tw_r,
                                                              state.b_rr, state.b_rl)
 
-    # TODO: Need review, top priprity
     long_sm_elastic_LT = G_long * f.LongLT_sm_elastic_1g_v3(G_long, self.sm, self.cm_height, self.wheel_base, self.nominal_engine_brake_G,
                                                             self.pitch_center_height_braking, self.pitch_center_height_accel)
     long_sm_geo_LT = G_long * f.LongLT_sm_geometric_1g_v3(G_long, self.sm, self.wheel_base, self.nominal_engine_brake_G,
                                                           self.pitch_center_height_braking, self.pitch_center_height_accel, self.tire_diam_r)
     long_usm_geo_LT = G_long * f.LongLT_usm_geometric_1g(self.usm_f, self.usm_r, self.tire_diam_f, self.tire_diam_r, self.wheel_base_f,
                                                          state.b_fr, state.b_fl, state.b_rr, state.b_rl)
+    
+    #  Load transfers from engine torque reacted at the motor mounts and differential mounts
     long_LT_diff_trq = f.get_long_LT_diff_trq(G_Long=G_long, m=self.m, drive_wheel_diam=self.tire_diam_r,
                                               wheel_base=self.wheel_base, nominal_engine_brake_G=self.nominal_engine_brake_G)
-    long_sm_elastic_LT += long_LT_diff_trq
+    lat_LT_diff_trq_f = f.get_lat_LT_diff_trq(G_Long=G_long, m=self.m, drive_wheel_diam=self.tire_diam_r,
+                                              tw=self.tw_f, nominal_engine_brake_G=self.nominal_engine_brake_G, diff_ratio=self.differential_ratio)
+    lat_LT_diff_trq_r = f.get_lat_LT_diff_trq(G_Long=G_long, m=self.m, drive_wheel_diam=self.tire_diam_r,
+                                              tw=self.tw_r, nominal_engine_brake_G=self.nominal_engine_brake_G, diff_ratio=self.differential_ratio)
 
-    #  Load transfers from springs and dampers
-    #TODO: Check K_ch implementation.
+    long_sm_elastic_LT += long_LT_diff_trq
+    lat_sm_elastic_LT_f += lat_LT_diff_trq_f
+    lat_sm_elastic_LT_r += lat_LT_diff_trq_r
+
+    #  Load transfers from torisonal rigidity
     chassis_flex_LT_f,  chassis_flex_LT_r = f.get_chassis_flex_LT(
         self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f, self.tw_r
     )
