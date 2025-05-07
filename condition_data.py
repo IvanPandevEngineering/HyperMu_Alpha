@@ -13,7 +13,7 @@ COLUMNS_GLOBAL=['loggingTime(txt)',
                 'c_fr', 'c_fl', 'c_rr', 'c_rl',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
-                'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)']
+                'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)', 'est_speed(mph)']
 
 def custom_smooth(array, rounds):
     
@@ -30,6 +30,7 @@ def apply_filter(data, filter_type, smoothing_window_size):
         data['motionRotationRateY(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateY(rad/s)'])
         data['motionRotationRateX(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateX(rad/s)'])
         data['motionRotationRateZ(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateZ(rad/s)'])
+        data['est_speed_mph'] = bidirectional_bessel_lowpass(data['est_speed_mph'])
         data = data.dropna(how='any')
         print('Applying lowpass filter (bessel_bidirectional)...')
     
@@ -64,7 +65,8 @@ def yaw_rate_correction(data, pitch_installation_angle_deg):
     #data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + abs(0.28*data['motionRotationRateZ(rad/s)'])**2
     
     data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
-    
+    #TODO: APPLY LATERALLY AS WELL???
+
     return data
 
 def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, sampling_freq = 1000):
@@ -130,6 +132,9 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
     data_in = data_in.dropna(how='any')
 
+    data_in['est_speed_mph'] = np.cumsum(
+        0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000)) * 2.23694 # convert to mph
+
     data_in = apply_filter(
         data = data_in,
         filter_type = filter_type,
@@ -151,6 +156,7 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in['time'] = data_in.index
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
 
+
     print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
     print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
 
@@ -169,7 +175,8 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
                                  data_in['motionRotationRateX(rad/s)'],
                                  data_in['motionRotationRateZ(rad/s)'],
                                  data_in['motionRotationRateZ_diff(rad/s)'],
-                                 data_in['gyroRotationX_corrected(rad/s)'])), \
+                                 data_in['gyroRotationX_corrected(rad/s)'],
+                                 data_in['est_speed_mph'])), \
         columns=COLUMNS_GLOBAL)
     
     return data.dropna(how='any').reset_index(drop=True)
@@ -353,13 +360,14 @@ def get_init_empty():
     control_array_yaw_rate = np.array([0.0 for x in range(time_res * timespan)])
     control_array_pitch_rate_corrected = np.array([0.0 for x in range(time_res * timespan)])
     control_array_pitch_accel_corrected = np.array([0.0 for x in range(time_res * timespan)])
+    empty = np.array([0.0 for x in range(time_res * timespan)])
 
     data = pd.DataFrame(list(zip(time_array, G_lat_array, G_long_array, control_array_Gz,
         pitch_array,
         c_fr_array, c_fl_array, c_rr_array, c_rl_array,
         dt_array,
         control_array_roll_rate, control_array_pitch_rate, control_array_yaw_rate,
-        control_array_pitch_rate_corrected, control_array_pitch_accel_corrected)),
+        control_array_pitch_rate_corrected, control_array_pitch_accel_corrected, empty)),
         columns=COLUMNS_GLOBAL)
 
     return data
