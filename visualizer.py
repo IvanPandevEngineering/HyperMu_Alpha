@@ -322,6 +322,8 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
 
     subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Self (fl)')
     subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Other (fl)')
+    subplots[0,0].axvline(x=np.mean(self['tire_load_fl']), color='orange', linestyle='dashed', label='Self Mean Load (fl)')
+    subplots[0,0].axvline(x=np.mean(other['tire_load_fl']), color='blue', linestyle='dashed', label='Other Mean Load (fl)')
     subplots[0,0].set_ylabel('Count')
     subplots[0,0].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_fl']):.0f}, \u03C3:{np.std(self['tire_load_fl']):.0f}
@@ -332,6 +334,8 @@ Other: x\u0304:{np.mean(other['tire_load_fl']):.0f}, \u03C3:{np.std(other['tire_
 
     subplots[0,1].hist(self['tire_load_fr'], bins=50, label='Self (fr)')
     subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='Other (fr)')
+    subplots[0,1].axvline(x=np.mean(self['tire_load_fr']), color='orange', linestyle='dashed', label='Self Mean Load (fr)')
+    subplots[0,1].axvline(x=np.mean(other['tire_load_fr']), color='blue', linestyle='dashed', label='Other Mean Load (fr)')
     subplots[0,1].set_ylabel('Count')
     subplots[0,1].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_fr']):.0f}, \u03C3:{np.std(self['tire_load_fr']):.0f}
@@ -342,6 +346,8 @@ Other: x\u0304:{np.mean(other['tire_load_fr']):.0f}, \u03C3:{np.std(other['tire_
 
     subplots[1,0].hist(self['tire_load_rl'], bins=50, label='Self (rl)')
     subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='Other (rl)')
+    subplots[1,0].axvline(x=np.mean(self['tire_load_rl']), color='orange', linestyle='dashed', label='Self Mean Load (rl)')
+    subplots[1,0].axvline(x=np.mean(other['tire_load_rl']), color='blue', linestyle='dashed', label='Other Mean Load (rl)')
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_rl']):.0f}, \u03C3:{np.std(self['tire_load_rl']):.0f}
@@ -352,6 +358,8 @@ Self: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_l
 
     subplots[1,1].hist(self['tire_load_rr'], bins=50, label='Self (rr)')
     subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='Other (rr)')
+    subplots[1,1].axvline(x=np.mean(self['tire_load_rr']), color='orange', linestyle='dashed', label='Self Mean Load (rr))')
+    subplots[1,1].axvline(x=np.mean(other['tire_load_rr']), color='blue', linestyle='dashed', label='Other Mean Load (rr)')
     subplots[1,1].set_ylabel('Count')
     subplots[1,1].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_rr']):.0f}, \u03C3:{np.std(self['tire_load_rr']):.0f}
@@ -416,6 +424,8 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
 
     subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Self')
     subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Other')
+    subplots[0,0].axvline(x=np.mean(self['lateral_load_dist_f']), color='orange', linestyle='dashed', label='Self Mean')
+    subplots[0,0].axvline(x=np.mean(other['lateral_load_dist_f']), color='blue', linestyle='dashed', label='Other Mean')
     subplots[0,0].set_ylabel('Count')
     subplots[0,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Front)
 Self: x\u0304:{np.mean(self['lateral_load_dist_f']):.2f}, \u03C3:{np.std(self['lateral_load_dist_f']):.2f}
@@ -426,6 +436,8 @@ Self: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other[
 
     subplots[1,0].hist(self['lateral_load_dist_r'], bins=50, label='Self')
     subplots[1,0].hist(other['lateral_load_dist_r'], bins=50, alpha = 0.7, label='Other')
+    subplots[1,0].axvline(x=np.mean(self['lateral_load_dist_r']), color='orange', linestyle='dashed', label='Self Mean')
+    subplots[1,0].axvline(x=np.mean(other['lateral_load_dist_r']), color='blue', linestyle='dashed', label='Other Mean')
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Rear)
 Self: x\u0304:{np.mean(self['lateral_load_dist_r']):.2f}, \u03C3:{np.std(self['lateral_load_dist_r']):.2f}
@@ -436,6 +448,8 @@ Self: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other[
 
     subplots[2,0].hist(self['lateral_load_dist_ratio'], bins=50, label='Self')
     subplots[2,0].hist(other['lateral_load_dist_ratio'], bins=50, alpha = 0.7, label='Other')
+    subplots[2,0].axvline(x=np.mean(self['lateral_load_dist_ratio']), color='orange', linestyle='dashed', label='Self Mean')
+    subplots[2,0].axvline(x=np.mean(other['lateral_load_dist_ratio']), color='blue', linestyle='dashed', label='Other Mean')
     subplots[2,0].set_ylabel('Count')
     subplots[2,0].set_xlabel(f"""Lateral Load Distribution Ratio (% Front)
 Self: x\u0304:{np.mean(self['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(self['lateral_load_dist_ratio']):.2f}
