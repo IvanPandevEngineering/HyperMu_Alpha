@@ -5,22 +5,33 @@ number: 199 XP
 class: SCCA Solo II XP-Class
 driver: Ivan Pandev
 driver_mass: 147 lbs
+# All parameters' fidelities are rated as follows:
+# MEASURED:
+# ESTIMATED:
+# PROVIDED:
+# PLACEHOLDER:
+# N/A:
 parameters:
   test_lat_g:
     - 1.4
     - 'g'
-  test_downforce_front:
+  reference_downforce_speed:
     - 60
+    - 'mph'
+  reference_downforce_front:
+    - 55
     - 'lbf'
-  test_downforce_rear:
+  reference_downforce_rear:
     - 70
     - 'lbf'
-  corner_mass_fr:
+  corner_mass_fr:  
     - 681
     - 'lb'
   corner_mass_fl:
     - 684
     - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
   corner_mass_rr:
     - 585
     - 'lb'
@@ -43,14 +54,16 @@ parameters:
     - 24
     - 'in'
   moment_of_inertia_about_cg_roll:
-    - 890000  # From SW estimates 2020
+    - 890000  # 0.89M From SW estimates 2020
     - 'lbs-in^2'
   moment_of_inertia_about_cg_pitch:
-    - 1600000  # From SW estimates 2020
+    - 1600000  # 1.6M From SW estimates 2020
     - 'lbs-in^2'
   roll_center_height_front:
     - 4.5
     - 'in'
+    # Parameter Fidelity: ESTIMATED
+    # Value was estimated based on typical E46 BMW suspension geometry and conventional definition of a roll center for McPherson strut vehicles.
   roll_center_height_rear:
     - 7
     - 'in'
@@ -67,10 +80,10 @@ parameters:
     - 1.05
     - '-/-'
   pitch_center_height_accel:
-    - 4
+    - 16
     - 'in'
-  pitch_center_height_decel:
-    - 8
+  pitch_center_height_braking:
+    - 4
     - 'in'
   pitch_center_height_ic2cp:
     - 9
@@ -171,4 +184,10 @@ parameters:
   max_droop_rear:
     - 4
     - 'in'
+  nominal_engine_brake_G:
+    - 0.1
+    - 'G'
+  differential_ratio:
+   - 3.07
+   - '-/-'
 ...
