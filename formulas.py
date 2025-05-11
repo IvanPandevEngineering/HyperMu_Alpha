@@ -409,6 +409,14 @@ def get_hysteresis_coef(Hy, a_d, b_d):
 def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
     return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
 
+def get_df_end(speed_ms, CLpA):
+    return CLpA/2 * (speed_ms**2)
+
+def get_CLpA(ref_speed, ref_df):
+    '''DF = CL * V**2 * A * p/2
+    2DF/V**2 = CLpA'''
+    return 2*ref_df/(ref_speed**2)
+
 '''
 SECTION 3. General helper functions.
 '''

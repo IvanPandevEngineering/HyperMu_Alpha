@@ -4,6 +4,7 @@ Copyright 2025 Ivan Pandev
 
 import numpy as np
 import pickle
+from tqdm import tqdm
 import yaml
 
 import chassis_model as model
@@ -37,6 +38,8 @@ def make_metric(value, unit: str):
         return value*4.448219/0.0254  # N/m
     if unit == 'lbs-in^2':
         return value*0.453592/(39.3701**2)  # kg-m^2
+    if unit == 'mph':
+        return value/2.23694  # m/s
     else:
         return value
 
@@ -115,6 +118,9 @@ def get_inputs_dt(i, row, force_function):
         c_d_fl_next = (force_function['c_fl'][i+1]-force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
         c_d_rr_next = (force_function['c_rr'][i+1]-force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
         c_d_rl_next = (force_function['c_rl'][i+1]-force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
+        speed_ms = row['calc_speed_ms'],
+        speed_ms_half_next = (force_function['calc_speed_ms'][i+1] + force_function['calc_speed_ms'][i])/2,
+        speed_ms_next = force_function['calc_speed_ms'][i+1]
     )
 
     return inputs_dt
@@ -128,8 +134,11 @@ class HyperMuVehicle:
         vpd = unpack_yml(vehicle_yml_path)['parameters']  # Vehicle parameter dictionary
 
         self.test_lat_g = vpd['test_lat_g']
-        self.df_f = vpd['test_downforce_front']
-        self.df_r = vpd['test_downforce_rear']
+        self.ref_df_speed = vpd['reference_downforce_speed']
+        self.ref_df_f = vpd['reference_downforce_front']
+        self.ref_df_r = vpd['reference_downforce_rear']
+        self.CLpA_f = f.get_CLpA(self.ref_df_speed, self.ref_df_f)
+        self.CLpA_r = f.get_CLpA(self.ref_df_speed, self.ref_df_r)
 
         self.K_ch = vpd['torsional_spring_rate']
         self.wheel_base = vpd['wheel_base']
@@ -250,9 +259,9 @@ class HyperMuVehicle:
         self.set_init_state(replay_src='init')
 
         #self.LatLT_properties = f.roll_LatLD_per_g((self.usm_fr+self.usm_fl), (self.usm_rr + self.usm_rl), (self.sm_fr + self.sm_fl), (self.sm_rr + self.sm_rl), self.tw_v, self.tw_f, self.tw_r, self.tire_diam_f, self.tire_diam_r, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.df_f, self.df_r)
-        self.roll_tip_G = f.get_roll_tip_G(self.tw_f, self.tw_r, self.m_f, self.cm_height, self.m, self.df_f, self.df_r)
-        self.aero_response = f.aero_platform_response(self.df_f, self.df_r, self.m_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.LongLD_per_g = f.pitch_LongLD_per_g(self.cm_height, self.wheel_base, self.m, self.df_f, self.df_r)
+        self.roll_tip_G = f.get_roll_tip_G(self.tw_f, self.tw_r, self.m_f, self.cm_height, self.m, self.ref_df_f, self.ref_df_r)
+        self.aero_response = f.aero_platform_response(self.ref_df_f, self.ref_df_r, self.m_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
+        self.LongLD_per_g = f.pitch_LongLD_per_g(self.cm_height, self.wheel_base, self.m, self.ref_df_f, self.ref_df_r)
         self.pitch_gradient_accel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_accel, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
         self.pitch_gradient_decel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_braking, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
         self.pitch_frequency = f.pitch_frquency(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
@@ -365,8 +374,9 @@ class HyperMuVehicle:
         for var in model.state_for_plotting._fields:
             graphing_dict[f'{var}']=[]
 
-        print('Starting RK4 solver...')
-        for i, row in force_function.iterrows():
+        #  Loop completes at 2:03, 2:07, and 1:54 using Python 3.9. Roughly 470it/s.
+        #  Loop completes at 1:07 with py 3.13. Roughly 840it/s.
+        for i, row in tqdm(force_function.iterrows(), desc="Starting RK4 solver...", ncols=100):
 
             state, graphing_vars = RK4.RK4_step(
                 dt = force_function['timestep'][i+1],

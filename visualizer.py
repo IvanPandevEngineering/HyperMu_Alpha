@@ -27,7 +27,7 @@ def plot_basics(force_function, results, scenario):
 
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationX(G)'], label='lateral accel (G)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['accelerometerAccelerationY(G)'], label='longitudinal accel (G)')
-    subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['est_speed(mph)']/100, label='estimated speed (mph/100)')
+    subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['calc_speed_ms']*(2.23694/100), label='estimated speed (mph/100)')
     #subplots[0,0].plot(force_function['loggingTime(txt)'], -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     #subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['motionPitch(rad)']*56, label='pitch (deg)')
     subplots[0,0].plot(force_function['loggingTime(txt)'], force_function['c_fr']*-100, label='road surface height (cm, fr)')

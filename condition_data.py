@@ -13,7 +13,7 @@ COLUMNS_GLOBAL=['loggingTime(txt)',
                 'c_fr', 'c_fl', 'c_rr', 'c_rl',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
-                'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)', 'est_speed(mph)']
+                'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)', 'calc_speed_ms']
 
 def custom_smooth(array, rounds):
     
@@ -132,8 +132,8 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
     data_in = data_in.dropna(how='any')
 
-    data_in['est_speed_mph'] = np.cumsum(
-        0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000)) * 2.23694 # convert to mph
+    data_in['calc_speed_ms'] = np.cumsum(
+        0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000))
 
     data_in = apply_filter(
         data = data_in,
@@ -176,7 +176,7 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
                                  data_in['motionRotationRateZ(rad/s)'],
                                  data_in['motionRotationRateZ_diff(rad/s)'],
                                  data_in['gyroRotationX_corrected(rad/s)'],
-                                 data_in['est_speed_mph'])), \
+                                 data_in['calc_speed_ms'])), \
         columns=COLUMNS_GLOBAL)
     
     return data.dropna(how='any').reset_index(drop=True)

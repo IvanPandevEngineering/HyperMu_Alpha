@@ -97,7 +97,7 @@ def enforce_dimensional_boundary_conditions(self, state):
 def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     state,
-    G_lat, G_long  # lateral and longitudinal acceleration in G
+    G_lat, G_long, speed_ms  # lateral and longitudinal acceleration in G
 ) -> np.array:
     
     '''
@@ -184,6 +184,11 @@ def solve_chassis_model(
     tire_damper_F_rr = f.get_tire_damper_F(self.C_t_r, state.b_d_rr, state.c_d_rr)
     tire_damper_F_rl = f.get_tire_damper_F(self.C_t_r, state.b_d_rl, state.c_d_rl)
 
+    #  Aerodynamic Effects
+    downforce_f = f.get_df_end(speed_ms, self.CLpA_f)
+    downforce_r = f.get_df_end(speed_ms, self.CLpA_r)
+    #  drag_pitch_effects = f.get_drag_long_LT(self.cd, speed_ms)
+
     Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
     Hy_fl = f.get_hysteresis_coef(Hy, a_d=state.a_d_fl, b_d=state.b_d_fl)
@@ -231,10 +236,10 @@ def solve_chassis_model(
 
     #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct. 
     B_mat = np.array([
-        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655],
-        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655],
-        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr - self.sm_rr*9.80655],
-        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl - self.sm_rl*9.80655],
+        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655 - downforce_f],
+        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655 - downforce_f],
+        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr - self.sm_rr*9.80655 - downforce_r],
+        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl - self.sm_rl*9.80655 - downforce_r],
         [ - ride_spring_F_fr - ARB_F_f - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT - long_usm_geo_LT + tire_spring_F_fr + tire_damper_F_fr - self.usm_fr*9.80655],
         [ - ride_spring_F_fl + ARB_F_f - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT - long_usm_geo_LT + tire_spring_F_fl + tire_damper_F_fl - self.usm_fl*9.80655],
         [ - ride_spring_F_rr - ARB_F_r - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT + long_usm_geo_LT + tire_spring_F_rr + tire_damper_F_rr - self.usm_rr*9.80655],
