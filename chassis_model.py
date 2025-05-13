@@ -52,14 +52,35 @@ state_for_plotting = namedtuple('variables_of_interest',
      'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio']
 )
 
-def enforce_droop_limit(a, a_d, b, b_d, max_droop):
+def enforce_droop_limit(a, a_d, b_b_d_tuple, max_droop):
+    b = b_b_d_tuple[0]
+    b_d = b_b_d_tuple[1]
     if a - b < - max_droop:
         b = a + max_droop
-        b_d = a_d
+        b_d = a_d  # Assume unsprung mass is negligable to vehicle body mass. Conserve momentum. Can apply mass ratio here eventually.
     return b, b_d
 
-def enforce_suspension_compression_limit():
-    return None
+def enforce_droop_limit_2(self, state):
+    if state.a_fr - state.b_fr < - self.max_droop_f:
+        state = state._replace(b_fr = state.a_fr + self.max_droop_f)
+        state = state._replace(b_d_fr = state.a_d_fr)  # TODO: conservation of momentum
+    if state.a_fl - state.b_fl < - self.max_droop_f:
+        state = state._replace(b_fl = state.a_fl + self.max_droop_f)
+        state = state._replace(b_d_fl = state.a_d_fl)  # TODO: conservation of momentum
+    if state.a_rr - state.b_rr < - self.max_droop_r:
+        state = state._replace(b_rr = state.a_rr + self.max_droop_r)
+        state = state._replace(b_d_rr = state.a_d_rr)  # TODO: conservation of momentum
+    if state.a_rl - state.b_rl < - self.max_droop_r:
+        state = state._replace(b_rr = state.a_rr + self.max_droop_r)
+        state = state._replace(b_d_rr = state.a_d_rr)  # TODO: conservation of momentum
+
+    return state
+
+def enforce_suspension_compression_limit(init_a, a, a_d, init_b, b, b_d, max_compression):
+    if (a-init_a) - (b-init_b) > max_compression:
+        b = init_b + max_compression - (a-init_a)
+        b_d = a_d
+    return b, b_d
 
 def enforce_sidewall_compression_limit():
     return None
@@ -76,20 +97,9 @@ def enforce_dimensional_boundary_conditions(self, state):
     The function enforces b stays permissible distance from a.
     '''
 
-    constrained_b_fr, constrained_b_d_fr = enforce_droop_limit(state.a_fr, state.a_d_fr, state.b_fr, state.b_d_fr, self.max_droop_f)
-    constrained_b_fl, constrained_b_d_fl = enforce_droop_limit(state.a_fl, state.a_d_fl, state.b_fl, state.b_d_fl, self.max_droop_f)
-    constrained_b_rr, constrained_b_d_rr = enforce_droop_limit(state.a_rr, state.a_d_rr, state.b_rr, state.b_d_rr, self.max_droop_r)
-    constrained_b_rl, constrained_b_d_rl = enforce_droop_limit(state.a_rl, state.a_d_rl, state.b_rl, state.b_d_rl, self.max_droop_r)
-
-    # TODO: Enforce compression and sidewall compression limits.
-
-    constrained_state = chassis_state(
-        a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl,
-        b_fr = constrained_b_fr, b_fl = constrained_b_fl, b_rr = constrained_b_rr, b_rl = constrained_b_rl,
-        c_fr = state.c_fr, c_fl = state.c_fl, c_rr = state.c_rr, c_rl = state.c_rl,
-        a_d_fr = state.a_d_fr, a_d_fl = state.a_d_fl, a_d_rr = state.a_d_rr, a_d_rl = state.a_d_rl,
-        b_d_fr = constrained_b_d_fr, b_d_fl = constrained_b_d_fl, b_d_rr = constrained_b_d_rr, b_d_rl = constrained_b_d_rl,
-        c_d_fr = state.c_d_fr, c_d_fl = state.c_d_fl, c_d_rr = state.c_d_rr, c_d_rl = state.c_d_rl,
+    constrained_state = enforce_droop_limit_2(
+        self = self,
+        state = state
     )
 
     return constrained_state
@@ -157,10 +167,10 @@ def solve_chassis_model(
         self.K_ch, state.a_fr, state.a_fl, state.a_rr, state.a_rl, self.tw_f, self.tw_r
     )
 
-    bump_stop_F_fr = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
-    bump_stop_F_fl = f.get_bump_stop_F(self.K_bs_f, self.max_compression_f, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
-    bump_stop_F_rr = f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rr, state.a_rr, self.init_b_rr, state.b_rr)
-    bump_stop_F_rl = f.get_bump_stop_F(self.K_bs_r, self.max_compression_r, self.init_a_rl, state.a_rl, self.init_b_rl, state.b_rl)
+    bump_stop_F_fr = f.get_bump_stop_F(self.K_bs_f, self.compression_to_bumpstop_front, self.init_a_fr, state.a_fr, self.init_b_fr, state.b_fr)
+    bump_stop_F_fl = f.get_bump_stop_F(self.K_bs_f, self.compression_to_bumpstop_front, self.init_a_fl, state.a_fl, self.init_b_fl, state.b_fl)
+    bump_stop_F_rr = f.get_bump_stop_F(self.K_bs_r, self.compression_to_bumpstop_rear, self.init_a_rr, state.a_rr, self.init_b_rr, state.b_rr)
+    bump_stop_F_rl = f.get_bump_stop_F(self.K_bs_r, self.compression_to_bumpstop_rear, self.init_a_rl, state.a_rl, self.init_b_rl, state.b_rl)
 
     ride_spring_F_fr = f.get_ride_spring_F(self.K_s_f, state.a_fr, state.b_fr) + bump_stop_F_fr
     ride_spring_F_fl = f.get_ride_spring_F(self.K_s_f, state.a_fl, state.b_fl) + bump_stop_F_fl
