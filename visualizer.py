@@ -429,7 +429,7 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     subplots[0,0].set_ylabel('Count')
     subplots[0,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Front)
 Self: x\u0304:{np.mean(self['lateral_load_dist_f']):.2f}, \u03C3:{np.std(self['lateral_load_dist_f']):.2f}
-Self: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other['lateral_load_dist_f']):.2f}""")
+Other: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other['lateral_load_dist_f']):.2f}""")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
@@ -441,7 +441,7 @@ Self: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other[
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Rear)
 Self: x\u0304:{np.mean(self['lateral_load_dist_r']):.2f}, \u03C3:{np.std(self['lateral_load_dist_r']):.2f}
-Self: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other['lateral_load_dist_r']):.2f}""")
+Other: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other['lateral_load_dist_r']):.2f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
@@ -453,7 +453,7 @@ Self: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other[
     subplots[2,0].set_ylabel('Count')
     subplots[2,0].set_xlabel(f"""Lateral Load Distribution Ratio (% Front)
 Self: x\u0304:{np.mean(self['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(self['lateral_load_dist_ratio']):.2f}
-Self: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(other['lateral_load_dist_ratio']):.2f}""")
+Other: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(other['lateral_load_dist_ratio']):.2f}""")
     subplots[2,0].legend()
     subplots[2,0].grid(True)
     subplots[2,0].set_yscale('log')
@@ -478,7 +478,7 @@ Self: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(ot
 
     subplots[2,1].plot(f.fft_convert(self['lateral_load_dist_ratio'])[0], f.fft_convert(self['lateral_load_dist_ratio'])[1], label='Self')
     subplots[2,1].plot(f.fft_convert(other['lateral_load_dist_ratio'])[0], f.fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Other')
-    subplots[2,1].set_ylabel('Norm. Lat. Load Ratio % Amp (Front)')
+    subplots[2,1].set_ylabel('Norm. Lat. Load Ratio % Amp')
     subplots[2,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_ratio']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_ratio']):.3}")
     subplots[2,1].legend()
     subplots[2,1].grid(True)

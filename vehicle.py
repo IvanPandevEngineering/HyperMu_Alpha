@@ -233,10 +233,12 @@ class HyperMuVehicle:
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
+        self.max_compression_f = vpd['max_compression_front'] * self.WS_motion_ratio_f
+        self.max_compression_r = vpd['max_compression_rear'] * self.WD_motion_ratio_r
         self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheel originally.
         self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheel originally.
-        self.max_compression_f = vpd['max_suspension_compression_front'] * self.WS_motion_ratio_f
-        self.max_compression_r = vpd['max_suspension_compression_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
+        self.compression_to_bumpstop_front = vpd['compression_to_bumpstop_front'] * self.WS_motion_ratio_f
+        self.compression_to_bumpstop_rear = vpd['compression_to_bumpstop_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
 
         self.nominal_engine_brake_G = vpd['nominal_engine_brake_G']
         self.differential_ratio = vpd['differential_ratio']

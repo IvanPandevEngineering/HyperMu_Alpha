@@ -396,9 +396,9 @@ def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
     return sm * 9.80655 / K_s + get_pre_init_b(sm, usm, K_t)
 
-def get_bump_stop_F(K_bs, max_compression, init_a, a, init_b, b):
+def get_bump_stop_F(K_bs, compression_to_bumpstop, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
-    return max(K_bs * ((a-init_a) - (b-init_b) - max_compression)  , 0)
+    return max(K_bs * ((a-init_a) - (b-init_b) - compression_to_bumpstop)  , 0)
 
 def get_hysteresis_saturation_component(a_d, b_d, weight):
     return 1 / np.cosh(weight * (a_d - b_d))
