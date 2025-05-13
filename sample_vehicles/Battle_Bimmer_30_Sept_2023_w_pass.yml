@@ -6,27 +6,37 @@ class: SCCA Solo II XP-Class
 driver: Ivan Pandev
 driver_mass: 147 lbs
 # All parameters' fidelities are rated as follows:
-# MEASURED:
-# ESTIMATED:
-# PROVIDED:
-# PLACEHOLDER:
-# N/A:
+# MEASURED: Measured directly from vehicle.
+# ESTIMATED: Calcualted from first principles and known parameters on the vehicle.
+# PROVIDED: Manufacturer-supplied values describing a part or assembly.
+# PLACEHOLDER: Best-guess value from experience/ context/ etc.
+# N/A: Nominal values which can be arbitrarily selected.
 parameters:
   test_lat_g:
     - 1.4
     - 'g'
+    # Parameter Fidelity: N/A
+    # This is a nominal value defining static test scenarios.
   reference_downforce_speed:
     - 60
     - 'mph'
+    # Parameter Fidelity: N/A
+    # Reference value for downforce values.
   reference_downforce_front:
     - 55
     - 'lbf'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   reference_downforce_rear:
     - 70
     - 'lbf'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   corner_mass_fr:  
     - 681
     - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
   corner_mass_fl:
     - 684
     - 'lb'
@@ -35,30 +45,48 @@ parameters:
   corner_mass_rr:
     - 585
     - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
   corner_mass_rl:
     - 593
     - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
   corner_unsprung_mass_fr:
     - 80
     - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   corner_unsprung_mass_fl:
     - 80
     - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   corner_unsprung_mass_rr:
     - 90
     - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   corner_unsprung_mass_rl:
     - 90
     - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   center_of_mass_height:
     - 24
     - 'in'
+    # Parameter Fidelity: PLACEHOLDER
+    #
   moment_of_inertia_about_cg_roll:
     - 890000  # 0.89M From SW estimates 2020
     - 'lbs-in^2'
+    # Parameter Fidelity: ESTIMATED
+    # Value calculated in CAD Model of an E46 chassis with major components modelled individually.
   moment_of_inertia_about_cg_pitch:
     - 1600000  # 1.6M From SW estimates 2020
     - 'lbs-in^2'
+    # Parameter Fidelity: ESTIMATED
+    # Value calculated in CAD Model of an E46 chassis with major components modelled individually.
   roll_center_height_front:
     - 4.5
     - 'in'
@@ -67,127 +95,221 @@ parameters:
   roll_center_height_rear:
     - 7
     - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
   WS_motion_ratio_f:
     - 1.1
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   WS_motion_ratio_r:
     - 1.538
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   WD_motion_ratio_f:
     - 1.1
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   WD_motion_ratio_r:
     - 1.05
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   pitch_center_height_accel:
     - 16
     - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
   pitch_center_height_braking:
     - 4
     - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
   pitch_center_height_ic2cp:
     - 9
     - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
   anti-dive:
     - 0.20
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   anti-squat:
     - 0.20
     - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
   tire_diameter_front:
     - 25.3
     - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official dimension provided by tire Manufacturer. Dynamic rolling diameter is calculated in the vehicle model.
   tire_diameter_rear:
     - 25.3
     - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official dimension provided by tire Manufacturer. Dynamic rolling diameter is calculated in the vehicle model.
   track_width_front:
     - 63.5
     - 'in'
+    # Parameter Fidelity: MEASURED
+    # Measured on level ground from contact patch centers.
   track_width_rear:
     - 61.5
     - 'in'
+    # Parameter Fidelity: MEASURED
+    # Measured on level ground from contact patch centers.
   wheel_base:
     - 107.3
     - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official E46 wheelbase, no modifications done so far should alter this value.
   torsional_spring_rate:
     - 12500
     - 'Nm/deg'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Official torsional rigidity of an E46 chassis. Impractical to measure competing affects of chassis bracing/ notching effects.
   spring_rate_f:
     - 450
     - 'lbf/in'
+    # Parameter Fidelity: PROVIDED
+    # Nominal spring rate given by Eibach.
   spring_rate_r:
     - 750
     - 'lbf/in'
+    # Parameter Fidelity: PROVIDED
+    # Nominal spring rate given by Eibach.
   bump_stop_spring_rate_f:
     - 2000
     - 'lbf/in'
+    # Parameter Fidelity: ESTIMATED
+    #
   bump_stop_spring_rate_r:
     - 2000
     - 'lbf/in'
+    # Parameter Fidelity: ESTIMATED
+    #
   arb_rate_f:
     - 160
     - 'lbf/in' #opposite wheel held static
+    # Parameter Fidelity: PLACEHOLDER
+    # 
   arb_rate_r:
     - 70
     - 'lbf/in' #opposite wheel held static
+    # Parameter Fidelity: MEASURED
+    # Measured using corner scales and jacks on the stiffness option 3/5. Currently adjusted to 2/5, extrapolated from measurement and arm length change.
   tire_rate_f:
     - 1100
     - 'lbf/in'
+    # Parameter Fidelity: MEASURED-PLACEHOLDER
+    # Measured interior sidewall compression and vertical load. Tire behavior is highly non-linear and detail should be added going forward.
   tire_rate_r:
     - 1200
     - 'lbf/in'
+    # Parameter Fidelity: MEASURED-PLACEHOLDER
+    # Measured interior sidewall compression and vertical load. Tire behavior is highly non-linear and detail should be added going forward.
   slow_compression_damper_rate_f:
     - 3846 #500N @ 0.13m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   slow_compression_damper_rate_r:
     - 2384 #310N @ 0.13m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   slow_rebound_damper_rate_f:
     - 6153 #800N @ 0.13m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   slow_rebound_damper_rate_r:
     - 4615 #600N @ 0.13m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   knee_speed_compression_f:
     - 0.130
     - 'm/s'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   knee_speed_rebound_f:
     - 0.130
     - 'm/s'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   knee_speed_compression_r:
     - 0.130
     - 'm/s'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   knee_speed_rebound_r:
     - 0.115
     - 'm/s'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   fast_compression_damper_rate_f:
     - 2121 #700N @ 0.33m/s 
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   fast_compression_damper_rate_r:
     - 1364 #450N @ 0.33m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   fast_rebound_damper_rate_f:
     - 3939 #1300N @ 0.33m/s
     - 'N/(m/s)'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
   fast_rebound_damper_rate_r:
     - 3485 #1150N @ 0.33m/s
     - 'N/(m/s)'
-  max_suspension_compression_front:
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Koni provided QC value for dampers at full-soft settings, which is the current adjustment. Rates derived from these data.
+  max_compression_front:
+    - 1.25  # Must be taken FROM REST on level ground, taken at spring or damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_compression_rear:
+    - 2.5  # Must be taken FROM REST on level ground, taken at spring or damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  compression_to_bumpstop_front:
     - 0.75  # Must be taken FROM REST on level ground, taken at spring or damper
     - 'in'
-  max_suspension_compression_rear:
+    # Parameter Fidelity: MEASURED
+    #
+  compression_to_bumpstop_rear:
     - 1.5  # Must be taken FROM REST on level ground, taken at spring or damper
     - 'in'
+    # Parameter Fidelity: MEASURED
+    #
   max_droop_front:
     - 2
     - 'in'
+    # Parameter Fidelity:
+    #
   max_droop_rear:
     - 4
     - 'in'
+    # Parameter Fidelity:
+    #
   nominal_engine_brake_G:
     - 0.1
     - 'G'
+    # Parameter Fidelity:
+    #
   differential_ratio:
-   - 3.07
-   - '-/-'
+    - 3.07
+    - '-/-'
+    # Parameter Fidelity: MEASURED
+    # Known explicitly. Standard E46 323 manual diff ratio.
 ...
