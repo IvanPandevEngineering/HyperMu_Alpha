@@ -107,7 +107,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     mpl.rcParams['axes.labelsize'] = 10
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
-    fig, subplots = plt.subplots(2, 2, figsize=(14, 8))
+    fig, subplots = plt.subplots(2, 3, figsize=(15, 8))
     fig.suptitle(f'Correlation on Roll/Pitch Rate, {scenario}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
@@ -152,6 +152,23 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     subplots[1][1].set_xlabel('Predicted Pitch Rate (deg/s)')
     subplots[1][1].set_ylabel('Recorded Pitch Rate (deg/s)')
     subplots[1][1].grid(True)
+
+    subplots[0][2].plot(force_function['loggingTime(txt)'][:-2000], f.get_RsqCorr_v_time(
+        control = 180*force_function['gyroRotationY(rad/s)']/3.14,
+        results = np.array(results['roll_angle_rate_f']))
+    )
+    subplots[0][2].set_xlabel('Time (s)')
+    subplots[0][2].set_ylabel('R-sq Correlation, Roll (%)')
+    subplots[0][2].grid(True)
+
+    subplots[1][2].plot(force_function['loggingTime(txt)'][:-2000], f.get_RsqCorr_v_time(
+        control = 180*force_function['gyroRotationX_corrected(rad/s)']/3.14,
+        results = -np.array(results['pitch_angle_rate']))
+    )
+    subplots[1][2].legend()
+    subplots[1][2].set_xlabel('Time (s)')
+    subplots[1][2].set_ylabel('R-sq Correlation, Pitch (%)')
+    subplots[1][2].grid(True)
 
     fig.tight_layout()
     plt.show()
@@ -351,7 +368,7 @@ Other: x\u0304:{np.mean(other['tire_load_fr']):.0f}, \u03C3:{np.std(other['tire_
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_rl']):.0f}, \u03C3:{np.std(self['tire_load_rl']):.0f}
-Self: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_load_rl']):.0f}""")
+Other: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_load_rl']):.0f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
@@ -363,7 +380,7 @@ Self: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_l
     subplots[1,1].set_ylabel('Count')
     subplots[1,1].set_xlabel(f"""Tire Load (N)
 Self: x\u0304:{np.mean(self['tire_load_rr']):.0f}, \u03C3:{np.std(self['tire_load_rr']):.0f}
-Self: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_load_rr']):.0f}""")
+Other: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_load_rr']):.0f}""")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')

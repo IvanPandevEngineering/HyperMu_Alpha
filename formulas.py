@@ -3,6 +3,10 @@ Copyright 2025 Ivan Pandev
 '''
 
 import numpy as np
+from scipy import stats
+
+G = 9.80665  # m/(s**2)
+K_TRAVEL_LIMIT = 1e8  # N/m, spring rate associated with component crashes like suspension bottoming
 
 
 '''
@@ -398,7 +402,7 @@ def get_pre_init_a(sm, usm, K_s, K_t):
 
 def get_bump_stop_F(K_bs, compression_to_bumpstop, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
-    return max(K_bs * ((a-init_a) - (b-init_b) - compression_to_bumpstop)  , 0)
+    return max(K_bs * ((a-init_a) - (b-init_b) - compression_to_bumpstop), 0)
 
 def get_hysteresis_saturation_component(a_d, b_d, weight):
     return 1 / np.cosh(weight * (a_d - b_d))
@@ -416,6 +420,11 @@ def get_CLpA(ref_speed, ref_df):
     '''DF = CL * V**2 * A * p/2
     2DF/V**2 = CLpA'''
     return 2*ref_df/(ref_speed**2)
+
+def get_travel_limit_stop_force(init_a, a, init_b, b, travel_limit):
+    # if max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0) > 0:
+    #    print(max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0))
+    return max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0)
 
 '''
 SECTION 3. General helper functions.
@@ -447,3 +456,13 @@ def get_RMS(series):
     signal_energy = np.sum(np.abs(mags)**2) / len(series)
 
     return np.sqrt(signal_energy)
+
+def get_RsqCorr_v_time(control, results, window=2000):
+    print('Calculating R-sq correlation w.r.t. time...')
+
+    corr_series=[]
+    for i in range(len(control[:-window])):
+        corr_series.append(stats.linregress(control[i:i+window], results[i:i+window])[2])
+    
+    # print(corr_series)
+    return corr_series

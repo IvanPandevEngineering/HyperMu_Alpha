@@ -75,7 +75,7 @@ def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, samp
 
     return filtfilt(b, a, signal)
 
-def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.0, sampling_freq = 1000):
+def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.2, sampling_freq = 1000):
 
     nyquist = sampling_freq / 2
     b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
