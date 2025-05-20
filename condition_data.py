@@ -30,7 +30,6 @@ def apply_filter(data, filter_type, smoothing_window_size):
         data['motionRotationRateY(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateY(rad/s)'])
         data['motionRotationRateX(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateX(rad/s)'])
         data['motionRotationRateZ(rad/s)'] = bidirectional_bessel_lowpass(data['motionRotationRateZ(rad/s)'])
-        data['est_speed_mph'] = bidirectional_bessel_lowpass(data['est_speed_mph'])
         data = data.dropna(how='any')
         print('Applying lowpass filter (bessel_bidirectional)...')
     
@@ -76,7 +75,7 @@ def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, samp
 
     return filtfilt(b, a, signal)
 
-def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 0.7, sampling_freq = 1000):
+def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.0, sampling_freq = 1000):
 
     nyquist = sampling_freq / 2
     b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
@@ -115,9 +114,11 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in = data_in.set_index('datetime')
     data_in = data_in[~data_in.index.duplicated(keep='first')]
 
+    # print('OLD METHOD MAKES THIS:')
+    print(data_in)
+
     #select interesting time range
-    data_in = data_in[start_index:end_index]  # Racing
-    # data_in = data_in[4200:6800]  # Control
+    data_in = data_in[start_index:end_index]
 
     data_in['c_fr_array'] = 0
     data_in['c_fl_array'] = 0
@@ -159,6 +160,100 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
 
     print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
     print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
+
+    #create dataframe and drop nans one more time
+    data = pd.DataFrame(list(zip(data_in['time'],
+                                 data_in['motionUserAccelerationX(G)'],
+                                 data_in['motionUserAccelerationY(G)'],
+                                 data_in['motionUserAccelerationZ(G)'],
+                                 data_in['motionPitch(rad)'],
+                                 data_in['c_fr_array'],
+                                 data_in['c_fl_array'],
+                                 data_in['c_rr_array'],
+                                 data_in['c_rl_array'],
+                                 data_in['timestep'],
+                                 data_in['motionRotationRateY(rad/s)'],
+                                 data_in['motionRotationRateX(rad/s)'],
+                                 data_in['motionRotationRateZ(rad/s)'],
+                                 data_in['motionRotationRateZ_diff(rad/s)'],
+                                 data_in['gyroRotationX_corrected(rad/s)'],
+                                 data_in['calc_speed_ms'])), \
+        columns=COLUMNS_GLOBAL)
+    
+    return data.dropna(how='any').reset_index(drop=True)
+
+def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_index:int, end_index:int):
+
+    print('Converting file to dataframe...')
+    data_in = pd.read_csv(path, low_memory=False)[['loggingTime(txt)',
+                                                   'GForceX',
+                                                   'GForceY',
+                                                   'GForceZ',
+                                                   'Speed',
+                                                   'GyroX',
+                                                   'GyroY',
+                                                   'GyroZ']]
+
+    print('Parsing timesteps...')
+
+    data_in['motionRotationRateY(rad/s)'] = data_in['GyroX']*(np.pi/180)
+    data_in['motionRotationRateX(rad/s)'] = data_in['GyroY']*(np.pi/180)
+    data_in['motionRotationRateZ(rad/s)'] = data_in['GyroZ']*(np.pi/180)
+    data_in['motionPitch(rad)'] = data_in['GyroX']
+    data_in['motionUserAccelerationX(G)'] = data_in['GForceY']
+    data_in['motionUserAccelerationY(G)'] = data_in['GForceX']
+    data_in['motionUserAccelerationZ(G)'] = data_in['GForceZ']
+
+    #Create datetime column to be interpolated
+    data_in['datetime'] = pd.to_datetime(data_in['loggingTime(txt)'])
+    data_in['datetime'] = pd.DatetimeIndex(data_in['datetime'])
+
+    #drop redundant column
+    data_in = data_in.drop(columns='loggingTime(txt)')
+
+    #set index to be picked up by interpolation function, drop duplicated time stamps
+    data_in = data_in.set_index('datetime')
+    data_in = data_in[~data_in.index.duplicated(keep='first')]
+
+    #select interesting time range
+    data_in = data_in[start_index:end_index]
+
+    #resampling to time resolution, interpolate linearly then drop all nans
+    data_in = data_in.resample('1ms').interpolate(method='linear')
+    #print(data_in)
+    data_in = data_in.dropna(how='any')
+    #print(data_in)
+
+    data_in['c_fr_array'] = 0
+    data_in['c_fl_array'] = 0
+    data_in['c_rr_array'] = 0
+    data_in['c_rl_array'] = 0
+
+    #get derivative of yaw rate
+    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
+    data_in = data_in.dropna(how='any')
+
+    data_in['calc_speed_ms'] = np.cumsum(
+        -0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000))
+
+    data_in = apply_filter(
+        data = data_in,
+        filter_type = filter_type,
+        smoothing_window_size = smoothing_window_size_ms
+    )
+
+    #apply vertical-offset corrections
+    data_in['motionUserAccelerationX(G)'] = data_in['motionUserAccelerationX(G)'] - 0.03
+    data_in['motionUserAccelerationY(G)'] = data_in['motionUserAccelerationY(G)'] - 0.01
+
+    #create new time and timestep columns
+    data_in['time'] = data_in.index
+    data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
+
+    print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
+    print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
+
+    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)']
 
     #create dataframe and drop nans one more time
     data = pd.DataFrame(list(zip(data_in['time'],
