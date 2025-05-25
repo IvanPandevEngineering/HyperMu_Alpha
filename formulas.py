@@ -422,8 +422,6 @@ def get_CLpA(ref_speed, ref_df):
     return 2*ref_df/(ref_speed**2)
 
 def get_travel_limit_stop_force(init_a, a, init_b, b, travel_limit):
-    # if max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0) > 0:
-    #    print(max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0))
     return max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0)
 
 '''

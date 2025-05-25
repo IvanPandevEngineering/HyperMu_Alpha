@@ -55,6 +55,14 @@ def plot_basics(force_function, results, scenario):
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_fl'], label='spring displacement (m, fl)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rr'], label='spring displacement (m, rr)')
     subplots[1,0].plot(force_function['loggingTime(txt)'], results['spring_disp_rl'], label='spring displacement (m, rl)')
+    subplots[1,0].fill_between(force_function['loggingTime(txt)'], 0, 0.07, where=np.array(results['tlsf_suspension_fr'])>0,
+                               color='red', alpha=0.6)
+    subplots[1,0].fill_between(force_function['loggingTime(txt)'], 0, 0.07, where=np.array(results['tlsf_suspension_fl'])>0,
+                               color='red', alpha=0.6)
+    subplots[1,0].fill_between(force_function['loggingTime(txt)'], 0, 0.07, where=np.array(results['tlsf_suspension_rr'])>0,
+                               color='red', alpha=0.6)
+    subplots[1,0].fill_between(force_function['loggingTime(txt)'], 0, 0.07, where=np.array(results['tlsf_suspension_rl'])>0,
+                               color='red', alpha=0.6)
     subplots[1,0].set_ylabel('Suspesion Displacements (m)')
     subplots[1,0].legend()
     subplots[1,0].grid(True)

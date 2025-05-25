@@ -79,21 +79,24 @@ def get_force_function(**kwargs):
         )
         scenario = 'Unit Test: One-Wheel Warp Offset'
     else:
-        # force_function = cd.from_sensor_log_iOS_app_unbiased(
-        #     kwargs['replay_src'],
-        #     kwargs['filter_type'],
-        #     kwargs['smoothing_window_size_ms'],
-        #     kwargs['start_index'],
-        #     kwargs['end_index'],
-        # )
-        force_function = cd.from_RaceBox(
-            kwargs['replay_src'],
-            kwargs['filter_type'],
-            kwargs['smoothing_window_size_ms'],
-            kwargs['start_index'],
-            kwargs['end_index'],
-        )
-        scenario = 'G-Replay from Telemetry'
+        if kwargs['sensor'] == 'iOS_app':
+            force_function = cd.from_sensor_log_iOS_app_unbiased(
+                kwargs['replay_src'],
+                kwargs['filter_type'],
+                kwargs['smoothing_window_size_ms'],
+                kwargs['start_index'],
+                kwargs['end_index'],
+            )
+            scenario = 'G-Replay from Telemetry'
+        elif kwargs['sensor'] == 'RaceBox':
+            force_function = cd.from_RaceBox(
+                kwargs['replay_src'],
+                kwargs['filter_type'],
+                kwargs['smoothing_window_size_ms'],
+                kwargs['start_index'],
+                kwargs['end_index'],
+            )
+            scenario = 'G-Replay from Telemetry'
 
     return force_function, scenario
 
@@ -383,8 +386,6 @@ class HyperMuVehicle:
         for var in model.state_for_plotting._fields:
             graphing_dict[f'{var}']=[]
 
-        #  Loop completes at 2:03, 2:07, and 1:54 using Python 3.9. Roughly 470it/s.
-        #  Loop completes at 1:07 with py 3.13. Roughly 840it/s.
         for i, row in tqdm(force_function.iterrows(), desc="Starting RK4 solver...", ncols=100):
 
             state, graphing_vars = RK4.RK4_step(

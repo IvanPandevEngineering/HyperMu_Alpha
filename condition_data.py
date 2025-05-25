@@ -114,9 +114,6 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in = data_in.set_index('datetime')
     data_in = data_in[~data_in.index.duplicated(keep='first')]
 
-    # print('OLD METHOD MAKES THIS:')
-    print(data_in)
-
     #select interesting time range
     data_in = data_in[start_index:end_index]
 
@@ -156,7 +153,6 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     #create new time and timestep columns
     data_in['time'] = data_in.index
     data_in['timestep'] = data_in['time'].diff().dt.total_seconds()
-
 
     print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
     print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
@@ -220,9 +216,7 @@ def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_
 
     #resampling to time resolution, interpolate linearly then drop all nans
     data_in = data_in.resample('1ms').interpolate(method='linear')
-    #print(data_in)
     data_in = data_in.dropna(how='any')
-    #print(data_in)
 
     data_in['c_fr_array'] = 0
     data_in['c_fl_array'] = 0

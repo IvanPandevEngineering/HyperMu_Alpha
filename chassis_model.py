@@ -49,60 +49,9 @@ state_for_plotting = namedtuple('variables_of_interest',
      'bump_stop_F_fr', 'bump_stop_F_fl', 'bump_stop_F_rr', 'bump_stop_F_rl', 
      'roll_angle_f', 'roll_angle_r', 'pitch_angle',
      'roll_angle_rate_f', 'roll_angle_rate_r', 'pitch_angle_rate',
-     'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio']
+     'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio',
+     'tlsf_suspension_fr', 'tlsf_suspension_fl', 'tlsf_suspension_rr', 'tlsf_suspension_rl']
 )
-
-def enforce_droop_limit(a, a_d, b_b_d_tuple, max_droop):
-    b = b_b_d_tuple[0]
-    b_d = b_b_d_tuple[1]
-    if a - b < - max_droop:
-        b = a + max_droop
-        b_d = a_d  # Assume unsprung mass is negligable to vehicle body mass. Conserve momentum. Can apply mass ratio here eventually.
-    return b, b_d
-
-def enforce_droop_limit_2(self, state):
-    if state.a_fr - state.b_fr < - self.max_droop_f:
-        state = state._replace(b_fr = state.a_fr + self.max_droop_f)
-        state = state._replace(b_d_fr = state.a_d_fr)  # TODO: conservation of momentum
-    if state.a_fl - state.b_fl < - self.max_droop_f:
-        state = state._replace(b_fl = state.a_fl + self.max_droop_f)
-        state = state._replace(b_d_fl = state.a_d_fl)  # TODO: conservation of momentum
-    if state.a_rr - state.b_rr < - self.max_droop_r:
-        state = state._replace(b_rr = state.a_rr + self.max_droop_r)
-        state = state._replace(b_d_rr = state.a_d_rr)  # TODO: conservation of momentum
-    if state.a_rl - state.b_rl < - self.max_droop_r:
-        state = state._replace(b_rr = state.a_rr + self.max_droop_r)
-        state = state._replace(b_d_rr = state.a_d_rr)  # TODO: conservation of momentum
-
-    return state
-
-def enforce_suspension_compression_limit(init_a, a, a_d, init_b, b, b_d, max_compression):
-    if (a-init_a) - (b-init_b) > max_compression:
-        b = init_b + max_compression - (a-init_a)
-        b_d = a_d
-    return b, b_d
-
-def enforce_sidewall_compression_limit():
-    return None
-
-def enforce_total_body_compression_limit():
-    return None
-
-def enforce_dimensional_boundary_conditions(self, state):
-
-    '''
-    Enforce maximum droop condition.
-    Hard limits here will force appropriate changes in forces and accelerations downstream.
-    Max_droop values are distance between a, b taken from unloaded condition.
-    The function enforces b stays permissible distance from a.
-    '''
-
-    constrained_state = enforce_droop_limit_2(
-        self = self,
-        state = state
-    )
-
-    return constrained_state
 
 def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
@@ -124,8 +73,6 @@ def solve_chassis_model(
     [b_rl_dd]
     ]
     '''
-
-    state = enforce_dimensional_boundary_conditions(self, state)
 
     #  Get instantaneous body inertias
     I_roll_inst_f, I_roll_arm_inst_f = f.get_inst_I_roll_properties(self.I_roll/2, self.tw_f)
@@ -199,6 +146,12 @@ def solve_chassis_model(
     downforce_r = f.get_df_end(speed_ms, self.CLpA_r)
     #  drag_pitch_effects = f.get_drag_long_LT(self.cd, speed_ms)
 
+    #  Travel Limit Stop Force
+    TLSF_suspension_fr = f.get_travel_limit_stop_force(init_a=self.init_a_fr, a=state.a_fr, init_b=self.init_b_fr, b=state.b_fr, travel_limit=self.max_compression_f)
+    TLSF_suspension_fl = f.get_travel_limit_stop_force(init_a=self.init_a_fl, a=state.a_fl, init_b=self.init_b_fl, b=state.b_fl, travel_limit=self.max_compression_f)
+    TLSF_suspension_rr = f.get_travel_limit_stop_force(init_a=self.init_a_rr, a=state.a_rr, init_b=self.init_b_rr, b=state.b_rr, travel_limit=self.max_compression_r)
+    TLSF_suspension_rl = f.get_travel_limit_stop_force(init_a=self.init_a_rl, a=state.a_rl, init_b=self.init_b_rl, b=state.b_rl, travel_limit=self.max_compression_r)
+
     Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
     Hy_fl = f.get_hysteresis_coef(Hy, a_d=state.a_d_fl, b_d=state.b_d_fl)
@@ -246,10 +199,10 @@ def solve_chassis_model(
 
     #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct. 
     B_mat = np.array([
-        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655 - downforce_f],
-        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655 - downforce_f],
-        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr - self.sm_rr*9.80655 - downforce_r],
-        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl - self.sm_rl*9.80655 - downforce_r],
+        [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*9.80655 - downforce_f + TLSF_suspension_fr],
+        [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*9.80655 - downforce_f + TLSF_suspension_fl],
+        [ - lat_sm_elastic_LT_r + long_sm_elastic_LT - chassis_flex_LT_r + ride_spring_F_rr + ARB_F_r + ride_damper_F_ideal_rr - self.sm_rr*9.80655 - downforce_r + TLSF_suspension_rr],
+        [ + lat_sm_elastic_LT_r + long_sm_elastic_LT + chassis_flex_LT_r + ride_spring_F_rl - ARB_F_r + ride_damper_F_ideal_rl - self.sm_rl*9.80655 - downforce_r + TLSF_suspension_rl],
         [ - ride_spring_F_fr - ARB_F_f - ride_damper_F_ideal_fr - lat_sm_geo_LT_f - lat_usm_geo_LT_f - long_sm_geo_LT - long_usm_geo_LT + tire_spring_F_fr + tire_damper_F_fr - self.usm_fr*9.80655],
         [ - ride_spring_F_fl + ARB_F_f - ride_damper_F_ideal_fl + lat_sm_geo_LT_f + lat_usm_geo_LT_f - long_sm_geo_LT - long_usm_geo_LT + tire_spring_F_fl + tire_damper_F_fl - self.usm_fl*9.80655],
         [ - ride_spring_F_rr - ARB_F_r - ride_damper_F_ideal_rr - lat_sm_geo_LT_r - lat_usm_geo_LT_r + long_sm_geo_LT + long_usm_geo_LT + tire_spring_F_rr + tire_damper_F_rr - self.usm_rr*9.80655],
@@ -313,7 +266,11 @@ def solve_chassis_model(
             lateral_load_dist_f = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_fr, tire_damper_F_fr), 
                                                                 tire_load_l = f.get_tire_load(tire_spring_F_fl, tire_damper_F_fl)),
             lateral_load_dist_r = f.get_lateral_load_dist_axle(tire_load_r = f.get_tire_load(tire_spring_F_rr, tire_damper_F_rr),
-                                                                tire_load_l = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)))
+                                                                tire_load_l = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl))),
+        tlsf_suspension_fr = TLSF_suspension_fr,
+        tlsf_suspension_fl = TLSF_suspension_fl,
+        tlsf_suspension_rr = TLSF_suspension_rr,
+        tlsf_suspension_rl = TLSF_suspension_rl
     )
 
     return body_accelerations, state_for_plotting_return
