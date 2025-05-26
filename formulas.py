@@ -5,8 +5,11 @@ Copyright 2025 Ivan Pandev
 import numpy as np
 from scipy import stats
 
+FREQ_DATA = 500  # hz
 G = 9.80665  # m/(s**2)
 K_TRAVEL_LIMIT = 1e8  # N/m, spring rate associated with component crashes like suspension bottoming
+PERIOD_DATA = 1/FREQ_DATA  # s
+PERIOD_DATA_MS = 1000/FREQ_DATA  # ms
 
 
 '''
@@ -248,31 +251,31 @@ SECTION 2. Begin functions for supporting time-dependent solving below.
 
 def LatLT_sm_elastic_1g_axle(sm, rc_height, cm_height, tw):  # N, transferred to outside OR lifted from inside tire
     
-    return 9.80665 * sm * (cm_height - rc_height) / tw
+    return G * sm * (cm_height - rc_height) / tw
 
 def LatLT_sm_geometric_1g_axle(sm, rc_height, tw):  # N, transferred to outside OR lifted from inside tire
     
-    return 9.80665 * sm * rc_height / tw
+    return G * sm * rc_height / tw
 
 def LatLT_usm_geometric_1g_axle(usm, tire_diameter, tw, b_r, b_l):  # N, transferred to outside OR lifted from inside tire
     
     effective_tire_radius = tire_diameter/2 - (b_r + b_l)/2
 
-    return 9.80665 * usm * effective_tire_radius / tw
+    return G * usm * effective_tire_radius / tw
 
 def LongLT_sm_elastic_1g_v3(LongG, sm, cm_height, wheel_base, nominal_engine_brake_G,
                             pc_height_braking, pc_height_accel):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > nominal_engine_brake_G:  # Braking Condition
-        return 9.80665 * sm/4 * (cm_height - pc_height_braking) / (wheel_base/2)
+        return G * sm/4 * (cm_height - pc_height_braking) / (wheel_base/2)
     else:  # Accel Condition
-        return 9.80665 * sm/4 * (cm_height - pc_height_accel) / (wheel_base/2)
+        return G * sm/4 * (cm_height - pc_height_accel) / (wheel_base/2)
 
 def LongLT_sm_geometric_1g_v3(LongG, sm, wheel_base, nominal_engine_brake_G,
                               pc_height_braking, pc_height_accel, drive_tire_diam):  # N, transferred to outside OR lifted from ONE end tire
     if LongG > nominal_engine_brake_G:  # Braking Condition
-        return 9.80665 * sm/4 * (pc_height_braking) / (wheel_base/2)
+        return G * sm/4 * (pc_height_braking) / (wheel_base/2)
     else:  # Accel Condition
-        return 9.80665 * sm/4 * (pc_height_accel - drive_tire_diam/2) / (wheel_base/2)
+        return G * sm/4 * (pc_height_accel - drive_tire_diam/2) / (wheel_base/2)
 
 #TODO: Finalize and draw out the below equations. Not done yet.
 def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_end, b_fr, b_fl, b_rr, b_rl):  # N, transferred to outside OR lifted from One end tire
@@ -281,18 +284,18 @@ def LongLT_usm_geometric_1g(usm_f, usm_r, tire_diameter_f, tire_diameter_r, wb_e
     effective_tire_radius_f = tire_diameter_f/2 - (b_fr + b_fl)/2
     effective_tire_radius_r = tire_diameter_r/2 - (b_rr + b_rl)/2
 
-    return 9.80665 * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
+    return G * ((usm_f * effective_tire_radius_f + usm_r * effective_tire_radius_r)/2) / wb_end
 
 def get_long_LT_diff_trq(G_Long, m, drive_wheel_diam, wheel_base, nominal_engine_brake_G):
     '''Effects of engine torque, including engine braking, reacting through the differential mounts longitudinally, per ONE wheel.'''
     G_Long = min(G_Long, nominal_engine_brake_G)  # Accel Gs are recorded negative. Engine braking is slightly positive.
-    trq_half_shafts = G_Long*m*9.80655*drive_wheel_diam/2
+    trq_half_shafts = G_Long*m*G*drive_wheel_diam/2
     return trq_half_shafts/(wheel_base*2)
 
 def get_lat_LT_diff_trq(G_Long, m, drive_wheel_diam, tw, nominal_engine_brake_G, diff_ratio):
     '''Effects of engine torque, including engine braking, reacting through the engine mounts laterally, per ONE wheel.'''
     G_Long = min(G_Long, nominal_engine_brake_G)  # Accel Gs are recorded negative. Engine braking is slightly positive.
-    trq_half_shafts = G_Long*m*9.80655*drive_wheel_diam/2
+    trq_half_shafts = G_Long*m*G*drive_wheel_diam/2
     trq_driveshaft = trq_half_shafts/diff_ratio
     return trq_driveshaft/(tw*2)
 
@@ -394,11 +397,11 @@ def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
 
 def get_pre_init_b(sm, usm, K_t):
     'Returns at-rest tire-to-ground deflection, taken from the unloaded, free-spring position.'
-    return (sm + usm) * 9.80655 / K_t
+    return (sm + usm) * G / K_t
 
 def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
-    return sm * 9.80655 / K_s + get_pre_init_b(sm, usm, K_t)
+    return sm * G / K_s + get_pre_init_b(sm, usm, K_t)
 
 def get_bump_stop_F(K_bs, compression_to_bumpstop, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
@@ -435,7 +438,7 @@ def fft_convert(series):
     series = series - np.mean(series)
 
     #  Perform FFT transform
-    freqs = np.fft.fftfreq(len(series), 1 / 1000)
+    freqs = np.fft.fftfreq(len(series), PERIOD_DATA)
     mags = np.abs(np.fft.fft(series))
 
     #  Normalize to preserve comparability to time-domain values
@@ -455,8 +458,10 @@ def get_RMS(series):
 
     return np.sqrt(signal_energy)
 
-def get_RsqCorr_v_time(control, results, window=2000):
+def get_RsqCorr_v_time(control, results, window_s=4):
     print('Calculating R-sq correlation w.r.t. time...')
+
+    window = window_s * FREQ_DATA
 
     corr_series=[]
     for i in range(len(control[:-window])):

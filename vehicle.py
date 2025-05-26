@@ -13,6 +13,7 @@ import formulas as f
 import RK4_iterator as RK4
 import visualizer as vis
 import virtual_params as vparam
+import yappi
 
 
 def user_warning():
@@ -374,6 +375,7 @@ class HyperMuVehicle:
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         force_function, scenario = get_force_function(**kwargs)
+        # force_function = convert_pandas_to_namedTuple()
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
@@ -385,7 +387,8 @@ class HyperMuVehicle:
         graphing_dict={}
         for var in model.state_for_plotting._fields:
             graphing_dict[f'{var}']=[]
-
+        
+        #yappi.start()
         for i, row in tqdm(force_function.iterrows(), desc="Starting RK4 solver...", ncols=100):
 
             state, graphing_vars = RK4.RK4_step(
@@ -400,11 +403,13 @@ class HyperMuVehicle:
 
             if i == len(force_function)-3:
                 break
-
+        
+        #yappi.stop()
         force_function = force_function[2:]
         assert len(force_function) == len(graphing_dict['tire_load_fr']), 'Length mismatch.'
 
         print('Shaker solver complete.\n')
+        #yappi.get_func_stats().print_all()
 
         return force_function, graphing_dict, scenario
     

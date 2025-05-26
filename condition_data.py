@@ -68,14 +68,14 @@ def yaw_rate_correction(data, pitch_installation_angle_deg):
 
     return data
 
-def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, sampling_freq = 1000):
+def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, sampling_freq = f.FREQ_DATA):
 
     nyquist = sampling_freq / 2
     b, a = butter(order, cutoff_freq / nyquist, btype='low')
 
     return filtfilt(b, a, signal)
 
-def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.2, sampling_freq = 1000):
+def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.2, sampling_freq = f.FREQ_DATA):
 
     nyquist = sampling_freq / 2
     b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
@@ -123,15 +123,15 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
     data_in['c_rl_array'] = 0
 
     #resampling to time resolution, interpolate linearly then drop all nans
-    data_in = data_in.resample('1ms').interpolate(method='linear')
+    data_in = data_in.resample(f'{f.PERIOD_DATA_MS}ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
     #get derivative of yaw rate
-    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
+    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/f.PERIOD_DATA
     data_in = data_in.dropna(how='any')
 
     data_in['calc_speed_ms'] = np.cumsum(
-        0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000))
+        0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (f.G / f.FREQ_DATA))
 
     data_in = apply_filter(
         data = data_in,
@@ -215,7 +215,7 @@ def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_
     data_in = data_in[start_index:end_index]
 
     #resampling to time resolution, interpolate linearly then drop all nans
-    data_in = data_in.resample('1ms').interpolate(method='linear')
+    data_in = data_in.resample(f'{f.PERIOD_DATA_MS}ms').interpolate(method='linear')
     data_in = data_in.dropna(how='any')
 
     data_in['c_fr_array'] = 0
@@ -224,11 +224,11 @@ def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_
     data_in['c_rl_array'] = 0
 
     #get derivative of yaw rate
-    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/0.001
+    data_in['motionRotationRateZ_diff(rad/s)'] = data_in['motionRotationRateZ(rad/s)'].diff()/f.PERIOD_DATA
     data_in = data_in.dropna(how='any')
 
     data_in['calc_speed_ms'] = np.cumsum(
-        -0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (9.80655/1000))
+        -0.5 * (data_in['motionUserAccelerationY(G)'] + data_in['motionUserAccelerationY(G)'].shift(1)) * (f.G / f.FREQ_DATA))
 
     data_in = apply_filter(
         data = data_in,
