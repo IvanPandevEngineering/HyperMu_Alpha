@@ -1,3 +1,4 @@
+from collections import namedtuple
 import math
 import numpy as np
 import pandas as pd
@@ -14,6 +15,16 @@ COLUMNS_GLOBAL=['loggingTime(txt)',
                 'timestep',
                 'gyroRotationY(rad/s)', 'gyroRotationX(rad/s)', 'gyroRotationZ(rad/s)',
                 'gyroRotationZ_diff(rad/s)', 'gyroRotationX_corrected(rad/s)', 'calc_speed_ms']
+
+force_function_namedTuple = namedtuple('force_function_namedTuple',
+    ['time',
+    'G_lat', 'G_long', 'G_vert',
+    'pitch_rad',
+    'c_fr', 'c_fl', 'c_rr', 'c_rl',
+    'timestep',
+    'gyro_roll_radps', 'gyro_pitch_radps', 'gyro_yaw_radps',
+    'gyro_yaw_diff_radps', 'gyro_pitch_corrected_radps', 'calc_speed_ms']
+)
 
 def custom_smooth(array, rounds):
     
@@ -174,9 +185,26 @@ def from_sensor_log_iOS_app_unbiased(path:str, filter_type:str, smoothing_window
                                  data_in['motionRotationRateZ_diff(rad/s)'],
                                  data_in['gyroRotationX_corrected(rad/s)'],
                                  data_in['calc_speed_ms'])), \
-        columns=COLUMNS_GLOBAL)
-    
-    return data.dropna(how='any').reset_index(drop=True)
+        columns=COLUMNS_GLOBAL).dropna(how='any').reset_index(drop=True)
+
+    return force_function_namedTuple(
+        time = np.array(data['loggingTime(txt)']),
+        G_lat = np.array(data['accelerometerAccelerationX(G)']),
+        G_long = np.array(data['accelerometerAccelerationY(G)']),
+        G_vert = np.array(data['accelerometerAccelerationZ(G)']),
+        pitch_rad = np.array(data['motionPitch(rad)']),
+        c_fr = np.array(data['c_fr']),
+        c_fl = np.array(data['c_fl']),
+        c_rr = np.array(data['c_rr']),
+        c_rl = np.array(data['c_rl']),
+        timestep = np.array(data['timestep']),
+        gyro_roll_radps = np.array(data['gyroRotationY(rad/s)']),
+        gyro_pitch_radps = np.array(data['gyroRotationX(rad/s)']),
+        gyro_yaw_radps = np.array(data['gyroRotationZ(rad/s)']),
+        gyro_yaw_diff_radps = np.array(data['gyroRotationZ_diff(rad/s)']),
+        gyro_pitch_corrected_radps = np.array(data['gyroRotationX_corrected(rad/s)']),
+        calc_speed_ms = np.array(data['calc_speed_ms'])
+    )
 
 def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_index:int, end_index:int):
 
@@ -459,7 +487,24 @@ def get_init_empty():
         control_array_pitch_rate_corrected, control_array_pitch_accel_corrected, empty)),
         columns=COLUMNS_GLOBAL)
 
-    return data
+    return force_function_namedTuple(
+        time = np.array(data['loggingTime(txt)']),
+        G_lat = np.array(data['accelerometerAccelerationX(G)']),
+        G_long = np.array(data['accelerometerAccelerationY(G)']),
+        G_vert = np.array(data['accelerometerAccelerationZ(G)']),
+        pitch_rad = np.array(data['motionPitch(rad)']),
+        c_fr = np.array(data['c_fr']),
+        c_fl = np.array(data['c_fl']),
+        c_rr = np.array(data['c_rr']),
+        c_rl = np.array(data['c_rl']),
+        timestep = np.array(data['timestep']),
+        gyro_roll_radps = np.array(data['gyroRotationY(rad/s)']),
+        gyro_pitch_radps = np.array(data['gyroRotationX(rad/s)']),
+        gyro_yaw_radps = np.array(data['gyroRotationZ(rad/s)']),
+        gyro_yaw_diff_radps = np.array(data['gyroRotationZ_diff(rad/s)']),
+        gyro_pitch_corrected_radps = np.array(data['gyroRotationX_corrected(rad/s)']),
+        calc_speed_ms = np.array(data['calc_speed_ms'])
+    )
 
 def SNR_analysis(signal_path, control_path, filter_type, scenario):
     '''
