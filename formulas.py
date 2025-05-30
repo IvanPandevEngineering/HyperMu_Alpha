@@ -3,6 +3,7 @@ Copyright 2025 Ivan Pandev
 '''
 
 import numpy as np
+from numba import jit
 from scipy import stats
 
 FREQ_DATA = 500  # hz
@@ -328,6 +329,7 @@ def get_inst_I_roll_properties(I_roll, tw):
 def get_inst_I_pitch_properties(I_pitch, wheel_base, sm_f):
     return I_pitch, wheel_base*(1-sm_f), wheel_base*sm_f
 
+@jit(nopython=True, cache=True)
 def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw_f, tw_r):
     'Force added or subtracted to a single wheel bue to chassis twist. Return front and rear axle values.'
     roll_angle_f_deg = 180 * np.arctan((a_fr-a_fl)/tw_f) / np.pi
@@ -407,12 +409,15 @@ def get_bump_stop_F(K_bs, compression_to_bumpstop, init_a, a, init_b, b):
     'Returns bump stop engagement force. All inputs are taken at the wheel.'
     return max(K_bs * ((a-init_a) - (b-init_b) - compression_to_bumpstop), 0)
 
+@jit(nopython=True, cache=True)
 def get_hysteresis_saturation_component(a_d, b_d, weight):
     return 1 / np.cosh(weight * (a_d - b_d))
 
+@jit(nopython=True, cache=True)
 def get_hysteresis_coef(Hy, a_d, b_d):
     return Hy * get_hysteresis_saturation_component(a_d, b_d, 6)
 
+@jit(nopython=True, cache=True)
 def get_hysteresis_force(Hy, a_d, b_d, a_dd, b_dd):
     return Hy * (a_dd - b_dd) * get_hysteresis_saturation_component(a_d, b_d, 6)
 

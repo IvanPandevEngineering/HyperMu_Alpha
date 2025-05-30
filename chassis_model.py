@@ -23,6 +23,7 @@ A consequence of these conventions is that no suspension travel ratios will be u
 '''
 
 from collections import namedtuple
+from numba import jit
 import numpy as np
 
 import formulas as f
@@ -52,6 +53,10 @@ state_for_plotting = namedtuple('variables_of_interest',
      'lateral_load_dist_f', 'lateral_load_dist_r', 'lateral_load_dist_ratio',
      'tlsf_suspension_fr', 'tlsf_suspension_fl', 'tlsf_suspension_rr', 'tlsf_suspension_rl']
 )
+
+@jit(nopython=True, cache=True)
+def solve_chassis_matrix(A_mat, B_mat):
+    return np.linalg.inv(A_mat) @ B_mat
 
 def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
@@ -210,7 +215,7 @@ def solve_chassis_model(
     ])
 
     #  Solve for accelerations of all 8 bodies
-    body_accelerations = np.matmul(np.linalg.inv(A_mat), B_mat)
+    body_accelerations = solve_chassis_matrix(A_mat=A_mat, B_mat=B_mat)
 
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
     state_for_plotting_return = state_for_plotting(

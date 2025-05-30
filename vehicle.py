@@ -389,7 +389,7 @@ class HyperMuVehicle:
             graphing_dict[f'{var}']=[]
         
         #yappi.start()
-        for i, row in tqdm(force_function.iterrows(), desc="Starting RK4 solver...", ncols=100):
+        for i, row in tqdm(force_function[:-2].iterrows(), desc="Starting RK4 solver...", ncols=100):
 
             state, graphing_vars = RK4.RK4_step(
                 dt = force_function['timestep'][i+1],
@@ -400,9 +400,6 @@ class HyperMuVehicle:
 
             for var in model.state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
-
-            if i == len(force_function)-3:
-                break
         
         #yappi.stop()
         force_function = force_function[2:]
