@@ -2,10 +2,12 @@
 Copyright 2025 Ivan Pandev
 '''
 
+from numba import jit
 import numpy as np
 import pickle
 from tqdm import tqdm
 import yaml
+import yappi
 
 import chassis_model as model
 import condition_data as cd
@@ -13,7 +15,6 @@ import formulas as f
 import RK4_iterator as RK4
 import visualizer as vis
 import virtual_params as vparam
-import yappi
 
 
 def user_warning():
@@ -28,7 +29,7 @@ def user_warning():
 
     pass
 
-def make_metric(value, unit: str):
+def make_metric(value:float, unit:str) -> float:
     if unit == 'in':
         return value/39.3701  # Meters
     if unit == 'lb':
@@ -58,6 +59,10 @@ def error_percent(rec, sim, baseline):
     rec = rec - baseline
     sim = sim - baseline
     return 100 * (sim - rec) / rec
+
+def trim_force_function(tuple_instance):
+    modified_data = {field: np_array[:-2] for field, np_array in tuple_instance._asdict().items()}
+    return cd.force_function_namedTuple(**modified_data)
 
 def get_force_function(**kwargs):
 
@@ -101,37 +106,44 @@ def get_force_function(**kwargs):
 
     return force_function, scenario
 
-def get_inputs_dt(i, row, force_function):
+#@jit(nopython=True, cache=True)
+# JIT increases this function time for telemetry runs, speeds up init runs moderately.
+def get_inputs_dt(i, force_function):
 
     inputs_dt = RK4.time_dependent_inputs(
-        G_lat = row['accelerometerAccelerationX(G)'],
-        G_lat_next = force_function['accelerometerAccelerationX(G)'][i+1],
-        G_lat_half_next = (row['accelerometerAccelerationX(G)'] + force_function['accelerometerAccelerationX(G)'][i+1])/2, 
-        G_long = row['accelerometerAccelerationY(G)'],
-        G_long_next = force_function['accelerometerAccelerationY(G)'][i+1],
-        G_long_half_next = (row['accelerometerAccelerationY(G)'] + force_function['accelerometerAccelerationY(G)'][i+1])/2,
-        G_vert = row['accelerometerAccelerationZ(G)'],
-        G_vert_next = force_function['accelerometerAccelerationZ(G)'][i+1],
-        G_vert_half_next = (row['accelerometerAccelerationZ(G)'] + force_function['accelerometerAccelerationZ(G)'][i+1])/2,
-        c_fr = row['c_fr'],
-        c_fl = row['c_fl'],
-        c_rr = row['c_rr'],
-        c_rl = row['c_rl'],
-        c_d_fr = (row['c_fr']-force_function['c_fr'][i+1]) / row['timestep'],
-        c_d_fl = (row['c_fl']-force_function['c_fl'][i+1]) / row['timestep'],
-        c_d_rr = (row['c_rr']-force_function['c_rr'][i+1]) / row['timestep'],
-        c_d_rl = (row['c_rl']-force_function['c_rl'][i+1]) / row['timestep'],
-        c_fr_next = force_function['c_fr'][i+1],
-        c_fl_next = force_function['c_fl'][i+1],
-        c_rr_next = force_function['c_rr'][i+1],
-        c_rl_next = force_function['c_rl'][i+1],
-        c_d_fr_next = (force_function['c_fr'][i+1]-force_function['c_fr'][i+2]) / force_function['timestep'][i+1],
-        c_d_fl_next = (force_function['c_fl'][i+1]-force_function['c_fl'][i+2]) / force_function['timestep'][i+1],
-        c_d_rr_next = (force_function['c_rr'][i+1]-force_function['c_rr'][i+2]) / force_function['timestep'][i+1],
-        c_d_rl_next = (force_function['c_rl'][i+1]-force_function['c_rl'][i+2]) / force_function['timestep'][i+1],
-        speed_ms = row['calc_speed_ms'],
-        speed_ms_half_next = (force_function['calc_speed_ms'][i+1] + force_function['calc_speed_ms'][i])/2,
-        speed_ms_next = force_function['calc_speed_ms'][i+1]
+        G_lat = force_function.G_lat[i],
+        G_lat_next = force_function.G_lat[i+1],
+        G_lat_half_next = (force_function.G_lat[i] + force_function.G_lat[i+1])/2,
+
+        G_long = force_function.G_long[i],
+        G_long_next = force_function.G_long[i+1],
+        G_long_half_next = (force_function.G_long[i] + force_function.G_long[i+1])/2,
+
+        G_vert = force_function.G_vert[i],
+        G_vert_next = force_function.G_vert[i+1],
+        G_vert_half_next = (force_function.G_vert[i] + force_function.G_vert[i+1])/2,
+
+        c_fr = force_function.c_fr[i],
+        c_fl = force_function.c_fl[i],
+        c_rr = force_function.c_rr[i],
+        c_rl = force_function.c_rl[i],
+        c_d_fr = (force_function.c_fr[i]-force_function.c_fr[i+1]) / force_function.timestep[i],
+        c_d_fl = (force_function.c_fl[i]-force_function.c_fl[i+1]) / force_function.timestep[i],
+        c_d_rr = (force_function.c_rr[i]-force_function.c_rr[i+1]) / force_function.timestep[i],
+        c_d_rl = (force_function.c_rl[i]-force_function.c_rl[i+1]) / force_function.timestep[i],
+
+        c_fr_next = force_function.c_fr[i+1],
+        c_fl_next = force_function.c_fl[i+1],
+        c_rr_next = force_function.c_rr[i+1],
+        c_rl_next = force_function.c_rl[i+1],
+        c_d_fr_next = (force_function.c_fr[i+1]-force_function.c_fr[i+2]) / force_function.timestep[i+1],
+        c_d_fl_next = (force_function.c_fl[i+1]-force_function.c_fl[i+2]) / force_function.timestep[i+1],
+        c_d_rr_next = (force_function.c_rr[i+1]-force_function.c_rr[i+2]) / force_function.timestep[i+1],
+        c_d_rl_next = (force_function.c_rl[i+1]-force_function.c_rl[i+2]) / force_function.timestep[i+1],
+        
+        speed_ms = force_function.calc_speed_ms[i],
+        speed_ms_half_next = (force_function.calc_speed_ms[i+1] + force_function.calc_speed_ms[i])/2,
+        speed_ms_next = force_function.calc_speed_ms[i+1]
     )
 
     return inputs_dt
@@ -375,7 +387,6 @@ class HyperMuVehicle:
 
         #  Create force function from chosen telemetry conversion function, selection of function TBD
         force_function, scenario = get_force_function(**kwargs)
-        # force_function = convert_pandas_to_namedTuple()
 
         #  Initiate the positional state of the chassis
         state = model.chassis_state(
@@ -389,26 +400,25 @@ class HyperMuVehicle:
             graphing_dict[f'{var}']=[]
         
         #yappi.start()
-        for i, row in tqdm(force_function[:-2].iterrows(), desc="Starting RK4 solver...", ncols=100):
+        for i in tqdm(range(len(force_function.time)-2), desc="Starting RK4 solver"):
 
             state, graphing_vars = RK4.RK4_step(
-                dt = force_function['timestep'][i+1],
+                dt = force_function.timestep[i+1],
                 self = self,
                 state = state,
-                inputs_dt = get_inputs_dt(i, row, force_function)
+                inputs_dt = get_inputs_dt(i, force_function)
             )
 
             for var in model.state_for_plotting._fields:
                 graphing_dict[f'{var}'].append(getattr(graphing_vars, var))
         
         #yappi.stop()
-        force_function = force_function[2:]
-        assert len(force_function) == len(graphing_dict['tire_load_fr']), 'Length mismatch.'
+        assert (len(force_function.time)-2) == len(graphing_dict['tire_load_fr']), 'Length mismatch.'
 
         print('Shaker solver complete.\n')
         #yappi.get_func_stats().print_all()
 
-        return force_function, graphing_dict, scenario
+        return trim_force_function(force_function), graphing_dict, scenario
     
     def plot_shaker_basics(self, **kwargs):
 
