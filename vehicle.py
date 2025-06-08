@@ -415,15 +415,15 @@ class HyperMuVehicle:
         #yappi.stop()
         assert (len(force_function.time)-2) == len(graphing_dict['tire_load_fr']), 'Length mismatch.'
 
-        print('Shaker solver complete.\n')
+        print('Shaker solver complete.')
         #yappi.get_func_stats().print_all()
 
         return trim_force_function(force_function), graphing_dict, scenario
     
-    def plot_shaker_basics(self, **kwargs):
+    def plot_shaker_basics(self, desc, **kwargs):
 
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
-        vis.plot_basics(force_function, shaker_results, scenario)
+        vis.plot_basics(force_function, shaker_results, scenario, desc)
     
     def correlation_rollPitchRate(self, **kwargs):
 
@@ -471,17 +471,17 @@ class HyperMuVehicle:
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
         vis.damper_response_detail(force_function, shaker_results, scenario)
     
-    def compare_tire_response_detail(self, other_vehicle, **kwargs):
+    def compare_tire_response_detail(self, other_vehicle, desc, **kwargs):
         
         force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
         force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
-        vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
+        vis.tire_response_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario, desc)
     
-    def compare_load_transfer_detail(self, other_vehicle, **kwargs):
+    def compare_load_transfer_detail(self, other_vehicle, desc, **kwargs):
         
         force_function, shaker_results_self, scenario = self.Shaker(**kwargs)
         force_function, shaker_results_other, scenario = other_vehicle.Shaker(**kwargs)
-        vis.load_transfer_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario)
+        vis.load_transfer_detail_comparison(force_function, shaker_results_self, shaker_results_other, scenario, desc)
 
     def get_static_errors_dict(
         self,

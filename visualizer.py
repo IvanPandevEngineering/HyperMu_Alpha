@@ -12,9 +12,9 @@ import formulas as f
 
 DISCLAIMER = str("This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user's own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2025 Ivan Pandev.")
 
-def plot_basics(force_function, results, scenario):
+def plot_basics(force_function, results, scenario, desc):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
@@ -22,7 +22,7 @@ def plot_basics(force_function, results, scenario):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(4, 2, figsize=(14, 9))
-    fig.suptitle(f'General Performance Overview, {scenario}', fontsize=14)
+    fig.suptitle(f'General Performance Overview, {scenario}: {desc}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
     subplots[0,0].plot(force_function.time, force_function.G_lat, label='lateral accel (G)')
@@ -110,7 +110,7 @@ def plot_basics(force_function, results, scenario):
 
 def check_correlation_rollPitchRate(force_function, results, scenario):
 
-    print('Graphing...')
+    print('Graphing...\n')
     plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
     mpl.rcParams['xtick.labelsize'] = 8
@@ -183,7 +183,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
 
 def check_correlation_rollRateRearZ(force_function, results, scenario):
 
-    print('Graphing...')
+    print('Graphing...\n')
     plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
     mpl.rcParams['xtick.labelsize'] = 8
@@ -239,7 +239,7 @@ def check_correlation_rollRateRearZ(force_function, results, scenario):
 
 def damper_response_detail(force_function, shaker_results, scenario):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(1, 1, figsize=(8, 6))
@@ -262,7 +262,7 @@ def check_correlation_one_wheel_warp(
         static_errors
     ):
     
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('seaborn-v0_8')
     mpl.rcParams['axes.labelsize'] = 10
@@ -332,9 +332,9 @@ def check_correlation_one_wheel_warp(
     fig.tight_layout()
     plt.show()
 
-def tire_response_detail_comparison(force_function, self, other, scenario):
+def tire_response_detail_comparison(force_function, self, other, scenario, desc):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('ggplot')
     mpl.rcParams['axes.labelsize'] = 10
@@ -342,88 +342,88 @@ def tire_response_detail_comparison(force_function, self, other, scenario):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(2, 4, figsize=(14, 8))
-    fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
+    fig.suptitle(f'Tire Response Detail Comparison, {scenario}: {desc}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
-    subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Self (fl)')
-    subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Other (fl)')
-    subplots[0,0].axvline(x=np.mean(self['tire_load_fl']), color='orange', linestyle='dashed', label='Self Mean Load (fl)')
-    subplots[0,0].axvline(x=np.mean(other['tire_load_fl']), color='blue', linestyle='dashed', label='Other Mean Load (fl)')
+    subplots[0,0].hist(self['tire_load_fl'], bins=50, label='Baseline (fl)')
+    subplots[0,0].hist(other['tire_load_fl'], bins=50, alpha = 0.8, label='Candidate (fl)')
+    subplots[0,0].axvline(x=np.mean(self['tire_load_fl']), color='orange', linestyle='dashed', label='Baseline Mean Load (fl)')
+    subplots[0,0].axvline(x=np.mean(other['tire_load_fl']), color='blue', linestyle='dashed', label='Candidate Mean Load (fl)')
     subplots[0,0].set_ylabel('Count')
     subplots[0,0].set_xlabel(f"""Tire Load (N)
-Self: x\u0304:{np.mean(self['tire_load_fl']):.0f}, \u03C3:{np.std(self['tire_load_fl']):.0f}
-Other: x\u0304:{np.mean(other['tire_load_fl']):.0f}, \u03C3:{np.std(other['tire_load_fl']):.0f}""")
+Baseline: x\u0304:{np.mean(self['tire_load_fl']):.0f}, \u03C3:{np.std(self['tire_load_fl']):.0f}
+Candidate: x\u0304:{np.mean(other['tire_load_fl']):.0f}, \u03C3:{np.std(other['tire_load_fl']):.0f}""")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
 
-    subplots[0,1].hist(self['tire_load_fr'], bins=50, label='Self (fr)')
-    subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='Other (fr)')
-    subplots[0,1].axvline(x=np.mean(self['tire_load_fr']), color='orange', linestyle='dashed', label='Self Mean Load (fr)')
-    subplots[0,1].axvline(x=np.mean(other['tire_load_fr']), color='blue', linestyle='dashed', label='Other Mean Load (fr)')
+    subplots[0,1].hist(self['tire_load_fr'], bins=50, label='Baseline (fr)')
+    subplots[0,1].hist(other['tire_load_fr'], bins=50, alpha = 0.7, label='Candidate (fr)')
+    subplots[0,1].axvline(x=np.mean(self['tire_load_fr']), color='orange', linestyle='dashed', label='Baseline Mean Load (fr)')
+    subplots[0,1].axvline(x=np.mean(other['tire_load_fr']), color='blue', linestyle='dashed', label='Candidate Mean Load (fr)')
     subplots[0,1].set_ylabel('Count')
     subplots[0,1].set_xlabel(f"""Tire Load (N)
-Self: x\u0304:{np.mean(self['tire_load_fr']):.0f}, \u03C3:{np.std(self['tire_load_fr']):.0f}
-Other: x\u0304:{np.mean(other['tire_load_fr']):.0f}, \u03C3:{np.std(other['tire_load_fr']):.0f}""")
+Baseline: x\u0304:{np.mean(self['tire_load_fr']):.0f}, \u03C3:{np.std(self['tire_load_fr']):.0f}
+Candidate: x\u0304:{np.mean(other['tire_load_fr']):.0f}, \u03C3:{np.std(other['tire_load_fr']):.0f}""")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_yscale('log')
 
-    subplots[1,0].hist(self['tire_load_rl'], bins=50, label='Self (rl)')
-    subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='Other (rl)')
-    subplots[1,0].axvline(x=np.mean(self['tire_load_rl']), color='orange', linestyle='dashed', label='Self Mean Load (rl)')
-    subplots[1,0].axvline(x=np.mean(other['tire_load_rl']), color='blue', linestyle='dashed', label='Other Mean Load (rl)')
+    subplots[1,0].hist(self['tire_load_rl'], bins=50, label='Baseline (rl)')
+    subplots[1,0].hist(other['tire_load_rl'], bins=50, alpha = 0.7, label='Candidate (rl)')
+    subplots[1,0].axvline(x=np.mean(self['tire_load_rl']), color='orange', linestyle='dashed', label='Baseline Mean Load (rl)')
+    subplots[1,0].axvline(x=np.mean(other['tire_load_rl']), color='blue', linestyle='dashed', label='Candidate Mean Load (rl)')
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Tire Load (N)
-Self: x\u0304:{np.mean(self['tire_load_rl']):.0f}, \u03C3:{np.std(self['tire_load_rl']):.0f}
-Other: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_load_rl']):.0f}""")
+Baseline: x\u0304:{np.mean(self['tire_load_rl']):.0f}, \u03C3:{np.std(self['tire_load_rl']):.0f}
+Candidate: x\u0304:{np.mean(other['tire_load_rl']):.0f}, \u03C3:{np.std(other['tire_load_rl']):.0f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
 
-    subplots[1,1].hist(self['tire_load_rr'], bins=50, label='Self (rr)')
-    subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='Other (rr)')
-    subplots[1,1].axvline(x=np.mean(self['tire_load_rr']), color='orange', linestyle='dashed', label='Self Mean Load (rr))')
-    subplots[1,1].axvline(x=np.mean(other['tire_load_rr']), color='blue', linestyle='dashed', label='Other Mean Load (rr)')
+    subplots[1,1].hist(self['tire_load_rr'], bins=50, label='Baseline (rr)')
+    subplots[1,1].hist(other['tire_load_rr'], bins=50, alpha = 0.7, label='Candidate (rr)')
+    subplots[1,1].axvline(x=np.mean(self['tire_load_rr']), color='orange', linestyle='dashed', label='Baseline Mean Load (rr))')
+    subplots[1,1].axvline(x=np.mean(other['tire_load_rr']), color='blue', linestyle='dashed', label='Candidate Mean Load (rr)')
     subplots[1,1].set_ylabel('Count')
     subplots[1,1].set_xlabel(f"""Tire Load (N)
-Self: x\u0304:{np.mean(self['tire_load_rr']):.0f}, \u03C3:{np.std(self['tire_load_rr']):.0f}
-Other: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_load_rr']):.0f}""")
+Baseline: x\u0304:{np.mean(self['tire_load_rr']):.0f}, \u03C3:{np.std(self['tire_load_rr']):.0f}
+Candidate: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_load_rr']):.0f}""")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')
 
-    subplots[0,2].plot(f.fft_convert(self['tire_load_fl'])[0], f.fft_convert(self['tire_load_fl'])[1], label='Self (fl)')
-    subplots[0,2].plot(f.fft_convert(other['tire_load_fl'])[0], f.fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='Other (fl)')
+    subplots[0,2].plot(f.fft_convert(self['tire_load_fl'])[0], f.fft_convert(self['tire_load_fl'])[1], label='Baseline (fl)')
+    subplots[0,2].plot(f.fft_convert(other['tire_load_fl'])[0], f.fft_convert(other['tire_load_fl'])[1], alpha = 0.7, label='Candidate (fl)')
     subplots[0,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_fl']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_fl']):.3}")
+    subplots[0,2].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['tire_load_fl']):.3}\n Candidate RMS (N): {f.get_RMS(other['tire_load_fl']):.3}")
     subplots[0,2].legend()
     subplots[0,2].grid(True)
     subplots[0,2].set_xscale('log')
     subplots[0,2].set_xlim(left = None, right = 100)
 
-    subplots[0,3].plot(f.fft_convert(self['tire_load_fr'])[0], f.fft_convert(self['tire_load_fr'])[1], label='Self (fr)')
-    subplots[0,3].plot(f.fft_convert(other['tire_load_fr'])[0], f.fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='Other (fr)')
+    subplots[0,3].plot(f.fft_convert(self['tire_load_fr'])[0], f.fft_convert(self['tire_load_fr'])[1], label='Baseline (fr)')
+    subplots[0,3].plot(f.fft_convert(other['tire_load_fr'])[0], f.fft_convert(other['tire_load_fr'])[1], alpha = 0.7, label='Candidate (fr)')
     subplots[0,3].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[0,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_fr']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_fr']):.3}")
+    subplots[0,3].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['tire_load_fr']):.3}\n Candidate RMS (N): {f.get_RMS(other['tire_load_fr']):.3}")
     subplots[0,3].legend()
     subplots[0,3].grid(True)
     subplots[0,3].set_xscale('log')
     subplots[0,3].set_xlim(left = None, right = 100)
 
-    subplots[1,2].plot(f.fft_convert(self['tire_load_rl'])[0], f.fft_convert(self['tire_load_rl'])[1], label='Self (rl)')
-    subplots[1,2].plot(f.fft_convert(other['tire_load_rl'])[0], f.fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='Other (rl)')
+    subplots[1,2].plot(f.fft_convert(self['tire_load_rl'])[0], f.fft_convert(self['tire_load_rl'])[1], label='Baseline (rl)')
+    subplots[1,2].plot(f.fft_convert(other['tire_load_rl'])[0], f.fft_convert(other['tire_load_rl'])[1], alpha = 0.7, label='Candidate (rl)')
     subplots[1,2].set_ylabel('Normalized Tire Load Amplitude (N)')
-    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_rl']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_rl']):.3}")
+    subplots[1,2].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['tire_load_rl']):.3}\n Candidate RMS (N): {f.get_RMS(other['tire_load_rl']):.3}")
     subplots[1,2].legend()
     subplots[1,2].grid(True)
     subplots[1,2].set_xscale('log')
     subplots[1,2].set_xlim(left = None, right = 100)
 
-    subplots[1,3].plot(f.fft_convert(self['tire_load_rr'])[0], f.fft_convert(self['tire_load_rr'])[1], label='Self (rr)')
-    subplots[1,3].plot(f.fft_convert(other['tire_load_rr'])[0], f.fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='Other (rr)')
+    subplots[1,3].plot(f.fft_convert(self['tire_load_rr'])[0], f.fft_convert(self['tire_load_rr'])[1], label='Baseline (rr)')
+    subplots[1,3].plot(f.fft_convert(other['tire_load_rr'])[0], f.fft_convert(other['tire_load_rr'])[1], alpha = 0.7, label='Candidate (rr)')
     subplots[1,3].set_ylabel('Normalized Amplitude (N)')
-    subplots[1,3].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['tire_load_rr']):.3}\n Other RMS (N): {f.get_RMS(other['tire_load_rr']):.3}")
+    subplots[1,3].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['tire_load_rr']):.3}\n Candidate RMS (N): {f.get_RMS(other['tire_load_rr']):.3}")
     subplots[1,3].legend()
     subplots[1,3].grid(True)
     subplots[1,3].set_xscale('log')
@@ -434,9 +434,9 @@ Other: x\u0304:{np.mean(other['tire_load_rr']):.0f}, \u03C3:{np.std(other['tire_
 
     return
 
-def load_transfer_detail_comparison(force_function, self, other, scenario):
+def load_transfer_detail_comparison(force_function, self, other, scenario, desc):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('ggplot')
     mpl.rcParams['axes.labelsize'] = 10
@@ -444,67 +444,67 @@ def load_transfer_detail_comparison(force_function, self, other, scenario):
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
     fig, subplots = plt.subplots(3, 2, figsize=(12, 8))
-    fig.suptitle(f'Tire Response Detail Comparison, {scenario}', fontsize=14)
+    fig.suptitle(f'Tire Response Detail Comparison, {scenario}: {desc}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
-    subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Self')
-    subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Other')
-    subplots[0,0].axvline(x=np.mean(self['lateral_load_dist_f']), color='orange', linestyle='dashed', label='Self Mean')
-    subplots[0,0].axvline(x=np.mean(other['lateral_load_dist_f']), color='blue', linestyle='dashed', label='Other Mean')
+    subplots[0,0].hist(self['lateral_load_dist_f'], bins=50, label='Baseline')
+    subplots[0,0].hist(other['lateral_load_dist_f'], bins=50, alpha = 0.8, label='Candidate')
+    subplots[0,0].axvline(x=np.mean(self['lateral_load_dist_f']), color='orange', linestyle='dashed', label='Baseline Mean')
+    subplots[0,0].axvline(x=np.mean(other['lateral_load_dist_f']), color='blue', linestyle='dashed', label='Candidate Mean')
     subplots[0,0].set_ylabel('Count')
     subplots[0,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Front)
-Self: x\u0304:{np.mean(self['lateral_load_dist_f']):.2f}, \u03C3:{np.std(self['lateral_load_dist_f']):.2f}
-Other: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other['lateral_load_dist_f']):.2f}""")
+Baseline: x\u0304:{np.mean(self['lateral_load_dist_f']):.2f}, \u03C3:{np.std(self['lateral_load_dist_f']):.2f}
+Candidate: x\u0304:{np.mean(other['lateral_load_dist_f']):.2f}, \u03C3:{np.std(other['lateral_load_dist_f']):.2f}""")
     subplots[0,0].legend()
     subplots[0,0].grid(True)
     subplots[0,0].set_yscale('log')
 
-    subplots[1,0].hist(self['lateral_load_dist_r'], bins=50, label='Self')
-    subplots[1,0].hist(other['lateral_load_dist_r'], bins=50, alpha = 0.7, label='Other')
-    subplots[1,0].axvline(x=np.mean(self['lateral_load_dist_r']), color='orange', linestyle='dashed', label='Self Mean')
-    subplots[1,0].axvline(x=np.mean(other['lateral_load_dist_r']), color='blue', linestyle='dashed', label='Other Mean')
+    subplots[1,0].hist(self['lateral_load_dist_r'], bins=50, label='Baseline')
+    subplots[1,0].hist(other['lateral_load_dist_r'], bins=50, alpha = 0.7, label='Candidate')
+    subplots[1,0].axvline(x=np.mean(self['lateral_load_dist_r']), color='orange', linestyle='dashed', label='Baseline Mean')
+    subplots[1,0].axvline(x=np.mean(other['lateral_load_dist_r']), color='blue', linestyle='dashed', label='Candidate Mean')
     subplots[1,0].set_ylabel('Count')
     subplots[1,0].set_xlabel(f"""Lateral Load Distribution (Outer %, Rear)
-Self: x\u0304:{np.mean(self['lateral_load_dist_r']):.2f}, \u03C3:{np.std(self['lateral_load_dist_r']):.2f}
-Other: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other['lateral_load_dist_r']):.2f}""")
+Baseline: x\u0304:{np.mean(self['lateral_load_dist_r']):.2f}, \u03C3:{np.std(self['lateral_load_dist_r']):.2f}
+Candidate: x\u0304:{np.mean(other['lateral_load_dist_r']):.2f}, \u03C3:{np.std(other['lateral_load_dist_r']):.2f}""")
     subplots[1,0].legend()
     subplots[1,0].grid(True)
     subplots[1,0].set_yscale('log')
 
-    subplots[2,0].hist(self['lateral_load_dist_ratio'], bins=50, label='Self')
-    subplots[2,0].hist(other['lateral_load_dist_ratio'], bins=50, alpha = 0.7, label='Other')
-    subplots[2,0].axvline(x=np.mean(self['lateral_load_dist_ratio']), color='orange', linestyle='dashed', label='Self Mean')
-    subplots[2,0].axvline(x=np.mean(other['lateral_load_dist_ratio']), color='blue', linestyle='dashed', label='Other Mean')
+    subplots[2,0].hist(self['lateral_load_dist_ratio'], bins=50, label='Baseline')
+    subplots[2,0].hist(other['lateral_load_dist_ratio'], bins=50, alpha = 0.7, label='Candidate')
+    subplots[2,0].axvline(x=np.mean(self['lateral_load_dist_ratio']), color='orange', linestyle='dashed', label='Baseline Mean')
+    subplots[2,0].axvline(x=np.mean(other['lateral_load_dist_ratio']), color='blue', linestyle='dashed', label='Candidate Mean')
     subplots[2,0].set_ylabel('Count')
     subplots[2,0].set_xlabel(f"""Lateral Load Distribution Ratio (% Front)
-Self: x\u0304:{np.mean(self['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(self['lateral_load_dist_ratio']):.2f}
-Other: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(other['lateral_load_dist_ratio']):.2f}""")
+Baseline: x\u0304:{np.mean(self['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(self['lateral_load_dist_ratio']):.2f}
+Candidate: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(other['lateral_load_dist_ratio']):.2f}""")
     subplots[2,0].legend()
     subplots[2,0].grid(True)
     subplots[2,0].set_yscale('log')
 
-    subplots[0,1].plot(f.fft_convert(self['lateral_load_dist_f'])[0], f.fft_convert(self['lateral_load_dist_f'])[1], label='Self')
-    subplots[0,1].plot(f.fft_convert(other['lateral_load_dist_f'])[0], f.fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Other')
+    subplots[0,1].plot(f.fft_convert(self['lateral_load_dist_f'])[0], f.fft_convert(self['lateral_load_dist_f'])[1], label='Baseline')
+    subplots[0,1].plot(f.fft_convert(other['lateral_load_dist_f'])[0], f.fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Candidate')
     subplots[0,1].set_ylabel('Norm. Lat. Load % Amp (Front)')
-    subplots[0,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_f']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_f']):.3}")
+    subplots[0,1].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['lateral_load_dist_f']):.3}\n Candidate RMS (N): {f.get_RMS(other['lateral_load_dist_f']):.3}")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_xscale('log')
     subplots[0,1].set_xlim(left = None, right = 100)
 
-    subplots[1,1].plot(f.fft_convert(self['lateral_load_dist_r'])[0], f.fft_convert(self['lateral_load_dist_r'])[1], label='Self')
-    subplots[1,1].plot(f.fft_convert(other['lateral_load_dist_r'])[0], f.fft_convert(other['lateral_load_dist_r'])[1], alpha = 0.7, label='Other')
+    subplots[1,1].plot(f.fft_convert(self['lateral_load_dist_r'])[0], f.fft_convert(self['lateral_load_dist_r'])[1], label='Baseline')
+    subplots[1,1].plot(f.fft_convert(other['lateral_load_dist_r'])[0], f.fft_convert(other['lateral_load_dist_r'])[1], alpha = 0.7, label='Candidate')
     subplots[1,1].set_ylabel('Norm. Lat. Load % Amp (Rear)')
-    subplots[1,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_r']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_r']):.3}")
+    subplots[1,1].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['lateral_load_dist_r']):.3}\n Candidate RMS (N): {f.get_RMS(other['lateral_load_dist_r']):.3}")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_xscale('log')
     subplots[1,1].set_xlim(left = None, right = 100)
 
-    subplots[2,1].plot(f.fft_convert(self['lateral_load_dist_ratio'])[0], f.fft_convert(self['lateral_load_dist_ratio'])[1], label='Self')
-    subplots[2,1].plot(f.fft_convert(other['lateral_load_dist_ratio'])[0], f.fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Other')
+    subplots[2,1].plot(f.fft_convert(self['lateral_load_dist_ratio'])[0], f.fft_convert(self['lateral_load_dist_ratio'])[1], label='Baseline')
+    subplots[2,1].plot(f.fft_convert(other['lateral_load_dist_ratio'])[0], f.fft_convert(other['lateral_load_dist_ratio'])[1], alpha = 0.7, label='Candidate')
     subplots[2,1].set_ylabel('Norm. Lat. Load Ratio % Amp')
-    subplots[2,1].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(self['lateral_load_dist_ratio']):.3}\n Other RMS (N): {f.get_RMS(other['lateral_load_dist_ratio']):.3}")
+    subplots[2,1].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['lateral_load_dist_ratio']):.3}\n Candidate RMS (N): {f.get_RMS(other['lateral_load_dist_ratio']):.3}")
     subplots[2,1].legend()
     subplots[2,1].grid(True)
     subplots[2,1].set_xscale('log')
@@ -517,7 +517,7 @@ Other: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.std(o
 
 def SNR_analysis(signal, control, scenario):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('ggplot')
     mpl.rcParams['axes.labelsize'] = 10
@@ -532,18 +532,18 @@ def SNR_analysis(signal, control, scenario):
     subplots[0,0].plot(control['gyroRotationY(rad/s)'], label='Control (rad/s)')
     subplots[0,0].plot(control['accelerometerAccelerationX(G)'], label='Control Lateral (G)')
 
-    subplots[0,1].hist(signal['gyroRotationY(rad/s)'], bins=50, label='Self')
-    subplots[0,1].hist(control['gyroRotationY(rad/s)'], bins=50, alpha = 0.8, label='Other')
+    subplots[0,1].hist(signal['gyroRotationY(rad/s)'], bins=50, label='Baseline')
+    subplots[0,1].hist(control['gyroRotationY(rad/s)'], bins=50, alpha = 0.8, label='Candidate')
     subplots[0,1].set_ylabel('Count')
-    subplots[0,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(signal['gyroRotationY(rad/s)']):.4}\n Other Std Dev: {np.std(control['gyroRotationY(rad/s)']):.4}")
+    subplots[0,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Baseline Std Dev: {np.std(signal['gyroRotationY(rad/s)']):.4}\n Candidate Std Dev: {np.std(control['gyroRotationY(rad/s)']):.4}")
     subplots[0,1].legend()
     subplots[0,1].grid(True)
     subplots[0,1].set_yscale('log')
 
-    subplots[0,2].plot(f.fft_convert(signal['gyroRotationY(rad/s)'])[0], f.fft_convert(signal['gyroRotationY(rad/s)'])[1], label='Self')
-    subplots[0,2].plot(f.fft_convert(control['gyroRotationY(rad/s)'])[0], f.fft_convert(control['gyroRotationY(rad/s)'])[1], alpha = 0.7, label='Other')
+    subplots[0,2].plot(f.fft_convert(signal['gyroRotationY(rad/s)'])[0], f.fft_convert(signal['gyroRotationY(rad/s)'])[1], label='Baseline')
+    subplots[0,2].plot(f.fft_convert(control['gyroRotationY(rad/s)'])[0], f.fft_convert(control['gyroRotationY(rad/s)'])[1], alpha = 0.7, label='Candidate')
     subplots[0,2].set_ylabel('Norm. Lat. Load % Amp (Front)')
-    subplots[0,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(signal['gyroRotationY(rad/s)']):.3}\n Other RMS (N): {f.get_RMS(control['gyroRotationY(rad/s)']):.3}")
+    subplots[0,2].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(signal['gyroRotationY(rad/s)']):.3}\n Candidate RMS (N): {f.get_RMS(control['gyroRotationY(rad/s)']):.3}")
     subplots[0,2].legend()
     subplots[0,2].grid(True)
     subplots[0,2].set_xscale('log')
@@ -553,18 +553,18 @@ def SNR_analysis(signal, control, scenario):
     subplots[1,0].plot(control['gyroRotationX(rad/s)'], label='Control (rad/s)')
     subplots[1,0].plot(control['accelerometerAccelerationY(G)'], label='Control Lateral (G)')
 
-    subplots[1,1].hist(signal['gyroRotationX(rad/s)'], bins=50, label='Self')
-    subplots[1,1].hist(control['gyroRotationX(rad/s)'], bins=50, alpha = 0.8, label='Other')
+    subplots[1,1].hist(signal['gyroRotationX(rad/s)'], bins=50, label='Baseline')
+    subplots[1,1].hist(control['gyroRotationX(rad/s)'], bins=50, alpha = 0.8, label='Candidate')
     subplots[1,1].set_ylabel('Count')
-    subplots[1,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Self Std Dev: {np.std(signal['gyroRotationX(rad/s)']):.4}\n Other Std Dev: {np.std(control['gyroRotationX(rad/s)']):.4}")
+    subplots[1,1].set_xlabel(f"Lateral Load Distribution (Outer %, Front)\n Baseline Std Dev: {np.std(signal['gyroRotationX(rad/s)']):.4}\n Candidate Std Dev: {np.std(control['gyroRotationX(rad/s)']):.4}")
     subplots[1,1].legend()
     subplots[1,1].grid(True)
     subplots[1,1].set_yscale('log')
 
-    subplots[1,2].plot(f.fft_convert(signal['gyroRotationX(rad/s)'])[0], f.fft_convert(signal['gyroRotationX(rad/s)'])[1], label='Self')
-    subplots[1,2].plot(f.fft_convert(control['gyroRotationX(rad/s)'])[0], f.fft_convert(control['gyroRotationX(rad/s)'])[1], alpha = 0.7, label='Other')
+    subplots[1,2].plot(f.fft_convert(signal['gyroRotationX(rad/s)'])[0], f.fft_convert(signal['gyroRotationX(rad/s)'])[1], label='Baseline')
+    subplots[1,2].plot(f.fft_convert(control['gyroRotationX(rad/s)'])[0], f.fft_convert(control['gyroRotationX(rad/s)'])[1], alpha = 0.7, label='Candidate')
     subplots[1,2].set_ylabel('Norm. Lat. Load % Amp (Front)')
-    subplots[1,2].set_xlabel(f"Frequency (hz)\n Self RMS (N): {f.get_RMS(signal['gyroRotationX(rad/s)']):.3}\n Other RMS (N): {f.get_RMS(control['gyroRotationX(rad/s)']):.3}")
+    subplots[1,2].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(signal['gyroRotationX(rad/s)']):.3}\n Candidate RMS (N): {f.get_RMS(control['gyroRotationX(rad/s)']):.3}")
     subplots[1,2].legend()
     subplots[1,2].grid(True)
     subplots[1,2].set_xscale('log')
@@ -577,7 +577,7 @@ def SNR_analysis(signal, control, scenario):
 
 def ML_set(synth_data):
 
-    print('Graphing...')
+    print('Graphing...\n')
 
     plt.style.use('seaborn-v0_8')
     fig, subplots = plt.subplots(1, 2, figsize=(12, 6))
