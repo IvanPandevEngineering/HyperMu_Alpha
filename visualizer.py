@@ -10,7 +10,7 @@ from scipy import stats
 import formulas as f
 
 
-DISCLAIMER = str("This software is intended strictly as a technical showcase for public viewing and commentary, NOT for public use, editing, or adoption. The simulation code within has not been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user's own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2025 Ivan Pandev.")
+DISCLAIMER = str("SAFETY DISCLAIMER: This software—and any video or written post showcasing its development or capabilities—is intended strictly as a technical demonstration for public viewing and commentary, NOT for public use, modification, or integration into real-world systems. The simulation code within has NOT been fully validated for accuracy or real-world application. Do NOT apply any changes to real-world vehicles based on HyperMu simulation results. Modifying vehicle properties always carries a risk of deadly loss of vehicle control. Any attempt to use this software for real-world applications is highly discouraged and done at the user’s own risk. The author assumes no liability for any consequences arising from such misuse. All rights reserved, Copyright 2025 Ivan Pandev.")
 
 def plot_basics(force_function, results, scenario, desc):
 
@@ -31,7 +31,9 @@ def plot_basics(force_function, results, scenario, desc):
     #subplots[0,0].plot(force_function.time, -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
     #subplots[0,0].plot(force_function.time, force_function['motionPitch(rad)']*56, label='pitch (deg)')
     subplots[0,0].plot(force_function.time, force_function.c_fr*-100, label='road surface height (cm, fr)')
+    subplots[0,0].plot(force_function.time, force_function.c_fl*-100, label='road surface height (cm, fl)')
     subplots[0,0].plot(force_function.time, force_function.c_rr*-100, label='road surface height (cm, rr)')
+    subplots[0,0].plot(force_function.time, force_function.c_rl*-100, label='road surface height (cm, rl)')
     subplots[0,0].set_ylabel('Function inputs (G, cm)')
     subplots[0,0].legend()
     subplots[0,0].grid(True)
@@ -142,7 +144,7 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
 
     subplots[1][0].plot(force_function.time, (180*force_function.gyro_pitch_corrected_radps/3.14), label='Corrected pitch angle rate (deg/s)')
     subplots[1][0].plot(force_function.time, (180*force_function.gyro_pitch_radps/3.14), label='Recorded pitch rate (deg/s)')
-    subplots[1][0].plot(force_function.time, (0.01*180*force_function['gyroRotationZ(rad/s)']/3.14), label='Yaw angle rate (deg/s)')
+    subplots[1][0].plot(force_function.time, (0.01*180*force_function.gyro_yaw_radps/3.14), label='Yaw angle rate (deg/s)')
     #subplots[1][0].plot(force_function.time, force_function.G_long, label='Long Accel (G)')
     subplots[1][0].plot(force_function.time, -np.array(results['pitch_angle_rate']), label='predicted pitch angle rate (deg/s)')
     subplots[1][0].set_xlabel('Time')
@@ -161,17 +163,19 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     subplots[1][1].set_ylabel('Recorded Pitch Rate (deg/s)')
     subplots[1][1].grid(True)
 
-    subplots[0][2].plot(force_function.time[:-2000], f.get_RsqCorr_v_time(
+    subplots[0][2].plot(force_function.time[:-1000], f.get_RsqCorr_v_time(
         control = 180*force_function.gyro_roll_radps/3.14,
-        results = np.array(results['roll_angle_rate_f']))
+        results = np.array(results['roll_angle_rate_f']),
+        window_s=4)
     )
     subplots[0][2].set_xlabel('Time (s)')
     subplots[0][2].set_ylabel('R-sq Correlation, Roll (%)')
     subplots[0][2].grid(True)
 
-    subplots[1][2].plot(force_function.time[:-2000], f.get_RsqCorr_v_time(
+    subplots[1][2].plot(force_function.time[:-1000], f.get_RsqCorr_v_time(
         control = 180*force_function.gyro_pitch_corrected_radps/3.14,
-        results = -np.array(results['pitch_angle_rate']))
+        results = -np.array(results['pitch_angle_rate']),
+        window_s=4)
     )
     subplots[1][2].legend()
     subplots[1][2].set_xlabel('Time (s)')
@@ -443,7 +447,7 @@ def load_transfer_detail_comparison(force_function, self, other, scenario, desc)
     mpl.rcParams['legend.fontsize'] = 8
     mpl.rcParams['xtick.labelsize'] = 8
     mpl.rcParams['ytick.labelsize'] = 8
-    fig, subplots = plt.subplots(3, 2, figsize=(12, 8))
+    fig, subplots = plt.subplots(4, 2, figsize=(12, 10))
     fig.suptitle(f'Tire Response Detail Comparison, {scenario}: {desc}', fontsize=14)
     fig.text(0.005, 0.005, f'{DISCLAIMER}', fontsize=8)
 
@@ -483,6 +487,18 @@ Candidate: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.s
     subplots[2,0].grid(True)
     subplots[2,0].set_yscale('log')
 
+    subplots[3,0].hist(self['long_load_dist'], bins=50, label='Baseline')
+    subplots[3,0].hist(other['long_load_dist'], bins=50, alpha = 0.7, label='Candidate')
+    subplots[3,0].axvline(x=np.mean(self['long_load_dist']), color='orange', linestyle='dashed', label='Baseline Mean')
+    subplots[3,0].axvline(x=np.mean(other['long_load_dist']), color='blue', linestyle='dashed', label='Candidate Mean')
+    subplots[3,0].set_ylabel('Count')
+    subplots[3,0].set_xlabel(f"""Longitudinal Load Distribution (% Front)
+Baseline: x\u0304:{np.mean(self['long_load_dist']):.2f}, \u03C3:{np.std(self['long_load_dist']):.2f}
+Candidate: x\u0304:{np.mean(other['long_load_dist']):.2f}, \u03C3:{np.std(other['long_load_dist']):.2f}""")
+    subplots[3,0].legend()
+    subplots[3,0].grid(True)
+    subplots[3,0].set_yscale('log')
+
     subplots[0,1].plot(f.fft_convert(self['lateral_load_dist_f'])[0], f.fft_convert(self['lateral_load_dist_f'])[1], label='Baseline')
     subplots[0,1].plot(f.fft_convert(other['lateral_load_dist_f'])[0], f.fft_convert(other['lateral_load_dist_f'])[1], alpha = 0.7, label='Candidate')
     subplots[0,1].set_ylabel('Norm. Lat. Load % Amp (Front)')
@@ -509,6 +525,15 @@ Candidate: x\u0304:{np.mean(other['lateral_load_dist_ratio']):.2f}, \u03C3:{np.s
     subplots[2,1].grid(True)
     subplots[2,1].set_xscale('log')
     subplots[2,1].set_xlim(left = None, right = 100)
+
+    subplots[3,1].plot(f.fft_convert(self['long_load_dist'])[0], f.fft_convert(self['long_load_dist'])[1], label='Baseline')
+    subplots[3,1].plot(f.fft_convert(other['long_load_dist'])[0], f.fft_convert(other['long_load_dist'])[1], alpha = 0.7, label='Candidate')
+    subplots[3,1].set_ylabel('Norm. Long Load Ratio % Amp')
+    subplots[3,1].set_xlabel(f"Frequency (hz)\n Baseline RMS (N): {f.get_RMS(self['long_load_dist']):.3}\n Candidate RMS (N): {f.get_RMS(other['long_load_dist']):.3}")
+    subplots[3,1].legend()
+    subplots[3,1].grid(True)
+    subplots[3,1].set_xscale('log')
+    subplots[3,1].set_xlim(left = None, right = 100)
 
     fig.tight_layout()
     plt.show()

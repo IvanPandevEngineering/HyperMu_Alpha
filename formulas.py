@@ -401,6 +401,9 @@ def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
     else:
         return -1
 
+def get_long_load_dist(tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl):
+    return 100 * (tire_load_fr+tire_load_fl) / (tire_load_fr+tire_load_fl+tire_load_rr+tire_load_rl)
+
 def get_pre_init_b(sm, usm, K_t):
     'Returns at-rest tire-to-ground deflection, taken from the unloaded, free-spring position.'
     return (sm + usm) * G / K_t
@@ -467,7 +470,7 @@ def get_RMS(series):
 
     return np.sqrt(signal_energy)
 
-def get_RsqCorr_v_time(control, results, window_s=4):
+def get_RsqCorr_v_time(control, results, window_s):
     print('Calculating R-sq correlation w.r.t. time...')
 
     window = window_s * FREQ_DATA
