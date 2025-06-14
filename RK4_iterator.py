@@ -9,7 +9,8 @@ import chassis_model as model
 from collections import namedtuple
 
 time_dependent_inputs = namedtuple('time_dependent_inputs',
-    ['G_lat', 'G_lat_half_next', 'G_lat_next',
+    ['dt',
+     'G_lat', 'G_lat_half_next', 'G_lat_next',
      'G_long', 'G_long_half_next', 'G_long_next',
      'G_vert', 'G_vert_half_next', 'G_vert_next',
      'c_fr', 'c_fl', 'c_rr', 'c_rl',
@@ -20,8 +21,10 @@ time_dependent_inputs = namedtuple('time_dependent_inputs',
 )
 
 def RK4_step(
-    dt, self, state, inputs_dt
+    self, state, inputs_dt
 ) -> tuple:
+
+    dt = inputs_dt.dt
 
     dd_mat = model.solve_chassis_model(
         self = self, state = state,

@@ -111,6 +111,8 @@ def get_force_function(**kwargs):
 def get_inputs_dt(i, force_function):
 
     inputs_dt = RK4.time_dependent_inputs(
+        dt = force_function.timestep[i+1],
+
         G_lat = force_function.G_lat[i],
         G_lat_next = force_function.G_lat[i+1],
         G_lat_half_next = (force_function.G_lat[i] + force_function.G_lat[i+1])/2,
@@ -249,10 +251,10 @@ class HyperMuVehicle:
         self.m = vpd['corner_mass_fr'] + vpd['corner_mass_fl'] + vpd['corner_mass_rr'] + vpd['corner_mass_rl']
         self.m_f = (vpd['corner_mass_fr'] + vpd['corner_mass_fl']) / self.m
         self.m_r = (vpd['corner_mass_rr'] + vpd['corner_mass_rl']) / self.m
-        self.resting_load_fr_N = vpd['corner_mass_fr'] * 9.80665
-        self.resting_load_fl_N = vpd['corner_mass_fl'] * 9.80665
-        self.resting_load_rr_N = vpd['corner_mass_rr'] * 9.80665
-        self.resting_load_rl_N = vpd['corner_mass_rl'] * 9.80665
+        self.resting_load_fr_N = vpd['corner_mass_fr'] * f.G
+        self.resting_load_fl_N = vpd['corner_mass_fl'] * f.G
+        self.resting_load_rr_N = vpd['corner_mass_rr'] * f.G
+        self.resting_load_rl_N = vpd['corner_mass_rl'] * f.G
 
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
@@ -402,9 +404,13 @@ class HyperMuVehicle:
         #yappi.start()
         for i in tqdm(range(len(force_function.time)-2), desc="Starting RK4 solver"):
 
+            #  Given current state as, bs, and cs...
+            #  self.update_kinematics(state)
+            #  tyres.update_tyres(state)
+
             state, graphing_vars = RK4.RK4_step(
-                dt = force_function.timestep[i+1],
                 self = self,
+                #  include tyres here
                 state = state,
                 inputs_dt = get_inputs_dt(i, force_function)
             )
