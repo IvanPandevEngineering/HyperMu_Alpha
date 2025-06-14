@@ -28,7 +28,8 @@ def RK4_step(
 
     dd_mat = model.solve_chassis_model(
         self = self, state = state,
-        G_lat = inputs_dt.G_lat, G_long = inputs_dt.G_long, speed_ms=inputs_dt.speed_ms  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat, G_long = inputs_dt.G_long, speed_ms=inputs_dt.speed_ms,
+        plot_cycle=False
     )[0]
 
     x1_a_fr = dt * state.a_d_fr
@@ -61,7 +62,8 @@ def RK4_step(
     dd_mat_half_next_1 = model.solve_chassis_model(
         self = self,
         state = RK_state_1,
-        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next, speed_ms=inputs_dt.speed_ms_half_next  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next, speed_ms=inputs_dt.speed_ms_half_next,
+        plot_cycle=False
     )[0]
 
     x2_a_fr = dt * (state.a_d_fr + v1_a_d_fr/2)
@@ -94,7 +96,8 @@ def RK4_step(
     dd_mat_half_next_2 = model.solve_chassis_model(
         self = self,
         state = RK_state_2,
-        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next, speed_ms=inputs_dt.speed_ms_half_next  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_half_next, G_long = inputs_dt.G_long_half_next, speed_ms=inputs_dt.speed_ms_half_next,
+        plot_cycle=False
     )[0]
 
     x3_a_fr = dt * (state.a_d_fr + v2_a_d_fr/2)
@@ -126,7 +129,8 @@ def RK4_step(
     dd_mat_next = model.solve_chassis_model(
         self = self,
         state = RK_state_3,
-        G_lat = inputs_dt.G_lat_next, G_long = inputs_dt.G_long_next, speed_ms=inputs_dt.speed_ms_next  # lateral and longitudinal acceleration in G
+        G_lat = inputs_dt.G_lat_next, G_long = inputs_dt.G_long_next, speed_ms=inputs_dt.speed_ms_next,
+        plot_cycle=False
     )[0]
 
     x4_a_fr = dt * (state.a_d_fr + v3_a_d_fr)
@@ -177,7 +181,8 @@ def RK4_step(
     next_variables_of_interest = model.solve_chassis_model(
         self = self,
         state = next_state,
-        G_lat = inputs_dt.G_lat_next, G_long = inputs_dt.G_long_next, speed_ms=inputs_dt.speed_ms_next
+        G_lat = inputs_dt.G_lat_next, G_long = inputs_dt.G_long_next, speed_ms=inputs_dt.speed_ms_next,
+        plot_cycle=True
     )[1]
 
     return next_state, next_variables_of_interest

@@ -410,7 +410,7 @@ class HyperMuVehicle:
 
             state, graphing_vars = RK4.RK4_step(
                 self = self,
-                #  include tyres here
+                #  tyres = tyres
                 state = state,
                 inputs_dt = get_inputs_dt(i, force_function)
             )

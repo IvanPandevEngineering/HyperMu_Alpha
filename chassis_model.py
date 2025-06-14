@@ -63,8 +63,9 @@ def solve_chassis_model(
     self,  # Instance of ChassisDyne's vehicle() class, containing spring constants, damper rates, masses, and inertias
     #  tyre included here
     state,
-    G_lat, G_long, speed_ms  # lateral and longitudinal acceleration in G
-) -> np.array:
+    G_lat, G_long, speed_ms,
+    plot_cycle
+):
     
     '''
     This method returns the x_dd = F(t, x, x_d) matrix for use in the RK4 iterator:
@@ -176,9 +177,6 @@ def solve_chassis_model(
     The last 4 rows are unsprung body inertias.
     '''
 
-    #TODO: check implementation of vertical mass inertia, eliminates need for dynamic I and I_arms
-    #TODO: small angle assumption for I is implemented incorrectly. Does not consider scaling with track width.
-
     A_mat = np.array([
         [( - I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2) - self.sm_f*self.sm/2) - Hy_fr,\
          ( + I_roll_inst_f/(I_roll_arm_inst_f**2) - I_pitch_inst/(4*I_pitch_arm_inst_f**2)),\
@@ -210,7 +208,6 @@ def solve_chassis_model(
         [0, 0, 0, Hy_rl, 0, 0, 0, - self.usm_r - Hy_rl]  # unsprung x_dd-dependent forces, rear-left
     ])
 
-    #TODO: unsprung mass must be considered in last 4 rows, check to make sure it is/isn't and correct. 
     B_mat = np.array([
         [ - lat_sm_elastic_LT_f - long_sm_elastic_LT + chassis_flex_LT_f + ride_spring_F_fr + ARB_F_f + ride_damper_F_ideal_fr - self.sm_fr*f.G - downforce_f + TLSF_suspension_fr],
         [ + lat_sm_elastic_LT_f - long_sm_elastic_LT - chassis_flex_LT_f + ride_spring_F_fl - ARB_F_f + ride_damper_F_ideal_fl - self.sm_fl*f.G - downforce_f + TLSF_suspension_fl],
@@ -226,69 +223,72 @@ def solve_chassis_model(
     body_accelerations = solve_chassis_matrix(A_mat=A_mat, B_mat=B_mat)
 
     #  Capture the variables of interest which will be gathered in time-series and plotted in vehicle.py
-    state_for_plotting_return = state_for_plotting(
-        a_fr=state.a_fr,
-        a_fl=state.a_fl,
-        a_rr=state.a_rr,
-        a_rl=state.a_rl,
-        b_fr=state.b_fr,
-        b_fl=state.b_fl,
-        b_rr=state.b_rr,
-        b_rl=state.b_rl,
-        a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
-        # TODO: Spring forces calculated here need to have gas chamber, bump stop, and spring forces separated before motion ratios applied.
-        spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),
-        spring_disp_fl = f.get_spring_disp(a = state.a_fl, b = state.b_fl, WS_motion_ratio = self.WS_motion_ratio_f),
-        spring_disp_rr = f.get_spring_disp(a = state.a_rr, b = state.b_rr, WS_motion_ratio = self.WS_motion_ratio_r),
-        spring_disp_rl = f.get_spring_disp(a = state.a_rl, b = state.b_rl, WS_motion_ratio = self.WS_motion_ratio_r),
-        damper_disp_fr = f.get_damper_disp(a = state.a_fr, b = state.b_fr, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_disp_fl = f.get_damper_disp(a = state.a_fl, b = state.b_fl, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_disp_rr = f.get_damper_disp(a = state.a_rr, b = state.b_rr, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_disp_rl = f.get_damper_disp(a = state.a_rl, b = state.b_rl, WD_motion_ratio = self.WD_motion_ratio_r),
-        tire_load_fr = tire_load_fr,
-        tire_load_fl = tire_load_fl,
-        tire_load_rr = tire_load_rr,
-        tire_load_rl = tire_load_rl,
-        damper_vel_fr = f.get_damper_vel(a_d = state.a_d_fr, b_d = state.b_d_fr, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_vel_fl = f.get_damper_vel(a_d = state.a_d_fl, b_d = state.b_d_fl, WD_motion_ratio = self.WD_motion_ratio_f),
-        damper_vel_rr = f.get_damper_vel(a_d = state.a_d_rr, b_d = state.b_d_rr, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_vel_rl = f.get_damper_vel(a_d = state.a_d_rl, b_d = state.b_d_rl, WD_motion_ratio = self.WD_motion_ratio_r),
-        damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f)
-                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fr, b_d=state.b_d_fr, a_dd=body_accelerations[0], b_dd=body_accelerations[4]),
-        damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f)
-                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fl, b_d=state.b_d_fl,  a_dd=body_accelerations[1], b_dd=body_accelerations[5]),
-        damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r)
-                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rr, b_d=state.b_d_rr,  a_dd=body_accelerations[2], b_dd=body_accelerations[6]),
-        damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r)
-                        + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rl, b_d=state.b_d_rl,  a_dd=body_accelerations[3], b_dd=body_accelerations[7]),
-        bump_stop_F_fr = bump_stop_F_fr,
-        bump_stop_F_fl = bump_stop_F_fl,
-        bump_stop_F_rr = bump_stop_F_rr,
-        bump_stop_F_rl = bump_stop_F_rl,
-        roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl, tw = self.tw_f),
-        roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl, tw = self.tw_r),
-        pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl, wb=self.wheel_base),
-        roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl, tw = self.tw_f),
-        roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl, tw = self.tw_r),
-        pitch_angle_rate = f.get_pitch_angle_rate_deg(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl, wb=self.wheel_base),
-        lateral_load_dist_f = 100 * f.get_lateral_load_dist_axle(tire_load_r = tire_load_fr, 
-                                                           tire_load_l = tire_load_fl),
-        lateral_load_dist_r = 100 * f.get_lateral_load_dist_axle(tire_load_r = tire_load_rr,
-                                                           tire_load_l = tire_load_rl),
-        lateral_load_dist_ratio = 100 * f.get_lateral_load_dist_ratio(
-            lateral_load_dist_f = f.get_lateral_load_dist_axle(tire_load_r = tire_load_fr, 
-                                                                tire_load_l = tire_load_fl),
-            lateral_load_dist_r = f.get_lateral_load_dist_axle(tire_load_r = tire_load_rr,
-                                                                tire_load_l = tire_load_rl)),
-        long_load_dist= f.get_long_load_dist(tire_load_fr = tire_load_fr,
-                                             tire_load_fl = tire_load_fl,
-                                             tire_load_rr = tire_load_rr,
-                                             tire_load_rl = tire_load_rl),
-        tlsf_suspension_fr = TLSF_suspension_fr,
-        tlsf_suspension_fl = TLSF_suspension_fl,
-        tlsf_suspension_rr = TLSF_suspension_rr,
-        tlsf_suspension_rl = TLSF_suspension_rl
-    )
+    if plot_cycle:
+        state_for_plotting_return = state_for_plotting(
+            a_fr=state.a_fr,
+            a_fl=state.a_fl,
+            a_rr=state.a_rr,
+            a_rl=state.a_rl,
+            b_fr=state.b_fr,
+            b_fl=state.b_fl,
+            b_rr=state.b_rr,
+            b_rl=state.b_rl,
+            a_dd_rear_axle = float((body_accelerations[2] + body_accelerations[3])/2),
+            # TODO: Spring forces calculated here need to have gas chamber, bump stop, and spring forces separated before motion ratios applied.
+            spring_disp_fr = f.get_spring_disp(a = state.a_fr, b = state.b_fr, WS_motion_ratio = self.WS_motion_ratio_f),
+            spring_disp_fl = f.get_spring_disp(a = state.a_fl, b = state.b_fl, WS_motion_ratio = self.WS_motion_ratio_f),
+            spring_disp_rr = f.get_spring_disp(a = state.a_rr, b = state.b_rr, WS_motion_ratio = self.WS_motion_ratio_r),
+            spring_disp_rl = f.get_spring_disp(a = state.a_rl, b = state.b_rl, WS_motion_ratio = self.WS_motion_ratio_r),
+            damper_disp_fr = f.get_damper_disp(a = state.a_fr, b = state.b_fr, WD_motion_ratio = self.WD_motion_ratio_f),
+            damper_disp_fl = f.get_damper_disp(a = state.a_fl, b = state.b_fl, WD_motion_ratio = self.WD_motion_ratio_f),
+            damper_disp_rr = f.get_damper_disp(a = state.a_rr, b = state.b_rr, WD_motion_ratio = self.WD_motion_ratio_r),
+            damper_disp_rl = f.get_damper_disp(a = state.a_rl, b = state.b_rl, WD_motion_ratio = self.WD_motion_ratio_r),
+            tire_load_fr = tire_load_fr,
+            tire_load_fl = tire_load_fl,
+            tire_load_rr = tire_load_rr,
+            tire_load_rl = tire_load_rl,
+            damper_vel_fr = f.get_damper_vel(a_d = state.a_d_fr, b_d = state.b_d_fr, WD_motion_ratio = self.WD_motion_ratio_f),
+            damper_vel_fl = f.get_damper_vel(a_d = state.a_d_fl, b_d = state.b_d_fl, WD_motion_ratio = self.WD_motion_ratio_f),
+            damper_vel_rr = f.get_damper_vel(a_d = state.a_d_rr, b_d = state.b_d_rr, WD_motion_ratio = self.WD_motion_ratio_r),
+            damper_vel_rl = f.get_damper_vel(a_d = state.a_d_rl, b_d = state.b_d_rl, WD_motion_ratio = self.WD_motion_ratio_r),
+            damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = self.WD_motion_ratio_f)
+                            + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fr, b_d=state.b_d_fr, a_dd=body_accelerations[0], b_dd=body_accelerations[4]),
+            damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = self.WD_motion_ratio_f)
+                            + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fl, b_d=state.b_d_fl,  a_dd=body_accelerations[1], b_dd=body_accelerations[5]),
+            damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = self.WD_motion_ratio_r)
+                            + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rr, b_d=state.b_d_rr,  a_dd=body_accelerations[2], b_dd=body_accelerations[6]),
+            damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = self.WD_motion_ratio_r)
+                            + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rl, b_d=state.b_d_rl,  a_dd=body_accelerations[3], b_dd=body_accelerations[7]),
+            bump_stop_F_fr = bump_stop_F_fr,
+            bump_stop_F_fl = bump_stop_F_fl,
+            bump_stop_F_rr = bump_stop_F_rr,
+            bump_stop_F_rl = bump_stop_F_rl,
+            roll_angle_f = f.get_roll_angle_deg_per_axle(a_r = state.a_fr, a_l = state.a_fl, tw = self.tw_f),
+            roll_angle_r = f.get_roll_angle_deg_per_axle(a_r = state.a_rr, a_l = state.a_rl, tw = self.tw_r),
+            pitch_angle = f.get_pitch_angle_deg(a_fr = state.a_fr, a_fl = state.a_fl, a_rr = state.a_rr, a_rl = state.a_rl, wb=self.wheel_base),
+            roll_angle_rate_f = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_fr, a_l_d = state.a_d_fl, tw = self.tw_f),
+            roll_angle_rate_r = f.get_roll_angle_rate_deg_per_axle(a_r_d = state.a_d_rr, a_l_d = state.a_d_rl, tw = self.tw_r),
+            pitch_angle_rate = f.get_pitch_angle_rate_deg(a_fr_d = state.a_d_fr, a_fl_d = state.a_d_fl, a_rr_d = state.a_d_rr, a_rl_d = state.a_d_rl, wb=self.wheel_base),
+            lateral_load_dist_f = 100 * f.get_lateral_load_dist_axle(tire_load_r = tire_load_fr, 
+                                                            tire_load_l = tire_load_fl),
+            lateral_load_dist_r = 100 * f.get_lateral_load_dist_axle(tire_load_r = tire_load_rr,
+                                                            tire_load_l = tire_load_rl),
+            lateral_load_dist_ratio = 100 * f.get_lateral_load_dist_ratio(
+                lateral_load_dist_f = f.get_lateral_load_dist_axle(tire_load_r = tire_load_fr, 
+                                                                    tire_load_l = tire_load_fl),
+                lateral_load_dist_r = f.get_lateral_load_dist_axle(tire_load_r = tire_load_rr,
+                                                                    tire_load_l = tire_load_rl)),
+            long_load_dist= f.get_long_load_dist(tire_load_fr = tire_load_fr,
+                                                tire_load_fl = tire_load_fl,
+                                                tire_load_rr = tire_load_rr,
+                                                tire_load_rl = tire_load_rl),
+            tlsf_suspension_fr = TLSF_suspension_fr,
+            tlsf_suspension_fl = TLSF_suspension_fl,
+            tlsf_suspension_rr = TLSF_suspension_rr,
+            tlsf_suspension_rl = TLSF_suspension_rl
+        )
+    else:
+        state_for_plotting_return=None
 
     return body_accelerations, state_for_plotting_return
 

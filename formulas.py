@@ -362,24 +362,20 @@ def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
 
 @jit(nopython=True, cache=True)
 def get_roll_angle_deg_per_axle(a_r, a_l, tw):
-    # TODO: Needs review of small angle assumption.
     return 180 * np.arctan((a_r-a_l)/tw) / np.pi
 
 @jit(nopython=True, cache=True)
 def get_pitch_angle_deg(a_fr, a_fl, a_rr, a_rl, wb):
-    # TODO: Needs review of small angle assumption.
     disp_f = (a_fr + a_fl)/2
     disp_r = (a_rr + a_rl)/2
     return 180 * np.arctan((disp_f - disp_r)/wb) / np.pi
 
 @jit(nopython=True, cache=True)
 def get_roll_angle_rate_deg_per_axle(a_r_d, a_l_d, tw):
-    # TODO: Needs review of small angle assumption.
     return 180 * np.arctan((a_r_d-a_l_d)/tw) / np.pi
 
 @jit(nopython=True, cache=True)
 def get_pitch_angle_rate_deg(a_fr_d, a_fl_d, a_rr_d, a_rl_d, wb):
-    # TODO: Needs review of small angle assumption.
     vel_f = (a_fr_d + a_fl_d)/2
     vel_r = (a_rr_d + a_rl_d)/2
     return 180 * np.arctan((vel_f - vel_r)/wb) / np.pi
