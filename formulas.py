@@ -6,6 +6,7 @@ import numpy as np
 from numba import jit
 from scipy import stats
 
+BINS_FOR_INTEG = 10
 FREQ_DATA = 250  # hz
 G = 9.80665  # m/(s**2)
 K_TRAVEL_LIMIT = 1e8  # N/m, spring rate associated with component crashes like suspension bottoming
@@ -337,7 +338,7 @@ def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw_f, tw_r):
 
     return K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_f / 2), K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_r / 2)
 
-def get_ride_spring_F(K_s, a, b):
+def get_ride_spring_F_wheel(K_s, a, b):
     return max(K_s * (a - b), 0)
 
 def get_ARB_F(K_arb, a_r, b_r, a_l, b_l):
@@ -408,9 +409,9 @@ def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
     return sm * G / K_s + get_pre_init_b(sm, usm, K_t)
 
-def get_bump_stop_F(K_bs, compression_to_bumpstop, init_a, a, init_b, b):
-    'Returns bump stop engagement force. All inputs are taken at the wheel.'
-    return max(K_bs * ((a-init_a) - (b-init_b) - compression_to_bumpstop), 0)
+def get_spring_F_wheel(disp, rate, motion_ratio):
+    'Returns bump stop engagement force, at the wheel. For use in the model solver.'
+    return disp * rate / (motion_ratio**2)
 
 @jit(nopython=True, cache=True)
 def get_hysteresis_saturation_component(a_d, b_d, weight):
@@ -434,6 +435,18 @@ def get_CLpA(ref_speed, ref_df):
 
 def get_travel_limit_stop_force(init_a, a, init_b, b, travel_limit):
     return max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0)
+
+def interp_active_motion_ratio(a, b, indecies, motion_ratios):
+    return np.interp(
+        x = a - b,
+        xp = indecies,
+        fp = motion_ratios
+    )
+
+def integ_component_disp(a, b, indecies, motion_ratios):
+    x = np.linspace(0, a-b, num=BINS_FOR_INTEG)
+    y = np.interp(x = x, xp=indecies, fp=motion_ratios)
+    return np.trapezoid(y, x)
 
 '''
 SECTION 3. General helper functions.
