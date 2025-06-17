@@ -6,7 +6,7 @@ import numpy as np
 from numba import jit
 from scipy import stats
 
-BINS_FOR_INTEG = 10
+BINS_FOR_INTEG = 50
 FREQ_DATA = 250  # hz
 G = 9.80665  # m/(s**2)
 K_TRAVEL_LIMIT = 1e8  # N/m, spring rate associated with component crashes like suspension bottoming
@@ -309,20 +309,15 @@ def get_damper_disp(a, b, WD_motion_ratio):
     'Convert wheel-to-body displacement to damper displacement'
     return (a-b) / WD_motion_ratio
 
-def get_ideal_damper_force(
-        C_lsc, C_hsc, C_lsr, C_hsr, a_d, b_d, knee_c, knee_r
-    ):
-    'Inputs are given at the wheel. Returns hysteresis-free and champer-spring-free damper force at the wheel.'
-    if (a_d-b_d) > 0:  # Compression domain
-        if (a_d-b_d) > knee_c:  # High-speed compression domain
-            return (C_hsc * (a_d - b_d - knee_c) + C_lsc * knee_c)
-        else:  # Low-speed compression domain
-            return (C_lsc * (a_d - b_d))
-    else:  # Rebound domain
-        if (a_d-b_d) < -knee_r:  # High-speed rebound domain
-            return (C_hsr * (a_d - b_d + knee_r) - C_lsr * knee_r)
-        else:  # Low-speed rebound domain
-            return (C_lsr * (a_d - b_d))
+def get_ideal_damper_force_wheel(a_d, b_d, speeds, forces, active_motion_ratio):
+
+    speed_at_damper = (a_d - b_d) / active_motion_ratio
+
+    return np.interp(
+        x = speed_at_damper,
+        xp = speeds,
+        fp = forces
+    ) / active_motion_ratio**2
 
 def get_inst_I_roll_properties(I_roll, tw):
     return I_roll, tw/2
@@ -399,7 +394,11 @@ def get_lateral_load_dist_ratio(lateral_load_dist_f, lateral_load_dist_r):
         return -1
 
 def get_long_load_dist(tire_load_fr, tire_load_fl, tire_load_rr, tire_load_rl):
-    return 100 * (tire_load_fr+tire_load_fl) / (tire_load_fr+tire_load_fl+tire_load_rr+tire_load_rl)
+    if tire_load_fr+tire_load_fl+tire_load_rr+tire_load_rl > 0:
+        return 100 * (tire_load_fr+tire_load_fl) / (tire_load_fr+tire_load_fl+tire_load_rr+tire_load_rl)
+    #  Handle div0 cases when both axles have zero load transfer
+    else:
+        return -1
 
 def get_pre_init_b(sm, usm, K_t):
     'Returns at-rest tire-to-ground deflection, taken from the unloaded, free-spring position.'
@@ -433,9 +432,10 @@ def get_CLpA(ref_speed, ref_df):
     2DF/V**2 = CLpA'''
     return 2*ref_df/(ref_speed**2)
 
-def get_travel_limit_stop_force(init_a, a, init_b, b, travel_limit):
-    return max(K_TRAVEL_LIMIT * ((a-init_a)-(b-init_b) - travel_limit), 0)
+def get_travel_limit_stop_force(a, b, travel_limit):
+    return max((K_TRAVEL_LIMIT * (a-b-travel_limit)), 0)
 
+@jit(nopython=True, cache=True)
 def interp_active_motion_ratio(a, b, indecies, motion_ratios):
     return np.interp(
         x = a - b,
@@ -443,6 +443,7 @@ def interp_active_motion_ratio(a, b, indecies, motion_ratios):
         fp = motion_ratios
     )
 
+@jit(nopython=True, cache=True)
 def integ_component_disp(a, b, indecies, motion_ratios):
     x = np.linspace(0, a-b, num=BINS_FOR_INTEG)
     y = np.interp(x = x, xp=indecies, fp=motion_ratios)

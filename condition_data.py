@@ -69,12 +69,12 @@ def apply_filter(data, filter_type, smoothing_window_size):
 
 def yaw_rate_correction(data, pitch_installation_angle_deg):
 
-    live_pitch_angle = 2 * pitch_installation_angle_deg*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
+    live_pitch_angle = pitch_installation_angle_deg*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
 
     # live_pitch_angle = data['motionUserAccelerationY(G)'] # use long acceleration as a proxy for pitch angle
     #data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + abs(0.28*data['motionRotationRateZ(rad/s)'])**2
     
-    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
+    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] - np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
     #TODO: APPLY LATERALLY AS WELL???
 
     return data
@@ -275,7 +275,12 @@ def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_
     #print(f"ROLL RMS: {f.get_RMS(data_in['motionRotationRateY(rad/s)'])}")
     #print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
 
-    data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)']
+    # data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)']
+
+    data_in = yaw_rate_correction(
+        data = data_in,
+        pitch_installation_angle_deg = 6
+    )
 
     #create dataframe and drop nans one more time
     data = pd.DataFrame(list(zip(data_in['time'],

@@ -154,6 +154,7 @@ def solve_chassis_model(
     ride_spring_disp_fr = f.integ_component_disp(
         a=state.a_fr, b=state.b_fr, indecies=self.measured_WS_indecies_f, motion_ratios=self.measured_WS_motion_ratios_f
     )
+    #print(f'ride spring disp: {ride_spring_disp_fr}')
     ride_spring_disp_fl = f.integ_component_disp(
         a=state.a_fl, b=state.b_fl, indecies=self.measured_WS_indecies_f, motion_ratios=self.measured_WS_motion_ratios_f
     )
@@ -168,6 +169,7 @@ def solve_chassis_model(
     damper_disp_fr = f.integ_component_disp(
         a=state.a_fr, b=state.b_fr, indecies=self.measured_WD_indecies_f, motion_ratios=self.measured_WD_motion_ratios_f
     )
+    #print(f'damper disp: {damper_disp_fr}')
     damper_disp_fl = f.integ_component_disp(
         a=state.a_fl, b=state.b_fl, indecies=self.measured_WD_indecies_f, motion_ratios=self.measured_WD_motion_ratios_f
     )
@@ -214,10 +216,22 @@ def solve_chassis_model(
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
     
-    ride_damper_F_ideal_fr = f.get_ideal_damper_force(C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fr, b_d = state.b_d_fr, knee_c = self.knee_c_f, knee_r = self.knee_r_f)
-    ride_damper_F_ideal_fl = f.get_ideal_damper_force(C_lsc = self.C_lsc_f, C_hsc = self.C_hsc_f, C_lsr = self.C_lsr_f, C_hsr = self.C_hsr_f, a_d = state.a_d_fl, b_d = state.b_d_fl, knee_c = self.knee_c_f, knee_r = self.knee_r_f)
-    ride_damper_F_ideal_rr = f.get_ideal_damper_force(C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rr, b_d = state.b_d_rr, knee_c = self.knee_c_r, knee_r = self.knee_r_r)
-    ride_damper_F_ideal_rl = f.get_ideal_damper_force(C_lsc = self.C_lsc_r, C_hsc = self.C_hsc_r, C_lsr = self.C_lsr_r, C_hsr = self.C_hsr_r, a_d = state.a_d_rl, b_d = state.b_d_rl, knee_c = self.knee_c_r, knee_r = self.knee_r_r)
+    ride_damper_F_ideal_fr = f.get_ideal_damper_force_wheel(
+        a_d=state.a_d_fr, b_d=state.b_d_fr, active_motion_ratio=active_WD_motion_ratio_fr, 
+        speeds=self.measured_damper_speeds_f, forces=self.measured_damper_forces_f
+    )
+    ride_damper_F_ideal_fl = f.get_ideal_damper_force_wheel(
+        a_d=state.a_d_fl, b_d=state.b_d_fl, active_motion_ratio=active_WD_motion_ratio_fl, 
+        speeds=self.measured_damper_speeds_f, forces=self.measured_damper_forces_f
+    )
+    ride_damper_F_ideal_rr = f.get_ideal_damper_force_wheel(
+        a_d=state.a_d_rr, b_d=state.b_d_rr, active_motion_ratio=active_WD_motion_ratio_rr, 
+        speeds=self.measured_damper_speeds_r, forces=self.measured_damper_forces_r
+    )
+    ride_damper_F_ideal_rl = f.get_ideal_damper_force_wheel(
+        a_d=state.a_d_rl, b_d=state.b_d_rl, active_motion_ratio=active_WD_motion_ratio_rl, 
+        speeds=self.measured_damper_speeds_r, forces=self.measured_damper_forces_r
+    )
 
     tire_spring_F_fr = f.get_tire_spring_F(self.K_t_f, state.b_fr, state.c_fr)
     tire_spring_F_fl = f.get_tire_spring_F(self.K_t_f, state.b_fl, state.c_fl)
@@ -239,10 +253,10 @@ def solve_chassis_model(
     tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)
 
     #  Travel Limit Stop Force
-    TLSF_suspension_fr = f.get_travel_limit_stop_force(init_a=self.init_a_fr, a=state.a_fr, init_b=self.init_b_fr, b=state.b_fr, travel_limit=self.max_compression_f)
-    TLSF_suspension_fl = f.get_travel_limit_stop_force(init_a=self.init_a_fl, a=state.a_fl, init_b=self.init_b_fl, b=state.b_fl, travel_limit=self.max_compression_f)
-    TLSF_suspension_rr = f.get_travel_limit_stop_force(init_a=self.init_a_rr, a=state.a_rr, init_b=self.init_b_rr, b=state.b_rr, travel_limit=self.max_compression_r)
-    TLSF_suspension_rl = f.get_travel_limit_stop_force(init_a=self.init_a_rl, a=state.a_rl, init_b=self.init_b_rl, b=state.b_rl, travel_limit=self.max_compression_r)
+    TLSF_suspension_fr = f.get_travel_limit_stop_force(a=state.a_fr, b=state.b_fr, travel_limit=self.max_compression_f)
+    TLSF_suspension_fl = f.get_travel_limit_stop_force(a=state.a_fl, b=state.b_fl, travel_limit=self.max_compression_f)
+    TLSF_suspension_rr = f.get_travel_limit_stop_force(a=state.a_rr, b=state.b_rr, travel_limit=self.max_compression_r)
+    TLSF_suspension_rl = f.get_travel_limit_stop_force(a=state.a_rl, b=state.b_rl, travel_limit=self.max_compression_r)
 
     Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
