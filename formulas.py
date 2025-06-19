@@ -6,8 +6,8 @@ import numpy as np
 from numba import jit
 from scipy import stats
 
-BINS_FOR_INTEG = 50
-FREQ_DATA = 250  # hz
+BINS_FOR_INTEG = 30
+FREQ_DATA = 200  # hz
 G = 9.80665  # m/(s**2)
 K_TRAVEL_LIMIT = 1e8  # N/m, spring rate associated with component crashes like suspension bottoming
 PERIOD_DATA = 1/FREQ_DATA  # s
@@ -309,6 +309,7 @@ def get_damper_disp(a, b, WD_motion_ratio):
     'Convert wheel-to-body displacement to damper displacement'
     return (a-b) / WD_motion_ratio
 
+@jit(nopython=True, cache=True)
 def get_ideal_damper_force_wheel(a_d, b_d, speeds, forces, active_motion_ratio):
 
     speed_at_damper = (a_d - b_d) / active_motion_ratio
@@ -352,10 +353,6 @@ def get_damper_vel(a_d, b_d, WD_motion_ratio):
     'Inputs are given at the wheel. Returns damper velocity at the damper.'
     return (a_d - b_d) / WD_motion_ratio
     
-def get_damper_force(ride_damper_F_ideal, WD_motion_ratio):
-    'Inputs are given at the wheel. Returns damper force at the damper.'
-    return ride_damper_F_ideal / WD_motion_ratio**2
-
 @jit(nopython=True, cache=True)
 def get_roll_angle_deg_per_axle(a_r, a_l, tw):
     return 180 * np.arctan((a_r-a_l)/tw) / np.pi

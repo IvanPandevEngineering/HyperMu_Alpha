@@ -253,6 +253,7 @@ def solve_chassis_model(
     tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)
 
     #  Travel Limit Stop Force
+    # TODO: Refactor here to base on suspension travel, then move on to tech debt and cleanup.
     TLSF_suspension_fr = f.get_travel_limit_stop_force(a=state.a_fr, b=state.b_fr, travel_limit=self.max_compression_f)
     TLSF_suspension_fl = f.get_travel_limit_stop_force(a=state.a_fl, b=state.b_fl, travel_limit=self.max_compression_f)
     TLSF_suspension_rr = f.get_travel_limit_stop_force(a=state.a_rr, b=state.b_rr, travel_limit=self.max_compression_r)
@@ -344,13 +345,13 @@ def solve_chassis_model(
             damper_vel_fl = f.get_damper_vel(a_d = state.a_d_fl, b_d = state.b_d_fl, WD_motion_ratio = active_WD_motion_ratio_fl),
             damper_vel_rr = f.get_damper_vel(a_d = state.a_d_rr, b_d = state.b_d_rr, WD_motion_ratio = active_WD_motion_ratio_rr),
             damper_vel_rl = f.get_damper_vel(a_d = state.a_d_rl, b_d = state.b_d_rl, WD_motion_ratio = active_WD_motion_ratio_rl),
-            damper_force_fr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fr, WD_motion_ratio = active_WD_motion_ratio_fr)
+            damper_force_fr = ride_damper_F_ideal_fr
                             + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fr, b_d=state.b_d_fr, a_dd=body_accelerations[0], b_dd=body_accelerations[4]),
-            damper_force_fl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_fl, WD_motion_ratio = active_WD_motion_ratio_fl)
+            damper_force_fl = ride_damper_F_ideal_fl
                             + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_fl, b_d=state.b_d_fl,  a_dd=body_accelerations[1], b_dd=body_accelerations[5]),
-            damper_force_rr = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rr, WD_motion_ratio = active_WD_motion_ratio_rr)
+            damper_force_rr = ride_damper_F_ideal_rr
                             + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rr, b_d=state.b_d_rr,  a_dd=body_accelerations[2], b_dd=body_accelerations[6]),
-            damper_force_rl = f.get_damper_force(ride_damper_F_ideal = ride_damper_F_ideal_rl, WD_motion_ratio = active_WD_motion_ratio_rl)
+            damper_force_rl = ride_damper_F_ideal_rl
                             + f.get_hysteresis_force(Hy=Hy, a_d=state.a_d_rl, b_d=state.b_d_rl,  a_dd=body_accelerations[3], b_dd=body_accelerations[7]),
             bump_stop_F_fr = bump_stop_F_wheel_fr,
             bump_stop_F_fl = bump_stop_F_wheel_fl,
