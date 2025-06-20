@@ -166,7 +166,6 @@ class HyperMuVehicle:
         vpd = unpack_yml(vehicle_yml_path)['parameters']  # Vehicle parameter dictionary
         vktd = unpack_yml(vehicle_yml_path)['kinematic_tables']  # Vehicle kinematic values dictionary
 
-        self.test_lat_g = vpd['test_lat_g']
         self.ref_df_speed = vpd['reference_downforce_speed']
         self.ref_df_f = vpd['reference_downforce_front']
         self.ref_df_r = vpd['reference_downforce_rear']
@@ -213,20 +212,6 @@ class HyperMuVehicle:
         self.bump_stop_rate_r = vpd['bump_stop_spring_rate_r']
         self.K_arb_f = vpd['arb_rate_f']
         self.K_arb_r = vpd['arb_rate_r']
-
-        #  Active C's to be used in ChassisDyne chassis model solver. All damper rates converted to at-wheel rates.
-        self.slow_compression_damper_rate_f = vpd['slow_compression_damper_rate_f']
-        self.slow_compression_damper_rate_r = vpd['slow_compression_damper_rate_r']
-        self.slow_rebound_damper_rate_f = vpd['slow_rebound_damper_rate_f']
-        self.slow_rebound_damper_rate_r = vpd['slow_rebound_damper_rate_r']
-        self.fast_compression_damper_rate_f = vpd['fast_compression_damper_rate_f']
-        self.fast_compression_damper_rate_r = vpd['fast_compression_damper_rate_r']
-        self.fast_rebound_damper_rate_f = vpd['fast_rebound_damper_rate_f']
-        self.fast_rebound_damper_rate_r = vpd['fast_rebound_damper_rate_r']
-        self.knee_speed_compression_f = vpd['knee_speed_compression_f']
-        self.knee_speed_compression_r = vpd['knee_speed_compression_r']
-        self.knee_speed_rebound_f = vpd['knee_speed_rebound_f']
-        self.knee_speed_rebound_r = vpd['knee_speed_rebound_r']
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
