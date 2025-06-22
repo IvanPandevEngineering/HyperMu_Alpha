@@ -97,14 +97,6 @@ def get_lat_LT_diff_trq(G_Long, m, drive_wheel_diam, tw, nominal_engine_brake_G,
     trq_driveshaft = trq_half_shafts/diff_ratio
     return trq_driveshaft/(tw*2)
 
-def get_spring_disp(a, b, WS_motion_ratio):
-    'Convert wheel-to-body displacement to spring displacement'
-    return (a-b) / WS_motion_ratio
-
-def get_damper_disp(a, b, WD_motion_ratio):
-    'Convert wheel-to-body displacement to damper displacement'
-    return (a-b) / WD_motion_ratio
-
 @jit(nopython=True, cache=True)
 def get_ideal_damper_force_wheel(a_d, b_d, speeds, forces, active_motion_ratio):
 
@@ -114,7 +106,7 @@ def get_ideal_damper_force_wheel(a_d, b_d, speeds, forces, active_motion_ratio):
         x = speed_at_damper,
         xp = speeds,
         fp = forces
-    ) / active_motion_ratio**2
+    ) / active_motion_ratio
 
 def get_inst_I_roll_properties(I_roll, tw):
     return I_roll, tw/2
@@ -129,9 +121,6 @@ def get_chassis_flex_LT(K_ch, a_fr, a_fl, a_rr, a_rl, tw_f, tw_r):
     roll_angle_r_deg = 180 * np.arctan((a_rr-a_rl)/tw_r) / np.pi
 
     return K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_f / 2), K_ch * (roll_angle_f_deg - roll_angle_r_deg) / (tw_r / 2)
-
-def get_ride_spring_F_wheel(K_s, a, b):
-    return max(K_s * (a - b), 0)
 
 def get_ARB_F(K_arb, a_r, b_r, a_l, b_l):
     return K_arb * ((a_r - b_r) - (a_l - b_l))
@@ -201,9 +190,9 @@ def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
     return sm * G / K_s + get_pre_init_b(sm, usm, K_t)
 
-def get_spring_F_wheel(disp, rate, motion_ratio):
+def get_spring_F_wheel(disp, rate, active_motion_ratio):
     'Returns bump stop engagement force, at the wheel. For use in the model solver.'
-    return disp * rate / (motion_ratio**2)
+    return disp * rate / active_motion_ratio
 
 @jit(nopython=True, cache=True)
 def get_hysteresis_saturation_component(a_d, b_d, weight):
@@ -225,8 +214,11 @@ def get_CLpA(ref_speed, ref_df):
     2DF/V**2 = CLpA'''
     return 2*ref_df/(ref_speed**2)
 
-def get_travel_limit_stop_force(a, b, travel_limit):
-    return max((K_TRAVEL_LIMIT * (a-b-travel_limit)), 0)
+def get_compression_limit_stop_force(disp, limit):
+    return K_TRAVEL_LIMIT * max((disp - limit), 0)
+
+def get_extension_limit_stop_force(disp, limit):
+    return K_TRAVEL_LIMIT * min((disp - limit), 0)
 
 @jit(nopython=True, cache=True)
 def interp_active_motion_ratio(a, b, indecies, motion_ratios):

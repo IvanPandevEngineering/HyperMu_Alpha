@@ -14,7 +14,6 @@ import condition_data as cd
 import formulas as f
 import RK4_iterator as RK4
 import visualizer as vis
-import virtual_params as vparam
 
 
 def user_warning():
@@ -252,20 +251,23 @@ class HyperMuVehicle:
         self.resting_load_fl_N = vpd['corner_mass_fl'] * f.G
         self.resting_load_rr_N = vpd['corner_mass_rr'] * f.G
         self.resting_load_rl_N = vpd['corner_mass_rl'] * f.G
-
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
-        self.max_compression_f = vpd['max_compression_front']  # Taken at wheel displacement
-        self.max_compression_r = vpd['max_compression_rear']  # Taken at wheel displacement
-        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheel originally.
-        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheel originally.
+
+        #  Travel limits
+        self.max_travel_damper_f = vpd['max_travel_damper_front']
+        self.max_travel_damper_r = vpd['max_travel_damper_rear']
+        self.max_travel_spring_f = vpd['max_travel_spring_front']
+        self.max_travel_spring_r = vpd['max_travel_spring_rear']
+        self.max_extension_damper_f = -vpd['max_extension_damper_front']
+        self.max_extension_damper_r = -vpd['max_extension_damper_rear']
         self.compression_to_bumpstop_front = vpd['compression_to_bumpstop_front']
         self.compression_to_bumpstop_rear = vpd['compression_to_bumpstop_rear']
 
         self.nominal_engine_brake_G = vpd['nominal_engine_brake_G']
         self.differential_ratio = vpd['differential_ratio']
 
-        # Very rough estimates pre-initializing in the class instance.
+        #  Very rough estimates pre-initializing in the class instance.
         self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.ride_spring_rate_f, self.K_t_f)  # initial a_fr
         self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.ride_spring_rate_f, self.K_t_f)  # initial a_fl
         self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.ride_spring_rate_r, self.K_t_r)  # initial a_rr

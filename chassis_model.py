@@ -154,7 +154,6 @@ def solve_chassis_model(
     ride_spring_disp_fr = f.integ_component_disp(
         a=state.a_fr, b=state.b_fr, indecies=self.measured_WS_indecies_f, motion_ratios=self.measured_WS_motion_ratios_f
     )
-    #print(f'ride spring disp: {ride_spring_disp_fr}')
     ride_spring_disp_fl = f.integ_component_disp(
         a=state.a_fl, b=state.b_fl, indecies=self.measured_WS_indecies_f, motion_ratios=self.measured_WS_motion_ratios_f
     )
@@ -169,7 +168,6 @@ def solve_chassis_model(
     damper_disp_fr = f.integ_component_disp(
         a=state.a_fr, b=state.b_fr, indecies=self.measured_WD_indecies_f, motion_ratios=self.measured_WD_motion_ratios_f
     )
-    #print(f'damper disp: {damper_disp_fr}')
     damper_disp_fl = f.integ_component_disp(
         a=state.a_fl, b=state.b_fl, indecies=self.measured_WD_indecies_f, motion_ratios=self.measured_WD_motion_ratios_f
     )
@@ -188,34 +186,35 @@ def solve_chassis_model(
 
     #  Solve bump stop forces at the wheel using instantaneous motion ratios
     bump_stop_F_wheel_fr = f.get_spring_F_wheel(
-        disp=bump_stop_disp_fr, rate=self.bump_stop_rate_f, motion_ratio=active_WS_motion_ratio_fr
+        disp=bump_stop_disp_fr, rate=self.bump_stop_rate_f, active_motion_ratio=active_WS_motion_ratio_fr
     )
     bump_stop_F_wheel_fl = f.get_spring_F_wheel(
-        disp=bump_stop_disp_fl, rate=self.bump_stop_rate_f, motion_ratio=active_WS_motion_ratio_fl
+        disp=bump_stop_disp_fl, rate=self.bump_stop_rate_f, active_motion_ratio=active_WS_motion_ratio_fl
     )
     bump_stop_F_wheel_rr = f.get_spring_F_wheel(
-        disp=bump_stop_disp_rr, rate=self.bump_stop_rate_r, motion_ratio=active_WD_motion_ratio_rr
+        disp=bump_stop_disp_rr, rate=self.bump_stop_rate_r, active_motion_ratio=active_WD_motion_ratio_rr
     )
     bump_stop_F_wheel_rl = f.get_spring_F_wheel(
-        disp=bump_stop_disp_rl, rate=self.bump_stop_rate_r, motion_ratio=active_WD_motion_ratio_rl
+        disp=bump_stop_disp_rl, rate=self.bump_stop_rate_r, active_motion_ratio=active_WD_motion_ratio_rl
     )
 
     ride_spring_F_wheel_fr = f.get_spring_F_wheel(
-        disp=ride_spring_disp_fr, rate=self.ride_spring_rate_f, motion_ratio=active_WS_motion_ratio_fr
+        disp=ride_spring_disp_fr, rate=self.ride_spring_rate_f, active_motion_ratio=active_WS_motion_ratio_fr
     ) + bump_stop_F_wheel_fr
     ride_spring_F_wheel_fl = f.get_spring_F_wheel(
-        disp=ride_spring_disp_fl, rate=self.ride_spring_rate_f, motion_ratio=active_WS_motion_ratio_fl
+        disp=ride_spring_disp_fl, rate=self.ride_spring_rate_f, active_motion_ratio=active_WS_motion_ratio_fl
     ) + bump_stop_F_wheel_fl
     ride_spring_F_wheel_rr = f.get_spring_F_wheel(
-        disp=ride_spring_disp_rr, rate=self.ride_spring_rate_r, motion_ratio=active_WS_motion_ratio_rr
+        disp=ride_spring_disp_rr, rate=self.ride_spring_rate_r, active_motion_ratio=active_WS_motion_ratio_rr
     ) + bump_stop_F_wheel_rr
     ride_spring_F_wheel_rl = f.get_spring_F_wheel(
-        disp=ride_spring_disp_rl, rate=self.ride_spring_rate_r, motion_ratio=active_WS_motion_ratio_rl
+        disp=ride_spring_disp_rl, rate=self.ride_spring_rate_r, active_motion_ratio=active_WS_motion_ratio_rl
     ) + bump_stop_F_wheel_rl
 
     ARB_F_f = f.get_ARB_F(self.K_arb_f, state.a_fr, state.b_fr, state.a_fl, state.b_fl)
     ARB_F_r = f.get_ARB_F(self.K_arb_r, state.a_rr, state.b_rr, state.a_rl, state.b_rl)
     
+    #TODO: tech debt, need to review application of motion ratios here in the formulas. Applied 3 times?
     ride_damper_F_ideal_fr = f.get_ideal_damper_force_wheel(
         a_d=state.a_d_fr, b_d=state.b_d_fr, active_motion_ratio=active_WD_motion_ratio_fr, 
         speeds=self.measured_damper_speeds_f, forces=self.measured_damper_forces_f
@@ -253,11 +252,19 @@ def solve_chassis_model(
     tire_load_rl = f.get_tire_load(tire_spring_F_rl, tire_damper_F_rl)
 
     #  Travel Limit Stop Force
-    # TODO: Refactor here to base on suspension travel, then move on to tech debt and cleanup.
-    TLSF_suspension_fr = f.get_travel_limit_stop_force(a=state.a_fr, b=state.b_fr, travel_limit=self.max_compression_f)
-    TLSF_suspension_fl = f.get_travel_limit_stop_force(a=state.a_fl, b=state.b_fl, travel_limit=self.max_compression_f)
-    TLSF_suspension_rr = f.get_travel_limit_stop_force(a=state.a_rr, b=state.b_rr, travel_limit=self.max_compression_r)
-    TLSF_suspension_rl = f.get_travel_limit_stop_force(a=state.a_rl, b=state.b_rl, travel_limit=self.max_compression_r)
+    #  Forces at extension work in the opposite sense to compression.
+    TLSF_suspension_fr = f.get_compression_limit_stop_force(disp=ride_spring_disp_fr, limit=self.max_travel_spring_f)\
+                        + f.get_compression_limit_stop_force(disp=damper_disp_fr, limit=self.max_travel_damper_f)\
+                        + f.get_extension_limit_stop_force(disp=damper_disp_fr, limit=self.max_extension_damper_f)
+    TLSF_suspension_fl = f.get_compression_limit_stop_force(disp=ride_spring_disp_fl, limit=self.max_travel_spring_f)\
+                        + f.get_compression_limit_stop_force(disp=damper_disp_fl, limit=self.max_travel_damper_f)\
+                        + f.get_extension_limit_stop_force(disp=damper_disp_fl, limit=self.max_extension_damper_f)
+    TLSF_suspension_rr = f.get_compression_limit_stop_force(disp=ride_spring_disp_rr, limit=self.max_travel_spring_r)\
+                        + f.get_compression_limit_stop_force(disp=damper_disp_rr, limit=self.max_travel_damper_r)\
+                        + f.get_extension_limit_stop_force(disp=damper_disp_rr, limit=self.max_extension_damper_r)
+    TLSF_suspension_rl = f.get_compression_limit_stop_force(disp=ride_spring_disp_rl, limit=self.max_travel_spring_r)\
+                        + f.get_compression_limit_stop_force(disp=damper_disp_rl, limit=self.max_travel_damper_r)\
+                        + f.get_extension_limit_stop_force(disp=damper_disp_rl, limit=self.max_extension_damper_r)
 
     Hy=0
     Hy_fr = f.get_hysteresis_coef(Hy, a_d=state.a_d_fr, b_d=state.b_d_fr)
