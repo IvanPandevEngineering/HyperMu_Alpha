@@ -69,13 +69,14 @@ def apply_filter(data, filter_type, smoothing_window_size):
 
 def yaw_rate_correction(data, pitch_installation_angle_deg):
 
-    live_pitch_angle = 2 * pitch_installation_angle_deg*math.pi/180 #- 10*data['motionPitch(rad)'] +   # Convert pitch installation angle to rad
+    #live_pitch_angle = np.pi*data['motionPitch(rad)']/180   # Convert pitch installation angle to rad
 
     # live_pitch_angle = data['motionUserAccelerationY(G)'] # use long acceleration as a proxy for pitch angle
     #data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + abs(0.28*data['motionRotationRateZ(rad/s)'])**2
     
-    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] + np.sin(live_pitch_angle)*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
-    #TODO: APPLY LATERALLY AS WELL???
+    #data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] - live_pitch_angle*abs(1-np.cos(data['motionRotationRateZ(rad/s)']))  # pitch rate correction by yaw and roll rates
+
+    data['gyroRotationX_corrected(rad/s)'] = data['motionRotationRateX(rad/s)'] - 0.04*abs(data['motionRotationRateZ(rad/s)'])
 
     return data
 
@@ -86,7 +87,7 @@ def bidirectional_butterworth_lowpass(signal, order = 2, cutoff_freq = 0.7, samp
 
     return filtfilt(b, a, signal)
 
-def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.2, sampling_freq = f.FREQ_DATA):
+def bidirectional_bessel_lowpass(signal, order = 5, cutoff_freq = 1.0, sampling_freq = f.FREQ_DATA):
 
     nyquist = sampling_freq / 2
     b, a = bessel(order, cutoff_freq / nyquist, btype='low', analog=False)
@@ -276,6 +277,11 @@ def from_RaceBox(path:str, filter_type:str, smoothing_window_size_ms:int, start_
     #print(f"PITCH RMS: {f.get_RMS(data_in['motionRotationRateX(rad/s)'])}")
 
     data_in['gyroRotationX_corrected(rad/s)'] = data_in['motionRotationRateX(rad/s)']
+
+    data_in = yaw_rate_correction(
+        data = data_in,
+        pitch_installation_angle_deg = 6
+    )
 
     #create dataframe and drop nans one more time
     data = pd.DataFrame(list(zip(data_in['time'],

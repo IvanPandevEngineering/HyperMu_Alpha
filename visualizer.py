@@ -29,7 +29,7 @@ def plot_basics(force_function, results, scenario, desc):
     subplots[0,0].plot(force_function.time, force_function.G_long, label='longitudinal accel (G)')
     subplots[0,0].plot(force_function.time, -force_function.calc_speed_ms*(2.23694/100), label='estimated speed (mph/100)')
     #subplots[0,0].plot(force_function.time, -force_function['accelerometerAccelerationZ(G)'], label='vertical accel (G)')
-    #subplots[0,0].plot(force_function.time, force_function['motionPitch(rad)']*56, label='pitch (deg)')
+    #subplots[0,0].plot(force_function.time, force_function.pitch_rad, label='pitch (deg)')
     subplots[0,0].plot(force_function.time, force_function.c_fr*-100, label='road surface height (cm, fr)')
     subplots[0,0].plot(force_function.time, force_function.c_fl*-100, label='road surface height (cm, fl)')
     subplots[0,0].plot(force_function.time, force_function.c_rr*-100, label='road surface height (cm, rr)')
@@ -57,13 +57,13 @@ def plot_basics(force_function, results, scenario, desc):
     subplots[1,0].plot(force_function.time, results['spring_disp_fl'], label='spring displacement (m, fl)')
     subplots[1,0].plot(force_function.time, results['spring_disp_rr'], label='spring displacement (m, rr)')
     subplots[1,0].plot(force_function.time, results['spring_disp_rl'], label='spring displacement (m, rl)')
-    subplots[1,0].fill_between(force_function.time, 0, 0.07, where=np.array(results['tlsf_suspension_fr'])>0,
+    subplots[1,0].fill_between(force_function.time, 0, 0.1, where=np.array(results['tlsf_suspension_fr'])>0,
                                color='red', alpha=0.6)
-    subplots[1,0].fill_between(force_function.time, 0, 0.07, where=np.array(results['tlsf_suspension_fl'])>0,
+    subplots[1,0].fill_between(force_function.time, 0, 0.1, where=np.array(results['tlsf_suspension_fl'])>0,
                                color='red', alpha=0.6)
-    subplots[1,0].fill_between(force_function.time, 0, 0.07, where=np.array(results['tlsf_suspension_rr'])>0,
+    subplots[1,0].fill_between(force_function.time, 0, 0.1, where=np.array(results['tlsf_suspension_rr'])>0,
                                color='red', alpha=0.6)
-    subplots[1,0].fill_between(force_function.time, 0, 0.07, where=np.array(results['tlsf_suspension_rl'])>0,
+    subplots[1,0].fill_between(force_function.time, 0, 0.1, where=np.array(results['tlsf_suspension_rl'])>0,
                                color='red', alpha=0.6)
     subplots[1,0].set_ylabel('Suspesion Displacements (m)')
     subplots[1,0].legend()
@@ -163,19 +163,21 @@ def check_correlation_rollPitchRate(force_function, results, scenario):
     subplots[1][1].set_ylabel('Recorded Pitch Rate (deg/s)')
     subplots[1][1].grid(True)
 
-    subplots[0][2].plot(force_function.time[:-1000], f.get_RsqCorr_v_time(
+    window_s = 4
+
+    subplots[0][2].plot(force_function.time[:-window_s*f.FREQ_DATA], f.get_RsqCorr_v_time(
         control = 180*force_function.gyro_roll_radps/3.14,
         results = np.array(results['roll_angle_rate_f']),
-        window_s=4)
+        window_s=window_s)
     )
     subplots[0][2].set_xlabel('Time (s)')
     subplots[0][2].set_ylabel('R-sq Correlation, Roll (%)')
     subplots[0][2].grid(True)
 
-    subplots[1][2].plot(force_function.time[:-1000], f.get_RsqCorr_v_time(
+    subplots[1][2].plot(force_function.time[:-window_s*f.FREQ_DATA], f.get_RsqCorr_v_time(
         control = 180*force_function.gyro_pitch_corrected_radps/3.14,
         results = -np.array(results['pitch_angle_rate']),
-        window_s=4)
+        window_s=window_s)
     )
     subplots[1][2].legend()
     subplots[1][2].set_xlabel('Time (s)')

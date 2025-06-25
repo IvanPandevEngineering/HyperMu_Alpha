@@ -14,7 +14,6 @@ import condition_data as cd
 import formulas as f
 import RK4_iterator as RK4
 import visualizer as vis
-import virtual_params as vparam
 
 
 def user_warning():
@@ -52,6 +51,13 @@ def unpack_yml(path: str):
 
     for key in dict['parameters']:
         dict['parameters'][key] = make_metric(dict['parameters'][key][0], dict['parameters'][key][1])
+    
+    for key in dict['kinematic_tables']:
+        for item in dict['kinematic_tables'][key]:
+            dict['kinematic_tables'][key][item] = make_metric(
+                np.array(dict['kinematic_tables'][key][item][0]),
+                dict['kinematic_tables'][key][item][1]
+            )
 
     return(dict)
 
@@ -157,8 +163,8 @@ class HyperMuVehicle:
         user_warning()
 
         vpd = unpack_yml(vehicle_yml_path)['parameters']  # Vehicle parameter dictionary
+        vktd = unpack_yml(vehicle_yml_path)['kinematic_tables']  # Vehicle kinematic values dictionary
 
-        self.test_lat_g = vpd['test_lat_g']
         self.ref_df_speed = vpd['reference_downforce_speed']
         self.ref_df_f = vpd['reference_downforce_front']
         self.ref_df_r = vpd['reference_downforce_rear']
@@ -173,48 +179,38 @@ class HyperMuVehicle:
         self.tire_diam_f = vpd['tire_diameter_front']
         self.tire_diam_r = vpd['tire_diameter_rear']
 
-        self.WS_motion_ratio_f = vpd['WS_motion_ratio_f']
-        self.WS_motion_ratio_r = vpd['WS_motion_ratio_r']
-        self.WD_motion_ratio_f = vpd['WD_motion_ratio_f']
-        self.WD_motion_ratio_r = vpd['WD_motion_ratio_r']
+        #  Motion ratio lookup table properties
+        self.measured_WS_indecies_f = vktd['front_WS_motion_ratio']['index']
+        self.measured_WS_motion_ratios_f = vktd['front_WS_motion_ratio']['ratio']
+        self.measured_WS_indecies_r = vktd['rear_WS_motion_ratio']['index']
+        self.measured_WS_motion_ratios_r = vktd['rear_WS_motion_ratio']['ratio']
+        self.measured_WD_indecies_f = vktd['front_WD_motion_ratio']['index']
+        self.measured_WD_motion_ratios_f = vktd['front_WD_motion_ratio']['ratio']
+        self.measured_WD_indecies_r = vktd['rear_WD_motion_ratio']['index']
+        self.measured_WD_motion_ratios_r = vktd['rear_WD_motion_ratio']['ratio']
 
-        #  K's to be used in ChassisDyne chassis model solver. All spring rates converted to at-wheel rates.
-        self.K_s_f = vpd['spring_rate_f'] / self.WS_motion_ratio_f**2
-        self.K_s_r = vpd['spring_rate_r'] / self.WS_motion_ratio_r**2
-        self.K_bs_f = vpd['bump_stop_spring_rate_f'] / self.WS_motion_ratio_f**2 # front bump stop is at strut
-        self.K_bs_r = vpd['bump_stop_spring_rate_r'] / self.WD_motion_ratio_r**2 # rear bump stop is at damper
+        self.measured_damper_speeds_f = vktd['front_damper_curve']['speed']
+        self.measured_damper_forces_f = vktd['front_damper_curve']['force']
+        self.measured_damper_speeds_r = vktd['rear_damper_curve']['speed']
+        self.measured_damper_forces_r = vktd['rear_damper_curve']['force']
+
+        #  Pre-initialized active motion ratios
+        self.WS_motion_ratio_preinit_fr = vktd['front_WS_motion_ratio']['ratio'][0]
+        self.WS_motion_ratio_preinit_fl = vktd['front_WS_motion_ratio']['ratio'][0]
+        self.WS_motion_ratio_preinit_rr = vktd['rear_WS_motion_ratio']['ratio'][0]
+        self.WS_motion_ratio_preinit_rl = vktd['rear_WS_motion_ratio']['ratio'][0]
+        self.WD_motion_ratio_preinit_fr = vktd['front_WD_motion_ratio']['ratio'][0]
+        self.WD_motion_ratio_preinit_fl = vktd['front_WD_motion_ratio']['ratio'][0]
+        self.WD_motion_ratio_preinit_rr = vktd['rear_WD_motion_ratio']['ratio'][0]
+        self.WD_motion_ratio_preinit_rl = vktd['rear_WD_motion_ratio']['ratio'][0]
+
+        #  Active K's to be used in ChassisDyne chassis model solver. All spring rates converted to at-wheel rates.
+        self.ride_spring_rate_f = vpd['spring_rate_f']
+        self.ride_spring_rate_r = vpd['spring_rate_r']
+        self.bump_stop_rate_f = vpd['bump_stop_spring_rate_f']
+        self.bump_stop_rate_r = vpd['bump_stop_spring_rate_r']
         self.K_arb_f = vpd['arb_rate_f']
         self.K_arb_r = vpd['arb_rate_r']
-
-        #  C's to be used in ChassisDyne chassis model solver. All damper rates converted to at-wheel rates.
-        self.C_lsc_f = vpd['slow_compression_damper_rate_f'] / self.WD_motion_ratio_f**2
-        self.C_lsc_r = vpd['slow_compression_damper_rate_r'] / self.WD_motion_ratio_r**2
-        self.C_lsr_f = vpd['slow_rebound_damper_rate_f'] / self.WD_motion_ratio_f**2
-        self.C_lsr_r = vpd['slow_rebound_damper_rate_r'] / self.WD_motion_ratio_r**2
-        self.C_hsc_f = vpd['fast_compression_damper_rate_f'] / self.WD_motion_ratio_f**2
-        self.C_hsc_r = vpd['fast_compression_damper_rate_r'] / self.WD_motion_ratio_r**2
-        self.C_hsr_f = vpd['fast_rebound_damper_rate_f'] / self.WD_motion_ratio_f**2
-        self.C_hsr_r = vpd['fast_rebound_damper_rate_r'] / self.WD_motion_ratio_r**2
-        self.knee_c_f = vpd['knee_speed_compression_f'] / self.WD_motion_ratio_f
-        self.knee_c_r = vpd['knee_speed_compression_r'] / self.WD_motion_ratio_r
-        self.knee_r_f = vpd['knee_speed_rebound_f'] / self.WD_motion_ratio_f
-        self.knee_r_r = vpd['knee_speed_rebound_r'] / self.WD_motion_ratio_r
-
-        self.tw_v, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v,\
-        self.C_lsc_f_v, self.C_lsc_r_v,\
-        self.C_lsr_f_v, self.C_lsr_r_v,\
-        self.C_hsc_f_v, self.C_hsc_r_v,\
-        self.C_hsr_f_v, self.C_hsr_r_v  = \
-            \
-        vparam.virtual_params(
-            self.tw_f, self.tw_r,
-            self.K_s_f, self.K_s_r,
-            self.K_arb_f, self.K_arb_r,
-            self.C_lsc_f, self.C_lsc_r,
-            self.C_lsr_f, self.C_lsr_r,
-            self.C_hsc_f, self.C_hsc_r,
-            self.C_hsr_f, self.C_hsr_r
-        )
 
         self.K_t_f = vpd['tire_rate_f']
         self.K_t_r = vpd['tire_rate_r']
@@ -255,23 +251,27 @@ class HyperMuVehicle:
         self.resting_load_fl_N = vpd['corner_mass_fl'] * f.G
         self.resting_load_rr_N = vpd['corner_mass_rr'] * f.G
         self.resting_load_rl_N = vpd['corner_mass_rl'] * f.G
-
         self.wheel_base_f = self.wheel_base * (1 - self.m_f)
         self.wheel_base_r = self.wheel_base * (self.m_f)
-        self.max_compression_f = vpd['max_compression_front'] * self.WS_motion_ratio_f
-        self.max_compression_r = vpd['max_compression_rear'] * self.WD_motion_ratio_r
-        self.max_droop_f = vpd['max_droop_front']  # No W/S, W/D convertions, because droop values taken at wheel originally.
-        self.max_droop_r = vpd['max_droop_rear']  # No W/S, W/D convertions, because droop values taken at wheel originally.
-        self.compression_to_bumpstop_front = vpd['compression_to_bumpstop_front'] * self.WS_motion_ratio_f
-        self.compression_to_bumpstop_rear = vpd['compression_to_bumpstop_rear'] * self.WD_motion_ratio_r # rear bump stop on rear damper, not spring
+
+        #  Travel limits
+        self.max_travel_damper_f = vpd['max_travel_damper_front']
+        self.max_travel_damper_r = vpd['max_travel_damper_rear']
+        self.max_travel_spring_f = vpd['max_travel_spring_front']
+        self.max_travel_spring_r = vpd['max_travel_spring_rear']
+        self.max_extension_damper_f = -vpd['max_extension_damper_front']
+        self.max_extension_damper_r = -vpd['max_extension_damper_rear']
+        self.compression_to_bumpstop_front = vpd['compression_to_bumpstop_front']
+        self.compression_to_bumpstop_rear = vpd['compression_to_bumpstop_rear']
 
         self.nominal_engine_brake_G = vpd['nominal_engine_brake_G']
         self.differential_ratio = vpd['differential_ratio']
 
-        self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.K_s_f, self.K_t_f)  # initial a_fr
-        self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.K_s_f, self.K_t_f)  # initial a_fl
-        self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.K_s_r, self.K_t_r)  # initial a_rr
-        self.init_a_rl = f.get_pre_init_a(self.sm_rl, self.usm_rl, self.K_s_r, self.K_t_r)  # initial a_rl
+        #  Very rough estimates pre-initializing in the class instance.
+        self.init_a_fr = f.get_pre_init_a(self.sm_fr, self.usm_fr, self.ride_spring_rate_f, self.K_t_f)  # initial a_fr
+        self.init_a_fl = f.get_pre_init_a(self.sm_fl, self.usm_fl, self.ride_spring_rate_f, self.K_t_f)  # initial a_fl
+        self.init_a_rr = f.get_pre_init_a(self.sm_rr, self.usm_rr, self.ride_spring_rate_r, self.K_t_r)  # initial a_rr
+        self.init_a_rl = f.get_pre_init_a(self.sm_rl, self.usm_rl, self.ride_spring_rate_r, self.K_t_r)  # initial a_rl
         self.init_b_fr = f.get_pre_init_b(self.sm_fr, self.usm_fr, self.K_t_f)  # initial b_fr
         self.init_b_fl = f.get_pre_init_b(self.sm_fl, self.usm_fl, self.K_t_f)  # initial b_fl
         self.init_b_rr = f.get_pre_init_b(self.sm_rr, self.usm_rr, self.K_t_r)  # initial b_rr
@@ -280,96 +280,14 @@ class HyperMuVehicle:
         self.I_roll_at_cg = vpd['moment_of_inertia_about_cg_roll']
         self.I_roll = f.parallel_axis_theorem(self.I_roll_at_cg, self.sm, self.cm_height - (self.rc_height_r + self.sm_f * (self.rc_height_f - self.rc_height_r)))
         self.I_pitch_at_cg = vpd['moment_of_inertia_about_cg_pitch']
-        #TODO: Review
-        self.I_pitch = f.parallel_axis_theorem(self.I_pitch_at_cg, self.sm, f.get_I_pitch_offset(self.cm_height, self.pc_height_ic2cp, self.sm_f, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r))
+        #TODO: URGENT needs serious fix. Please do this.
+        self.I_pitch = f.parallel_axis_theorem(self.I_pitch_at_cg, self.sm, f.get_I_pitch_offset(self.cm_height, self.pc_height_ic2cp, self.sm_f, self.ride_spring_rate_f, self.ride_spring_rate_r, self.K_t_f, self.K_t_r))
 
         self.set_init_state(replay_src='init')
 
-        #self.LatLT_properties = f.roll_LatLD_per_g((self.usm_fr+self.usm_fl), (self.usm_rr + self.usm_rl), (self.sm_fr + self.sm_fl), (self.sm_rr + self.sm_rl), self.tw_v, self.tw_f, self.tw_r, self.tire_diam_f, self.tire_diam_r, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.df_f, self.df_r)
-        self.roll_tip_G = f.get_roll_tip_G(self.tw_f, self.tw_r, self.m_f, self.cm_height, self.m, self.ref_df_f, self.ref_df_r)
-        self.aero_response = f.aero_platform_response(self.ref_df_f, self.ref_df_r, self.m_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.LongLD_per_g = f.pitch_LongLD_per_g(self.cm_height, self.wheel_base, self.m, self.ref_df_f, self.ref_df_r)
-        self.pitch_gradient_accel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_accel, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.pitch_gradient_decel = f.pitch_gradient(self.m, self.wheel_base, self.cm_height, self.pitch_center_height_braking, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.pitch_frequency = f.pitch_frquency(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r)
-        self.pitch_damping_slow = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v)
-        self.pitch_damping_fast = f.pitch_damping(self.I_pitch, self.sm_f, self.wheel_base, self.K_s_f_v, self.K_s_r_v, self.K_t_f, self.K_t_r, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v)
-
-    def summary(self):
-        print('\n')
-        print('_______ ROLL RESPONSE _______')
-        print(f'Roll Gradient: {f.roll_gradient(self.tw_v, self.rc_height_f, self.rc_height_r, self.cm_height, self.m, self.m_f, self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r):.3f} deg/G')
-        print(f'Roll Frequency: {f.roll_frequency(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll):.3f} hz')
-        print(f'Roll Damping Ratio (Slow): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_lsc_f_v, self.C_lsc_r_v, self.C_lsr_f_v, self.C_lsr_r_v):.3f}')
-        print(f'Roll Damping Ratio (Fast): {f.roll_damping(self.K_s_f_v, self.K_s_r_v, self.K_arb_f_v, self.K_arb_r_v, self.K_t_f, self.K_t_r, self.tw_v, self.I_roll, self.C_hsc_f_v, self.C_hsc_r_v, self.C_hsr_f_v, self.C_hsr_r_v):.3f}')
-        print(f'Lateral Load Distribution Front: +{self.LatLT_properties[0]:.3%} Outside/G')
-        print(f'Lateral Load Distribution Rear: +{self.LatLT_properties[1]:.3%} Outside/G')
-        print(f'Lateral Load Distribution Ratio: +{self.LatLT_properties[2]:.1%} Front/G')
-        print(f'Tip-Over G: {self.roll_tip_G:.3f} G')
-        print('\n')
-
-        print('_______ PITCH RESPONSE _______')
-        print(f'Pitch Gradient, Accel: {self.pitch_gradient_accel:.3f} deg/G')
-        print(f'Pitch Gradient, Decel: {self.pitch_gradient_decel:.3f} deg/G')
-        print(f'Pitch Frequency*: {self.pitch_frequency:.3f} hz')
-        print(f'Pitch Damping Ratio* (Slow): {self.pitch_damping_slow:.3f}')
-        print(f'Pitch Damping Ratio* (Fast): {self.pitch_damping_fast:.3f}')
-        print(f'Longitudinal Load Distribution: +/-{self.LongLD_per_g:.3%} Front/G')
-        print('* - taken from contact-patch-to-IC line, see documenation.')
-        print('\n')
-
-        print('_______ AERO PLATFORM RESPONSE _______')
-        print(f'Pitch Angle Change: {self.aero_response[0]:.3f} degrees, dive')
-        print(f'Front Ride Height Change: {self.aero_response[1]*1000:.3f} mm')
-        print(f'Rear Ride Height Change: {self.aero_response[2]*1000:.3f} mm')
-        print(f'Stability Margin: {self.aero_response[3]*1000:.3f} mm, stability')
-        print('\n')
-
-        print('_______ FRONT RIGHT CORNER _______')
-        print(f'Wheel Rate: {self.K_s_f/1000:.3f} N/mm')
-        print(f'Natural Frequency: {np.sqrt(self.K_s_f/self.sm_fr)/(2*np.pi):.3f} hz')
-        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fr):.3f} -/-')
-        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fr):.3f} -/-')
-        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fr):.3f} -/-')
-        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fr):.3f} -/-')
-        print('\n')
-
-        print('_______ FRONT LEFT CORNER _______')
-        print(f'Wheel Rate: {self.K_s_f/1000:.3f} N/mm')
-        print(f'Natural Frequency: {np.sqrt(self.K_s_f/self.sm_fl)/(2*np.pi):.3f} hz')
-        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_f, self.K_s_f, self.sm_fl):.3f} -/-')
-        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_f, self.K_s_f, self.sm_fl):.3f} -/-')
-        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_f, self.K_s_f, self.sm_fl):.3f} -/-')
-        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_f, self.K_s_f, self.sm_fl):.3f} -/-')
-        print('\n')
-
-        print('_______ REAR RIGHT CORNER _______')
-        print(f'Wheel Rate: {self.K_s_r/1000:.3f} N/mm')
-        print(f'Natural Frequency: {np.sqrt(self.K_s_r/self.sm_rr)/(2*np.pi):.3f} hz')
-        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rr):.3f} -/-')
-        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rr):.3f} -/-')
-        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rr):.3f} -/-')
-        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rr):.3f} -/-')
-        print('\n')
-
-        print('_______ REAR LEFT CORNER _______')
-        print(f'Wheel Rate: {self.K_s_r/1000:.3f} N/mm')
-        print(f'Natural Frequency: {np.sqrt(self.K_s_r/self.sm_rl)/(2*np.pi):.3f} hz')
-        print(f'Damping Ratio, Slow Compression: {f.zeta(self.C_lsc_r, self.K_s_r, self.sm_rl):.3f} -/-')
-        print(f'Damping Ratio, Slow Rebound: {f.zeta(self.C_lsr_r, self.K_s_r, self.sm_rl):.3f} -/-')
-        print(f'Damping Ratio, Fast Compression: {f.zeta(self.C_hsc_r, self.K_s_r, self.sm_rl):.3f} -/-')
-        print(f'Damping Ratio, Fast Rebound: {f.zeta(self.C_hsr_r, self.K_s_r, self.sm_rl):.3f} -/-')
-        print('\n')
-
-        print('_______ MASS DISTRIBUTION _______')
-        print(f'Front Axle Mass Distribution: {self.m_f:.3%}')
-        print(f'Left Mass Distribution: {(self.sm_fl+self.usm_fl+self.sm_rl+self.usm_rl)/self.m:.3%}')
-        print(f'Cross-Wise Mass Distribution (FL/RR): {(self.sm_fl+self.usm_fl+self.sm_rr+self.usm_rr)/self.m:.3%}')
-        print('\n')
-
     def set_init_state(self, **kwargs):
 
-        print('Solving vehicle model initial state.')
+        print('Solving vehicle model initial state...')
 
         force_function, shaker_results, scenario = self.Shaker(**kwargs)
         self.init_a_fr = shaker_results['a_fr'][-1]
@@ -381,7 +299,7 @@ class HyperMuVehicle:
         self.init_b_rr = shaker_results['b_rr'][-1]
         self.init_b_rl = shaker_results['b_rl'][-1]
 
-        print('Vehicle initial state resolved.')
+        print('Vehicle initial state resolved. Inital displacements stored.')
 
         return True
 
@@ -403,10 +321,6 @@ class HyperMuVehicle:
         
         #yappi.start()
         for i in tqdm(range(len(force_function.time)-2), desc="Starting RK4 solver"):
-
-            #  Given current state as, bs, and cs...
-            #  self.update_kinematics(state)
-            #  tyres.update_tyres(state)
 
             state, graphing_vars = RK4.RK4_step(
                 self = self,
