@@ -44,8 +44,13 @@ def get_K_end(K_s_v, K_t):
 
 '''
 SECTION 2. Begin functions for supporting time-dependent solving below.
-#TODO:Dummy functions still to finalize.
 '''
+
+def get_active_cm_height():
+    return
+
+def get_active_tire_diam():
+    return
 
 def LatLT_sm_elastic_1g_axle(sm, rc_height, cm_height, tw):  # N, transferred to outside OR lifted from inside tire
     
@@ -97,17 +102,6 @@ def get_lat_LT_diff_trq(G_Long, m, drive_wheel_diam, tw, nominal_engine_brake_G,
     trq_driveshaft = trq_half_shafts/diff_ratio
     return trq_driveshaft/(tw*2)
 
-@jit(nopython=True, cache=True)
-def get_ideal_damper_force_wheel(a_d, b_d, speeds, forces, active_motion_ratio):
-
-    speed_at_damper = (a_d - b_d) / active_motion_ratio
-
-    return np.interp(
-        x = speed_at_damper,
-        xp = speeds,
-        fp = forces
-    ) / active_motion_ratio
-
 def get_inst_I_roll_properties(I_roll, tw):
     return I_roll, tw/2
 
@@ -134,10 +128,25 @@ def get_tire_damper_F(C_t, b_d, c_d):
 def get_tire_load(tire_spring_F, tire_damper_F):
     return max(tire_spring_F + tire_damper_F, 0)
 
-def get_damper_vel(a_d, b_d, WD_motion_ratio):
+def get_damper_vel(a_d, b_d, active_motion_ratio):
     'Inputs are given at the wheel. Returns damper velocity at the damper.'
-    return (a_d - b_d) / WD_motion_ratio
-    
+    return (a_d - b_d) / active_motion_ratio
+
+@jit(nopython=True, cache=True)
+def get_ideal_damper_force_wheel(damper_vel, speed_indecies, forces, active_motion_ratio):
+    '''
+    Returns damper force experienced at the wheel, without hysteresis or
+    gas catridge spring effects.
+    No need for explicit knee speed definition; forces are interpolated w.r.t.
+    instantaneous damper speed.
+    '''
+
+    return np.interp(
+        x = damper_vel,
+        xp = speed_indecies,
+        fp = forces
+    ) / active_motion_ratio
+
 @jit(nopython=True, cache=True)
 def get_roll_angle_deg_per_axle(a_r, a_l, tw):
     return 180 * np.arctan((a_r-a_l)/tw) / np.pi
@@ -190,8 +199,8 @@ def get_pre_init_a(sm, usm, K_s, K_t):
     'Returns at-rest chassis-to-ground deflection, taken from the unloaded, free-spring position.'
     return sm * G / K_s + get_pre_init_b(sm, usm, K_t)
 
-def get_spring_F_wheel(disp, rate, active_motion_ratio):
-    'Returns bump stop engagement force, at the wheel. For use in the model solver.'
+def get_linear_spring_F_wheel(disp, rate, active_motion_ratio):
+    'Returns ride spring or bump stop engagement force, at the wheel.'
     return disp * rate / active_motion_ratio
 
 @jit(nopython=True, cache=True)
@@ -215,13 +224,22 @@ def get_CLpA(ref_speed, ref_df):
     return 2*ref_df/(ref_speed**2)
 
 def get_compression_limit_stop_force(disp, limit):
+    '''
+    Returns an order(s)-of-magnitude-greater spring force when suspension travels
+    beyond damper travel limit in compression or spring compression limit (block height).
+    '''
     return K_TRAVEL_LIMIT * max((disp - limit), 0)
 
 def get_extension_limit_stop_force(disp, limit):
+    '''
+    Returns an order(s)-of-magnitude-greater spring force when suspension travels
+    beyond damper travel limit in extension.
+    '''
     return K_TRAVEL_LIMIT * min((disp - limit), 0)
 
 @jit(nopython=True, cache=True)
 def interp_active_motion_ratio(a, b, indecies, motion_ratios):
+    'Interpolates motion ratio data points w.r.t. wheel travel to find instantaneous motion ratio.'
     return np.interp(
         x = a - b,
         xp = indecies,
@@ -230,9 +248,15 @@ def interp_active_motion_ratio(a, b, indecies, motion_ratios):
 
 @jit(nopython=True, cache=True)
 def integ_component_disp(a, b, indecies, motion_ratios):
-    x = np.linspace(0, a-b, num=BINS_FOR_INTEG)
-    y = np.interp(x = x, xp=indecies, fp=motion_ratios)
-    return np.trapezoid(y, x)
+    '''
+    Integrates motion ratio data points w.r.t. wheel travel to find component travel.
+    Can be used for either springs or dampers.
+    Since motion ratios are expressed in wheel travel to component travel,
+    fp must equal the inverse of the motion ratio data.
+    '''
+    x = np.linspace(0, a-b, num=BINS_FOR_INTEG)  # range over which to integrate, vector defined by a-b
+    y = np.interp(x = x, xp=indecies, fp=1/motion_ratios)  # interpolates motion ratio data at each point in vector x
+    return np.trapezoid(y, x)   # simple numpy trapezoidal integration
 
 '''
 SECTION 3. General helper functions.
