@@ -1,0 +1,316 @@
+---
+name: Battle_Bimmer_28_Dec_2022
+date: 31 Dec 2022
+number: 199 XP
+class: SCCA Solo II XP-Class
+driver: Ivan Pandev
+driver_mass: 147 lbs
+# All parameters' fidelities are rated as follows:
+# MEASURED: Measured directly from vehicle.
+# ESTIMATED: Calcualted from first principles and known parameters on the vehicle.
+# PROVIDED: Manufacturer-supplied values describing a part or assembly.
+# PLACEHOLDER: Best-guess value from experience/ context/ etc.
+# N/A: Nominal values which can be arbitrarily selected.
+parameters:
+### AERODYNAMIC PROPERTIES, LINEAR ###
+  reference_downforce_speed:
+    - 60
+    - 'mph'
+    # Parameter Fidelity: N/A
+    # Reference value for downforce values.
+  reference_downforce_front:
+    - 55
+    - 'lbf'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  reference_downforce_rear:
+    - 70
+    - 'lbf'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+
+### MASSES AND INERTIAS ###
+  corner_mass_fr:  
+    - 681
+    - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
+  corner_mass_fl:
+    - 684
+    - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
+  corner_mass_rr:
+    - 585
+    - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
+  corner_mass_rl:
+    - 593
+    - 'lb'
+    # Parameter Fidelity: MEASURED
+    # Value was measured directly using corner scales.
+  corner_unsprung_mass_fr:
+    - 80
+    - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  corner_unsprung_mass_fl:
+    - 80
+    - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  corner_unsprung_mass_rr:
+    - 90
+    - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  corner_unsprung_mass_rl:
+    - 90
+    - 'lb'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  center_of_mass_height:
+    - 20
+    - 'in'
+    # Parameter Fidelity: PLACEHOLDER
+    #
+  moment_of_inertia_about_cg_roll:
+    - 890000  # 0.89M From SW estimates 2020
+    - 'lbs-in^2'
+    # Parameter Fidelity: ESTIMATED
+    # Value calculated in CAD Model of an E46 chassis with major components modelled individually.
+  moment_of_inertia_about_cg_pitch:
+    - 1600000  # 1.6M From SW estimates 2020
+    - 'lbs-in^2'
+    # Parameter Fidelity: ESTIMATED
+    # Value calculated in CAD Model of an E46 chassis with major components modelled individually.
+
+### SUSPENSION GEOMETRIES, LINEAR ###
+  roll_center_height_front:
+    - 4.5
+    - 'in'
+    # Parameter Fidelity: ESTIMATED
+    # Value was estimated based on typical E46 BMW suspension geometry and conventional definition of a roll center for McPherson strut vehicles.
+  roll_center_height_rear:
+    - 7
+    - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  WS_motion_ratio_f:
+    - 1.2
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  WS_motion_ratio_r:
+    - 1.538
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  WD_motion_ratio_f:
+    - 1.2
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  WD_motion_ratio_r:
+    - 1.05
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  pitch_center_height_accel:
+    - 16
+    - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  pitch_center_height_braking:
+    - 4
+    - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  pitch_center_height_ic2cp:
+    - 9
+    - 'in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  anti-dive:
+    - 0.20
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  anti-squat:
+    - 0.20
+    - '-/-'
+    # Parameter Fidelity: ESTIMATED
+    #
+  tire_diameter_front:
+    - 25.3
+    - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official dimension provided by tire Manufacturer. Dynamic rolling diameter is calculated in the vehicle model.
+  tire_diameter_rear:
+    - 25.3
+    - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official dimension provided by tire Manufacturer. Dynamic rolling diameter is calculated in the vehicle model.
+  track_width_front:
+    - 63.5
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    # Measured on level ground from contact patch centers.
+  track_width_rear:
+    - 61.5
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    # Measured on level ground from contact patch centers.
+  wheel_base:
+    - 107.3
+    - 'in'
+    # Parameter Fidelity: PROVIDED
+    # Official E46 wheelbase, no modifications done so far should alter this value.
+
+### SPRING RATES, LINEAR ###  
+  torsional_spring_rate:
+    - 12500
+    - 'Nm/deg'
+    # Parameter Fidelity: PROVIDED-ESTIMATED
+    # Official torsional rigidity of an E46 chassis. Impractical to measure competing affects of chassis bracing/ notching effects.
+  spring_rate_f:
+    - 450
+    - 'lbf/in'
+    # Parameter Fidelity: PROVIDED
+    # Nominal spring rate given by Eibach.
+  spring_rate_r:
+    - 700
+    - 'lbf/in'
+    # Parameter Fidelity: PROVIDED
+    # Nominal spring rate given by Eibach.
+  bump_stop_spring_rate_f:
+    - 800
+    - 'lbf/in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  bump_stop_spring_rate_r:
+    - 800
+    - 'lbf/in'
+    # Parameter Fidelity: ESTIMATED
+    #
+  arb_rate_f:
+    - 160
+    - 'lbf/in' #opposite wheel held static
+    # Parameter Fidelity: PLACEHOLDER
+    # 
+  arb_rate_r:
+    - 70
+    - 'lbf/in' #opposite wheel held static
+    # Parameter Fidelity: MEASURED
+    # Measured using corner scales and jacks on the stiffness option 3/5. Currently adjusted to 2/5, extrapolated from measurement and arm length change.
+  tire_rate_f:
+    - 1100
+    - 'lbf/in'
+    # Parameter Fidelity: MEASURED-PLACEHOLDER
+    # Measured interior sidewall compression and vertical load. Tire behavior is highly non-linear and detail should be added going forward.
+  tire_rate_r:
+    - 1200
+    - 'lbf/in'
+    # Parameter Fidelity: MEASURED-PLACEHOLDER
+    # Measured interior sidewall compression and vertical load. Tire behavior is highly non-linear and detail should be added going forward.
+
+### SUSPENSION TRAVEL LIMITS ###  
+  max_travel_damper_front:
+    - 2.65  # Must be taken FROM FREE-SPRING LENGTH, taken at the damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_travel_damper_rear:
+    - 2.875  # Must be taken FROM FREE-SPRING LENGTH, taken at the damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_extension_damper_front:
+    - 2.0  # Must be taken FROM FREE-SPRING LENGTH, taken at the damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_extension_damper_rear:
+    - 2.0  # Must be taken FROM FREE-SPRING LENGTH, taken at the damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_travel_spring_front:
+    - 3.0  # Must be taken FROM FREE-SPRING LENGTH, taken at the spring
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  max_travel_spring_rear:
+    - 2.18  # Must be taken FROM FREE-SPRING LENGTH, taken at the spring
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  compression_to_bumpstop_front:
+    - 2.4  # Must be taken FROM FREE-SPRING LENGTH, taken at spring or damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+  compression_to_bumpstop_rear:
+    - 1.875  # Must be taken FROM FREE-SPRING LENGTH, taken at spring or damper
+    - 'in'
+    # Parameter Fidelity: MEASURED
+    #
+
+### MISC. ###
+  nominal_engine_brake_G:
+    - 0.1
+    - 'G'
+    # Parameter Fidelity:
+    #
+  differential_ratio:
+    - 3.07
+    - '-/-'
+    # Parameter Fidelity: MEASURED
+    # Known explicitly. Standard E46 323 manual diff ratio.
+
+### NON-LINEARITIES AND LOOKUP TABLES ###
+kinematic_tables:
+  front_WS_motion_ratio:
+    index:
+      - [-3.0, -1.5, 0, 1.5, 3.0]
+      - 'in'
+    ratio:
+      - [1.18, 1.19, 1.2, 1.21, 1.22]
+      - '-/-'
+  front_WD_motion_ratio:
+    index:
+      - [-3.0, -1.5, 0, 1.5, 3.0]
+      - 'in'
+    ratio:
+      - [1.18, 1.19, 1.2, 1.21, 1.22]
+      - '-/-'
+  rear_WS_motion_ratio:
+    index:
+      - [-3.0, -1.5, 0, 1.5, 3.0]
+      - 'in'
+    ratio:
+      - [1.52, 1.53, 1.54, 1.55, 1.56]
+      - '-/-'
+  rear_WD_motion_ratio:
+    index:
+      - [-3.0, -1.5, 0, 1.5, 3.0]
+      - 'in'
+    ratio:
+      - [1.03, 1.04, 1.05, 1.06, 1.07]
+      - '-/-'
+  front_damper_curve:
+    speed:
+      - [-0.33, -0.13, 0, 0.13, 0.33]
+      - 'm/s'
+    force:
+      - [-1300, -800, 0, 500, 700]
+      - 'N'
+  rear_damper_curve:
+    speed:
+      - [-0.33, -0.13, 0, 0.13, 0.33]
+      - 'm/s'
+    force:
+      - [-1150, -600, 0, 310, 450]
+      - 'N'
+...
